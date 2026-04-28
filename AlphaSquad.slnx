@@ -1,11 +1,11 @@
 <Solution>
   <Folder Name="/1-AlphaSquad.Api/">
-    <Project Path="AlphaSquad.Api/AlphaSquad.Api.csproj" />
+    <Project Path="src/AlphaSquad.Api/AlphaSquad.Api.csproj" />
   </Folder>
   <Folder Name="/2-AlphaSquad.Infrastructure/">
-    <Project Path="AlphaSquad.Infrastructure/AlphaSquad.Infrastructure.csproj" />
+    <Project Path="src/AlphaSquad.Infrastructure/AlphaSquad.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/3-AlphaSquad.Shared/">
-    <Project Path="AlphaSquad.Shared/AlphaSquad.Shared.csproj" />
+    <Project Path="src/AlphaSquad.Shared/AlphaSquad.Shared.csproj" />
   </Folder>
 </Solution>
