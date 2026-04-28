@@ -10,4 +10,17 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AlphaSquad.Infrastructure\AlphaSquad.Infrastructure.csproj" />
+    <ProjectReference Include="..\AlphaSquad.Shared\AlphaSquad.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Auth\" />
+    <Folder Include="Features\Users\" />
+    <Folder Include="Features\Tenants\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Middleware\" />
+  </ItemGroup>
+
 </Project>
