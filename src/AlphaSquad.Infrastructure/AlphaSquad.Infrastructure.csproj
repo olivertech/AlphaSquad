@@ -13,7 +13,6 @@
   <ItemGroup>
     <Folder Include="Auth\" />
     <Folder Include="Tenancy\" />
-    <Folder Include="Persistence\" />
   </ItemGroup>
 
   <ItemGroup>
