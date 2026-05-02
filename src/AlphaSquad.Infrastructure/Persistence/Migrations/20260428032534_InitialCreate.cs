@@ -11,6 +11,9 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS citext;");
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS unaccent;");
+
             migrationBuilder.CreateTable(
                 name: "Tenants",
                 columns: table => new
@@ -74,6 +77,9 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "Tenants");
+
+            migrationBuilder.Sql("DROP EXTENSION IF EXISTS unaccent;");
+            migrationBuilder.Sql("DROP EXTENSION IF EXISTS citext;");
         }
     }
 }

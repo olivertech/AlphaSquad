@@ -29,7 +29,7 @@ public class AppDbContext : DbContext
             entity.ToTable("Users");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
-            entity.Property(x => x.Email).HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Email).HasColumnType("citext").HasMaxLength(150).IsRequired(); //O citext é um tipo de texto case-insensitive do PostgreSQL
             entity.Property(x => x.PasswordHash).IsRequired();
             entity.Property(x => x.Role).HasConversion<int>().IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.Email }).IsUnique();

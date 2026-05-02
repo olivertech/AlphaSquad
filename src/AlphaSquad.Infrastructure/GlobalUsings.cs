@@ -6,3 +6,4 @@ global using System.Collections.Generic;
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Design;
+global using BCrypt.Net;
