@@ -1,9 +1,10 @@
 ﻿// App namespaces
 global using AlphaSquad.Shared.Enums;
+global using AlphaSquad.Infrastructure.Persistence;
 // System namespaces
 global using System;
 global using System.Collections.Generic;
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Design;
-global using BCrypt.Net;
+global using System.Text;

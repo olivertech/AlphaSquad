@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
-    <Folder Include="Features\Auth\" />
     <Folder Include="Features\Users\" />
     <Folder Include="Features\Tenants\" />
     <Folder Include="Extensions\" />
