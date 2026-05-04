@@ -1,4 +1,6 @@
-﻿namespace AlphaSquad.Api.Features.Auth;
+﻿using System.Security.Claims;
+
+namespace AlphaSquad.Api.Features.Auth;
 
 public static class AuthEndpoints
 {
@@ -15,9 +17,12 @@ public static class AuthEndpoints
     /// <returns></returns>
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
+        #region Grupos Auth
+
         var group = app.MapGroup("/api/auth")
             .WithTags("Auth");
 
+        // Endpoint de login, que é público (AllowAnonymous) e retorna um token JWT em caso de sucesso.
         group.MapPost("/login", LoginAsync)
             .AllowAnonymous()
             .WithName("Login")
@@ -25,7 +30,36 @@ public static class AuthEndpoints
             .Produces<string>(StatusCodes.Status400BadRequest)
             .Produces<string>(StatusCodes.Status401Unauthorized);
 
+        // Endpoint para obter informações do usuário autenticado (me), que requer autenticação (RequireAuthorization).
+        group.MapGet("/me", MeAsync)
+            .RequireAuthorization()
+            .WithName("Me")
+            .Produces<AuthenticatedUserResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        #endregion
+
         return app;
+    }
+
+    private static IResult MeAsync(ClaimsPrincipal user)
+    {
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        var name = user.FindFirstValue(ClaimTypes.Name);
+        var email = user.FindFirstValue(ClaimTypes.Email);
+        var role = user.FindFirstValue(ClaimTypes.Role);
+        var tenantId = user.FindFirstValue("tenant_id");
+        var tenantSlug = user.FindFirstValue("tenant_slug");
+
+        return Results.Ok(new
+        {
+            UserId = userId,
+            Name = name,
+            Email = email,
+            Role = role,
+            TenantId = tenantId,
+            TenantSlug = tenantSlug
+        });
     }
 
     private static async Task<IResult> LoginAsync([FromBody] LoginRequest request,
