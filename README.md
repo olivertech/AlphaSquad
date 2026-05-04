@@ -67,11 +67,12 @@ AlphaSquad/
 * Entity Framework Core
 * Dapper
 * PostgreSQL
+* Redis (rodando em container)
 
 ### Infraestrutura
 
 * VPS (Hostinger)
-* Docker (futuro)
+* Docker
 * Armazenamento local (fase inicial)
 
 ### Mobile (futuro)
