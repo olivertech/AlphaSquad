@@ -17,8 +17,6 @@ public static class AuthEndpoints
     /// <returns></returns>
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        #region Grupos Auth
-
         var group = app.MapGroup("/api/auth")
             .WithTags("Auth");
 
@@ -36,9 +34,7 @@ public static class AuthEndpoints
             .WithName("Me")
             .Produces<AuthenticatedUserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
-
-        #endregion
-
+        
         return app;
     }
 

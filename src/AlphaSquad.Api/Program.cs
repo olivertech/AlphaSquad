@@ -1,8 +1,3 @@
-using AlphaSquad.Api.Features.Auth;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -106,6 +101,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Em vez de usar MapControllers, registramos os endpoints de autenticação e tenants diretamente,
 app.MapAuthEndpoints();
+app.MapTenantEndpoints();
 
 app.Run();

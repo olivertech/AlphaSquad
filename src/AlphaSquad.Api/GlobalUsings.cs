@@ -1,8 +1,13 @@
 ﻿// App namespaces
 global using AlphaSquad.Infrastructure.Persistence;
 global using AlphaSquad.Shared.Contracts;
+global using AlphaSquad.Api.Features.Auth;
+global using AlphaSquad.Api.Features.Tenants;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;
 global using AlphaSquad.Infrastructure.Auth;
 global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.IdentityModel.Tokens;
+global using Microsoft.OpenApi.Models;
