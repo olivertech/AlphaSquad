@@ -1,6 +1,6 @@
 ﻿namespace AlphaSquad.Infrastructure.Auth;
 
-public class BCryptPasswordHasher : IPasswordHasher
+public class BCryptPasswordHasher : IBCryptPasswordHasher
 {
     public string Hash(string password)
     {

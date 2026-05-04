@@ -30,7 +30,7 @@ public static class AuthEndpoints
 
     private static async Task<IResult> LoginAsync([FromBody] LoginRequest request,
                                                   AppDbContext db,
-                                                  IPasswordHasher passwordHasher,
+                                                  IBCryptPasswordHasher passwordHasher,
                                                   IJwtService jwtService)
     {
         if (string.IsNullOrWhiteSpace(request.TenantSlug) ||
@@ -43,8 +43,7 @@ public static class AuthEndpoints
         var tenantSlug = request.TenantSlug.Trim().ToLower();
         var email = request.Email.Trim();
 
-        var tenant = await db.Tenants
-            .FirstOrDefaultAsync(x => x.Slug == tenantSlug && x.IsActive);
+        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Slug == tenantSlug && x.IsActive);
 
         if (tenant is null)
             return Results.Unauthorized();

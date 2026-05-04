@@ -1,6 +1,6 @@
 ﻿namespace AlphaSquad.Infrastructure.Auth;
 
-public interface IPasswordHasher
+public interface IBCryptPasswordHasher
 {
     string Hash(string password);
     bool Verify(string password, string passwordHash);

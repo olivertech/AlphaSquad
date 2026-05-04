@@ -7,9 +7,9 @@ namespace AlphaSquad.Infrastructure.Persistence;
 public class DatabaseSeeder
 {
     private readonly AppDbContext _db;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly IBCryptPasswordHasher _passwordHasher;
 
-    public DatabaseSeeder(AppDbContext db, IPasswordHasher passwordHasher)
+    public DatabaseSeeder(AppDbContext db, IBCryptPasswordHasher passwordHasher)
     {
         _db = db;
         _passwordHasher = passwordHasher;

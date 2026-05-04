@@ -47,7 +47,7 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+builder.Services.AddScoped<IBCryptPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<DatabaseSeeder>();
 
 var app = builder.Build();
