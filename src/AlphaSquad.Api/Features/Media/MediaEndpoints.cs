@@ -32,15 +32,9 @@ public static class MediaEndpoints
         return app;
     }
 
-    private static async Task<IResult> UploadAsync(HttpRequest request, AppDbContext db, IObjectStorageService storage, HttpContext context)
+    private static async Task<IResult> UploadAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, HttpContext context)
     {
         // 1. Validação do arquivo
-        if (!request.HasFormContentType)
-            return Results.BadRequest("Invalid content type.");
-
-        var form = await request.ReadFormAsync();
-        var file = form.Files.FirstOrDefault();
-
         if (file == null || file.Length == 0)
             return Results.BadRequest("File is required.");
 
@@ -56,7 +50,7 @@ public static class MediaEndpoints
 
         var result = await storage.UploadAsync(
             stream,
-            file.FileName,
+            file.FileName.ToLower(),
             file.ContentType,
             path
         );
