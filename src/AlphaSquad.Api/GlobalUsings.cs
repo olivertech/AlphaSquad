@@ -7,6 +7,7 @@ global using AlphaSquad.Api.DependencyInjections;
 global using AlphaSquad.Infrastructure.Caching;
 global using AlphaSquad.Infrastructure.Storage;
 global using AlphaSquad.Api.Features.Media;
+global using AlphaSquad.Shared.Helpers;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;

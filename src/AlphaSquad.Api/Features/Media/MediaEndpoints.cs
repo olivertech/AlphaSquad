@@ -1,4 +1,6 @@
-﻿namespace AlphaSquad.Api.Features.Media;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+
+namespace AlphaSquad.Api.Features.Media;
 
 /// <summary>
 /// O MapMediaEndpoints define os endpoints relacionados à mídia, como upload de arquivos. 
@@ -30,25 +32,57 @@ public static class MediaEndpoints
         return app;
     }
 
-    private static async Task<IResult> UploadAsync(IFormFile file, IObjectStorageService storage)
+    private static async Task<IResult> UploadAsync(HttpRequest request, AppDbContext db, IObjectStorageService storage, HttpContext context)
     {
+        // 1. Validação do arquivo
+        if (!request.HasFormContentType)
+            return Results.BadRequest("Invalid content type.");
+
+        var form = await request.ReadFormAsync();
+        var file = form.Files.FirstOrDefault();
+
         if (file == null || file.Length == 0)
             return Results.BadRequest("File is required.");
 
-        var path = "tenants/demo/uploads"; // TODO: evoluir isso depois para TenantId real
+        // 2. Recupera os dados do Tenant vindo do JWT
+        var tenantId = context.GetTenantId();
+        var tenantSlug = context.GetTenantSlug();
 
+        // 3. Caminho lógico no storage
+        var path = $"tenants/{tenantSlug}/media";
+
+        // 4. Upload
         using var stream = file.OpenReadStream();
 
-        var url = await storage.UploadAsync(
+        var result = await storage.UploadAsync(
             stream,
             file.FileName,
             file.ContentType,
             path
         );
 
-        return Results.Ok(new UploadMediaResponse
+        // 5. Persistência no banco
+        var media = new TenantMedia
         {
-            Url = url
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            FileName = file.FileName,
+            ContentType = file.ContentType,
+            Size = file.Length,
+            StorageKey = result.Key,
+            Url = result.Url,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.TenantMedias.Add(media);
+        await db.SaveChangesAsync();
+
+        // 6. Retorno
+        return Results.Ok(new
+        {
+            media.Id,
+            media.Url,
+            media.FileName
         });
     }
 }

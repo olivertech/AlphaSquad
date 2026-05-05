@@ -2,5 +2,5 @@
 
 public interface IObjectStorageService
 {
-    Task<string> UploadAsync(Stream fileStream, string fileName, string contentType, string path);
+    Task<UploadResult> UploadAsync(Stream fileStream, string fileName, string contentType, string path);
 }
