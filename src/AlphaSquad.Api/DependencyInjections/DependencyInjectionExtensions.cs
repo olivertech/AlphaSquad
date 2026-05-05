@@ -15,6 +15,8 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IBCryptPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<DatabaseSeeder>();
 
+        services.AddSingleton<IObjectStorageService, CloudflareR2StorageService>();
+
         return services;
     }
 }

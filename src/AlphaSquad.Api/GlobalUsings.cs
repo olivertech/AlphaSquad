@@ -5,6 +5,8 @@ global using AlphaSquad.Api.Features.Auth;
 global using AlphaSquad.Api.Features.Tenants;
 global using AlphaSquad.Api.DependencyInjections;
 global using AlphaSquad.Infrastructure.Caching;
+global using AlphaSquad.Infrastructure.Storage;
+global using AlphaSquad.Api.Features.Media;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;
@@ -14,3 +16,5 @@ global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using Microsoft.IdentityModel.Tokens;
 global using Microsoft.OpenApi.Models;
 global using StackExchange.Redis;
+global using System.Security.Claims;
+global using Amazon.S3;

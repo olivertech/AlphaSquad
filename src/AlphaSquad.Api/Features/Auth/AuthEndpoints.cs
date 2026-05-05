@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-
-namespace AlphaSquad.Api.Features.Auth;
+﻿namespace AlphaSquad.Api.Features.Auth;
 
 public static class AuthEndpoints
 {

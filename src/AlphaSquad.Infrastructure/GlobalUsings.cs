@@ -1,6 +1,7 @@
 ﻿// App namespaces
 global using AlphaSquad.Shared.Enums;
 global using AlphaSquad.Infrastructure.Persistence;
+global using AlphaSquad.Infrastructure.Storage;
 // System namespaces
 global using System;
 global using System.Collections.Generic;
@@ -10,3 +11,5 @@ global using Microsoft.EntityFrameworkCore.Design;
 global using System.Text.Json;
 global using Microsoft.Extensions.Options;
 global using StackExchange.Redis;
+global using Amazon.S3;
+global using Amazon.S3.Model;

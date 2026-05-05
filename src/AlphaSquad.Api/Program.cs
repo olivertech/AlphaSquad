@@ -1,7 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona os serviços necessários para a aplicação, incluindo controladores, dependências personalizadas, 
-// e configuração do Swagger para documentação da API.
 builder.Services.AddControllers();
 builder.Services.AddDependencies();
 builder.Services.AddEndpointsApiExplorer();
@@ -42,23 +40,22 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Configura o Entity Framework Core para usar o PostgreSQL como banco de dados, utilizando a string de conexão definida no appsettings.json.
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 // Configura as opções de JWT a partir da seção "Jwt" do appsettings.json, permitindo que sejam injetadas em outros serviços.
-builder.Services.Configure<JwtOptions>(
-    builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
-var jwtOptions = builder.Configuration
-    .GetSection("Jwt")
-    .Get<JwtOptions>()!;
-
+//var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
+
         options.RequireHttpsMetadata = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -78,16 +75,35 @@ builder.Services
     });
 
 // Configura as opções de Redis a partir da seção "Redis" do appsettings.json, permitindo que sejam injetadas em outros serviços.
-builder.Services.Configure<RedisOptions>(
-    builder.Configuration.GetSection("Redis"));
+builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection("Redis"));
 
-var redisOptions = builder.Configuration
-    .GetSection("Redis")
-    .Get<RedisOptions>()!;
-
+//var redisOptions = builder.Configuration.GetSection("Redis").Get<RedisOptions>()!;
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
 {
+    var redisOptions = builder.Configuration.GetSection("Redis").Get<RedisOptions>()!;
     return ConnectionMultiplexer.Connect(redisOptions.ConnectionString);
+});
+
+// Configura as opções de armazenamento a partir da seção "Storage" do appsettings.json, permitindo que sejam injetadas em outros
+// serviços relacionados ao armazenamento de arquivos, como o Cloudflare R2.
+builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
+
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var options = config.GetSection("Storage").Get<StorageOptions>();
+
+    var s3Config = new AmazonS3Config
+    {
+        ServiceURL = $"https://{options!.Endpoint}",
+        ForcePathStyle = true
+    };
+
+    return new AmazonS3Client(
+        options.AccessKey,
+        options.SecretKey,
+        s3Config
+    );
 });
 
 builder.Services.AddAuthorization();
@@ -114,8 +130,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Em vez de usar MapControllers, registramos os endpoints de autenticação e tenants diretamente,
+// Em vez de usar MapControllers, registramos os endpoints de autenticação, tenants e media diretamente,
+// utilizando os métodos de extensão MapAuthEndpoints, MapTenantEndpoints e MapMediaEndpoints.
 app.MapAuthEndpoints();
 app.MapTenantEndpoints();
+app.MapMediaEndpoints();
 
 app.Run();
