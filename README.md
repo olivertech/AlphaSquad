@@ -1,25 +1,23 @@
 # 🚀 AlphaSquad Platform
 
-**AlphaSquad** é uma plataforma SaaS white-label voltada para academias, focada em **engajamento, retenção de alunos e experiência mobile**.
+**AlphaSquad** é uma plataforma SaaS **white-label para academias**, focada em **engajamento, retenção de alunos e experiência mobile**.
 
-A proposta do projeto é permitir que academias tenham **seu próprio aplicativo personalizado**, mantendo uma base única, escalável e multi-tenant no backend.
+A proposta é permitir que academias tenham **seu próprio aplicativo personalizado**, sustentado por uma arquitetura **multi-tenant escalável e performática**.
 
 ---
 
 ## 🎯 Objetivo do Projeto
 
-Criar uma plataforma que permita academias:
+Permitir que academias:
 
-* Ter um app próprio com sua marca (white-label)
-* Engajar alunos com treinos, desafios e comunicação
-* Aumentar retenção e frequência
-* Centralizar operações mobile
+* Tenham um app próprio com sua marca (white-label)
+* Engajem alunos com treinos, desafios e comunicação
+* Aumentem retenção e frequência
+* Centralizem operações mobile
 
 ---
 
 ## 🧠 Visão do Produto
-
-O AlphaSquad não é apenas um app, mas sim uma:
 
 > **Plataforma de engajamento para academias com foco em retenção de alunos**
 
@@ -27,12 +25,12 @@ O AlphaSquad não é apenas um app, mas sim uma:
 
 ## 🧱 Arquitetura
 
-O projeto segue uma abordagem **clean minimalista**, com foco em:
+Abordagem **clean minimalista**, com foco em:
 
 * Simplicidade
 * Escalabilidade
-* Manutenibilidade
 * Performance
+* Manutenibilidade
 
 ### Estrutura da Solution
 
@@ -41,8 +39,8 @@ AlphaSquad/
 │
 ├── src/
 │   ├── AlphaSquad.Api              → API principal (ASP.NET Core)
-│   ├── AlphaSquad.Infrastructure   → Acesso a dados, EF Core, Dapper
-│   └── AlphaSquad.Shared           → Contratos, enums e modelos compartilhados
+│   ├── AlphaSquad.Infrastructure   → Dados, EF Core, Dapper, Redis
+│   └── AlphaSquad.Shared           → Contratos e modelos compartilhados
 │
 └── AlphaSquad.sln
 ```
@@ -54,7 +52,8 @@ AlphaSquad/
 * **Vertical Slice (Feature-first)**
 * **EF Core** → comandos (INSERT, UPDATE, DELETE)
 * **Dapper** → consultas (SELECT)
-* **Multi-tenant com banco compartilhado (TenantId)**
+* **Redis** → cache distribuído
+* **Multi-tenant (TenantId)**
 
 ---
 
@@ -67,7 +66,7 @@ AlphaSquad/
 * Entity Framework Core
 * Dapper
 * PostgreSQL
-* Redis (rodando em container)
+* Redis (Docker)
 
 ### Infraestrutura
 
@@ -81,13 +80,95 @@ AlphaSquad/
 
 ---
 
-## 🧠 Conceito White-Label
+## ⚡ Cache Distribuído com Redis
 
-A plataforma foi projetada para atender múltiplas academias:
+O projeto utiliza Redis para otimizar performance em leituras frequentes.
+
+### Estratégia adotada
+
+```text
+Cache-aside (lazy loading)
+```
+
+### Fluxo
+
+1. Requisição consulta Redis
+2. Se existir → retorna (cache hit)
+3. Se não existir → busca no banco (cache miss)
+4. Armazena no Redis com TTL
+5. Retorna resposta
+
+---
+
+### 🔁 Invalidação de Cache
+
+Implementada via eventos de escrita:
+
+```text
+PUT → invalida cache
+GET → reidrata cache
+```
+
+Exemplo:
+
+```csharp
+await cache.RemoveAsync(CacheKeys.TenantConfig(slug));
+```
+
+---
+
+### 🧠 Benefícios
+
+* Redução de carga no banco
+* Resposta mais rápida
+* Escalabilidade horizontal
+* Isolamento por tenant
+
+---
+
+### 🔑 Padrão de chave
+
+```text
+AlphaSquad:tenant-config:{slug}
+```
+
+---
+
+### ⏱️ TTL (Time-To-Live)
+
+* Controle de expiração configurável
+* Evita dados obsoletos permanentes
+* Mantém Redis como cache, não fonte de verdade
+
+---
+
+## 🧪 Monitoramento com RedisInsight
+
+Para inspeção e validação do cache, o projeto utiliza:
+
+👉 **RedisInsight**
+
+### Permite:
+
+* Visualizar chaves em tempo real
+* Inspecionar valores JSON
+* Monitorar TTL
+* Validar cache hits/misses
+* Debug de comportamento do sistema
+
+Exemplo de chave visualizada:
+
+```text
+AlphaSquad:tenant-config:alpha-demo
+```
+
+---
+
+## 🧠 Conceito White-Label
 
 * Backend único
 * Banco único (multi-tenant)
-* Aplicativo customizado por academia:
+* App customizado por academia:
 
   * Logo
   * Cores
@@ -97,13 +178,13 @@ A plataforma foi projetada para atender múltiplas academias:
 
 ## 🔐 Multi-Tenancy
 
-O isolamento de dados é feito via:
+Isolamento via:
 
 ```text
 TenantId
 ```
 
-Todas as entidades possuem vínculo com um tenant.
+Todas as entidades são vinculadas a um tenant.
 
 ---
 
@@ -121,7 +202,7 @@ Todas as entidades possuem vínculo com um tenant.
 
 ## 🗄️ Banco de Dados
 
-### Principais entidades iniciais
+### Entidades iniciais
 
 * Tenants
 * Users
@@ -136,7 +217,7 @@ Todas as entidades possuem vínculo com um tenant.
 
 ## 🚀 Como rodar o projeto
 
-### 1. Clonar o repositório
+### 1. Clonar
 
 ```bash
 git clone https://github.com/seu-usuario/alphasquad.git
@@ -145,9 +226,15 @@ cd alphasquad
 
 ---
 
-### 2. Configurar o banco PostgreSQL
+### 2. Subir Redis (Docker)
 
-Certifique-se de ter um banco criado:
+```bash
+docker run -d -p 6379:6379 redis
+```
+
+---
+
+### 3. Configurar PostgreSQL
 
 ```text
 Database: alphasquad_db
@@ -155,23 +242,21 @@ Database: alphasquad_db
 
 ---
 
-### 3. Configurar connection string
-
-Arquivo:
-
-```text
-src/AlphaSquad.Api/appsettings.json
-```
+### 4. Configurar connection strings
 
 ```json
 "ConnectionStrings": {
   "DefaultConnection": "Host=localhost;Port=5432;Database=alphasquad_db;Username=postgres;Password=SUA_SENHA"
+},
+"Redis": {
+  "ConnectionString": "localhost:6379",
+  "InstanceName": "AlphaSquad:"
 }
 ```
 
 ---
 
-### 4. Rodar migrations
+### 5. Rodar migrations
 
 ```bash
 dotnet ef database update \
@@ -181,7 +266,7 @@ dotnet ef database update \
 
 ---
 
-### 5. Executar a API
+### 6. Executar API
 
 ```bash
 dotnet run --project src/AlphaSquad.Api
@@ -189,7 +274,7 @@ dotnet run --project src/AlphaSquad.Api
 
 ---
 
-### 6. Acessar Swagger
+### 7. Swagger
 
 ```text
 https://localhost:7054/swagger
@@ -200,7 +285,8 @@ https://localhost:7054/swagger
 ## 📦 Padrões utilizados
 
 * Clean Architecture (minimalista)
-* Feature-based organization
+* Vertical Slice Architecture
+* Cache-aside pattern
 * Separation of concerns
 * Dependency Injection
 
@@ -210,11 +296,12 @@ https://localhost:7054/swagger
 
 🚧 Em desenvolvimento inicial
 
-Módulos atuais:
+### Módulos
 
-* [x] Estrutura base da solution
-* [x] Configuração EF Core + PostgreSQL
-* [x] Migrations iniciais
+* [x] Estrutura base
+* [x] EF Core + PostgreSQL
+* [x] Redis (cache distribuído)
+* [x] Cache-aside + invalidação
 * [ ] Autenticação JWT
 * [ ] Multi-tenant middleware
 * [ ] App MAUI
@@ -244,7 +331,7 @@ Módulos atuais:
 ### Fase 4
 
 * Social
-* Agenda de aulas
+* Agenda
 
 ---
 
@@ -252,8 +339,9 @@ Módulos atuais:
 
 * Arquitetura simples e escalável
 * Multi-tenant desde o início
-* Preparado para offline-first (mobile)
-* Integração futura com IA
+* Cache distribuído com Redis
+* Preparado para mobile offline-first
+* Base para expansão com IA
 
 ---
 
@@ -261,10 +349,5 @@ Módulos atuais:
 
 Marcelo Oliveira
 Senior .NET Developer
-[LinkedIn](https://www.linkedin.com/in/marcelo-de-oliveira-60b26514/)
+🔗 [https://www.linkedin.com/in/marcelo-de-oliveira-60b26514/](https://www.linkedin.com/in/marcelo-de-oliveira-60b26514/)
 
----
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
