@@ -1,14 +1,3 @@
-Seu README já está sólido. Vou fazer um upgrade focado em:
-
-* Mostrar **uso real de Redis (não só “tem Redis”)**
-* Demonstrar **maturidade arquitetural**
-* Incluir **RedisInsight como ferramenta profissional**
-* Deixar mais “vendável” para recrutador/dev técnico
-
-Segue versão atualizada 👇
-
----
-
 # 🚀 AlphaSquad Platform
 
 **AlphaSquad** é uma plataforma SaaS **white-label para academias**, focada em **engajamento, retenção de alunos e experiência mobile**.
