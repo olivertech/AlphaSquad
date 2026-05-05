@@ -1,5 +1,16 @@
 ﻿namespace AlphaSquad.Api.Features.Media;
 
+/// <summary>
+/// O MapMediaEndpoints define os endpoints relacionados à mídia, como upload de arquivos. 
+/// Ele é usado para organizar e agrupar as rotas de mídia sob um prefixo 
+/// comum (/api/media) e aplicar tags para documentação.
+/// Com essa classe e método, o código de configuração dos endpoints de mídia 
+/// fica centralizado e fácil de manter, além de melhorar a clareza e a organização do código da API.
+/// No Program.cs, o método MapMediaEndpoints é chamado para registrar esses endpoints na aplicação, 
+/// ao invés de chamar MapControllers, garantindo que as rotas de mídia estejam disponíveis para os clientes da API.
+/// </summary>
+/// <param name="app"></param>
+/// <returns></returns>
 public static class MediaEndpoints
 {
     public static IEndpointRouteBuilder MapMediaEndpoints(this IEndpointRouteBuilder app)
