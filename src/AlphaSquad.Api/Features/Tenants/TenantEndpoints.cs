@@ -18,22 +18,94 @@ public static class TenantEndpoints
         var group = app.MapGroup("/api/tenants")
             .WithTags("Tenants");
 
+        // Endpoint para obter as informações de um tenant com base no slug fornecido. Ele é público (AllowAnonymous)
+        // para permitir que clientes obtenham as informações do tenant sem necessidade de autenticação.
         group.MapGet("/by-slug/{slug}", GetBySlugAsync)
             .AllowAnonymous()
             .WithName("GetTenantBySlug")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+        // Endpoint para atualizar as informações de um tenant existente. Ele recebe o ID do tenant a ser atualizado,
+        // juntamente com os novos dados fornecidos no request. Ele requer autenticação (RequireAuthorization) para garantir
+        // que apenas usuários autorizados possam atualizar as informações do tenant.
+        group.MapPut("/{id:guid}", UpdateAsync)
+            .RequireAuthorization()
+            .WithName("UpdateTenant")
+            .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
     }
 
-    private static async Task<IResult> GetBySlugAsync(string slug, AppDbContext db)
+    /// <summary>
+    /// Endpoint para atualizar as informações de um tenant existente. Ele recebe o ID do tenant a ser atualizado,
+    /// juntamente com os novos dados fornecidos no request.
+    /// </summary>
+    /// <param name="id">O ID do tenant a ser atualizado.</param>
+    /// <param name="request">Os novos dados do tenant.</param>
+    /// <param name="db">O contexto do banco de dados.</param>
+    /// <param name="cache">O serviço de cache.</param>
+    /// <returns>O resultado da operação de atualização.</returns>
+    private static async Task<IResult> UpdateAsync(Guid id, UpdateTenantRequest request, AppDbContext db, IRedisCacheService cache)
+    {
+        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == id);
+
+        if (tenant is null)
+            return Results.NotFound();
+
+        var oldSlug = tenant.Slug;
+
+        tenant.Name = request.Name.Trim();
+        tenant.LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl)
+            ? null
+            : request.LogoUrl.Trim();
+
+        tenant.PrimaryColor = request.PrimaryColor.Trim();
+        tenant.SecondaryColor = request.SecondaryColor.Trim();
+
+        await db.SaveChangesAsync();
+
+        // Após atualizar o tenant, é importante remover a configuração antiga do cache para
+        // garantir que as próximas requisições obtenham os dados atualizados do banco de dados.
+        await cache.RemoveAsync(CacheKeys.TenantConfig(oldSlug));
+
+        var response = new TenantConfigResponse
+        {
+            Id = tenant.Id,
+            Name = tenant.Name,
+            Slug = tenant.Slug,
+            LogoUrl = tenant.LogoUrl,
+            PrimaryColor = tenant.PrimaryColor,
+            SecondaryColor = tenant.SecondaryColor,
+            IsActive = tenant.IsActive
+        };
+
+        return Results.Ok(response);
+    }
+
+    /// <summary>
+    /// Endpoint para obter as informações de um tenant com base no slug fornecido.
+    /// </summary>
+    /// <param name="slug">O slug do tenant.</param>
+    /// <param name="db">O contexto do banco de dados.</param>
+    /// <param name="cache">O serviço de cache.</param>
+    /// <returns>As informações do tenant ou um status de erro.</returns>
+    private static async Task<IResult> GetBySlugAsync(string slug, AppDbContext db, IRedisCacheService cache)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return Results.BadRequest("Tenant slug is required.");
 
         var normalizedSlug = slug.Trim().ToLower();
 
+        var cacheKey = CacheKeys.TenantConfig(normalizedSlug);
+
+        var cachedTenant = await cache.GetAsync<TenantConfigResponse>(cacheKey);
+
+        // Se a configuração do tenant estiver presente no cache, retorna-a imediatamente para melhorar a performance
+        if (cachedTenant is not null)
+            return Results.Ok(cachedTenant);
+                                                                                        
         var tenant = await db.Tenants
             .AsNoTracking()
             .Where(x => x.Slug == normalizedSlug && x.IsActive)
@@ -51,6 +123,12 @@ public static class TenantEndpoints
 
         if (tenant is null)
             return Results.NotFound();
+
+        // Guarda a configuração do tenant no cache por 30 minutos para melhorar a performance em futuras requisições
+        await cache.SetAsync(
+            cacheKey,
+            tenant,
+            TimeSpan.FromMinutes(30));
 
         return Results.Ok(tenant);
     }

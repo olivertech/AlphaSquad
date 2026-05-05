@@ -38,6 +38,11 @@ public static class AuthEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Endpoint para obter informações do usuário autenticado (me), que requer autenticação (RequireAuthorization).
+    /// </summary>
+    /// <param name="user">O usuário autenticado.</param>
+    /// <returns>As informações do usuário autenticado.</returns>
     private static IResult MeAsync(ClaimsPrincipal user)
     {
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -58,6 +63,14 @@ public static class AuthEndpoints
         });
     }
 
+    /// <summary>
+    /// Endpoint de login, que é público (AllowAnonymous) e retorna um token JWT em caso de sucesso.
+    /// </summary>
+    /// <param name="request">O objeto de requisição de login.</param>
+    /// <param name="db">O contexto do banco de dados.</param>
+    /// <param name="passwordHasher">O serviço de hash de senhas.</param>
+    /// <param name="jwtService">O serviço de geração de tokens JWT.</param>
+    /// <returns>O resultado da operação de login.</returns>
     private static async Task<IResult> LoginAsync([FromBody] LoginRequest request,
                                                   AppDbContext db,
                                                   IBCryptPasswordHasher passwordHasher,

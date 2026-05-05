@@ -1,10 +1,13 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// Adiciona os serviços necessários para a aplicação, incluindo controladores, dependências personalizadas, 
+// e configuração do Swagger para documentação da API.
 builder.Services.AddControllers();
-
+builder.Services.AddDependencies();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddEndpointsApiExplorer();
 
+// Configura o Swagger para gerar a documentação da API, incluindo a definição de segurança para autenticação JWT.
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -44,14 +47,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+// Configura as opções de JWT a partir da seção "Jwt" do appsettings.json, permitindo que sejam injetadas em outros serviços.
 builder.Services.Configure<JwtOptions>(
     builder.Configuration.GetSection("Jwt"));
 
 var jwtOptions = builder.Configuration
     .GetSection("Jwt")
     .Get<JwtOptions>()!;
-
-builder.Services.AddScoped<IJwtService, JwtService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -75,10 +77,20 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+// Configura as opções de Redis a partir da seção "Redis" do appsettings.json, permitindo que sejam injetadas em outros serviços.
+builder.Services.Configure<RedisOptions>(
+    builder.Configuration.GetSection("Redis"));
 
-builder.Services.AddScoped<IBCryptPasswordHasher, BCryptPasswordHasher>();
-builder.Services.AddScoped<DatabaseSeeder>();
+var redisOptions = builder.Configuration
+    .GetSection("Redis")
+    .Get<RedisOptions>()!;
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+{
+    return ConnectionMultiplexer.Connect(redisOptions.ConnectionString);
+});
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
