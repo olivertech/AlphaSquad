@@ -44,7 +44,54 @@ public static class MediaEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapGet("/", GetAllAsync)
+            .RequireAuthorization()
+            .WithName("GetTenantMedias")
+            .Produces<List<TenantMediaResponse>>(StatusCodes.Status200OK);
+
         return app;
+    }
+
+    private static async Task<IResult> GetAllAsync(AppDbContext db,
+                                                   HttpContext context,
+                                                   int page = 1,
+                                                   int pageSize = 20)
+    {
+        var tenantId = context.GetTenantId();
+
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize is < 1 or > 100 ? 20 : pageSize;
+
+        var query = db.TenantMedias
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId);
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new TenantMediaResponse
+            {
+                Id = x.Id,
+                TenantId = x.TenantId,
+                FileName = x.FileName,
+                ContentType = x.ContentType,
+                Size = x.Size,
+                StorageKey = x.StorageKey,
+                Url = x.Url,
+                CreatedAt = x.CreatedAt
+            })
+            .ToListAsync();
+
+        return Results.Ok(new
+        {
+            page,
+            pageSize,
+            total,
+            items
+        });
     }
 
     private static async Task<IResult> ReplaceFileAsync(Guid id, 
@@ -94,7 +141,7 @@ public static class MediaEndpoints
         {
             Id = media.Id,
             TenantId = media.TenantId,
-            FileName = media.FileName,
+            FileName = media.FileName.ToLower(),
             ContentType = media.ContentType,
             Size = media.Size,
             StorageKey = media.StorageKey,
@@ -149,7 +196,7 @@ public static class MediaEndpoints
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            FileName = file.FileName,
+            FileName = file.FileName.ToLower(),
             ContentType = file.ContentType,
             Size = file.Length,
             StorageKey = result.Key,
