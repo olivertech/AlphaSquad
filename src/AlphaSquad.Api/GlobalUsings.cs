@@ -9,10 +9,10 @@ global using AlphaSquad.Infrastructure.Storage;
 global using AlphaSquad.Api.Features.Media;
 global using AlphaSquad.Shared.Helpers;
 global using AlphaSquad.Api.Features.Users;
+global using AlphaSquad.Infrastructure.Auth;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;
-global using AlphaSquad.Infrastructure.Auth;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using Microsoft.IdentityModel.Tokens;
@@ -20,3 +20,5 @@ global using Microsoft.OpenApi.Models;
 global using StackExchange.Redis;
 global using System.Security.Claims;
 global using Amazon.S3;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Security.Cryptography;

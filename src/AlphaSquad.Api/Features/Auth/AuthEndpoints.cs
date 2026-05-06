@@ -255,6 +255,7 @@ public static class AuthEndpoints
     /// <summary>
     /// Endpoint para alteração de senha.
     /// Valida a senha atual antes de permitir a atualização para garantir que o usuário está autenticado.
+    /// Após a troca, revoga todos os tokens de atualização para forçar um novo login em todos os dispositivos.
     /// </summary>
     /// <param name="request">Objeto com a senha atual e a nova senha.</param>
     /// <param name="db">O contexto do banco de dados.</param>
@@ -269,7 +270,11 @@ public static class AuthEndpoints
         if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
             return Results.BadRequest("Current and new passwords are required.");
 
-        var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier));
+        var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim))
+            return Results.Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim);
         var appUser = await db.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
         if (appUser is null)
@@ -281,9 +286,18 @@ public static class AuthEndpoints
 
         // Atualiza para a nova senha com novo hash.
         appUser.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        
+        // Por segurança, revoga todos os Refresh Tokens ativos do usuário ao alterar a senha.
+        // Isso impede que sessões antigas continuem ativas após a troca de senha.
+        var tokens = await db.RefreshTokens.Where(x => x.UserId == userId && !x.IsRevoked).ToListAsync();
+        foreach (var token in tokens)
+        {
+            token.IsRevoked = true;
+        }
+
         await db.SaveChangesAsync();
 
-        return Results.Ok("Password changed successfully.");
+        return Results.Ok("Password changed successfully and all active sessions were terminated.");
     }
 
     /// <summary>
@@ -295,7 +309,11 @@ public static class AuthEndpoints
     /// <returns>NoContent em caso de sucesso.</returns>
     private static async Task<IResult> LogoutAsync(AppDbContext db, ClaimsPrincipal user)
     {
-        var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier));
+        var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim))
+            return Results.Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim);
         var tokens = await db.RefreshTokens.Where(x => x.UserId == userId && !x.IsRevoked).ToListAsync();
         
         foreach (var token in tokens)
