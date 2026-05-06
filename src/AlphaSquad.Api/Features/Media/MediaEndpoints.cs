@@ -1,10 +1,5 @@
 namespace AlphaSquad.Api.Features.Media;
 
-using AlphaSquad.Infrastructure.Persistence;
-using AlphaSquad.Shared.Contracts;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-
 /// <summary>
 /// O MapMediaEndpoints define os endpoints relacionados à mídia, como upload de arquivos. 
 /// Ele é usado para organizar e agrupar as rotas de mídia sob um prefixo 

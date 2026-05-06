@@ -1,11 +1,5 @@
 ﻿namespace AlphaSquad.Api.Features.Tenants;
 
-using AlphaSquad.Infrastructure.Persistence;
-using AlphaSquad.Shared.Contracts;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using AlphaSquad.Infrastructure.Caching;
-
 public static class TenantEndpoints
 {
     /// <summary>

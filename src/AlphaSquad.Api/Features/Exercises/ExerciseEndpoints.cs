@@ -1,11 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using AlphaSquad.Infrastructure.Persistence;
-using AlphaSquad.Shared.DTOs.Exercises;
-
-namespace AlphaSquad.Api.Features.Exercises;
+﻿namespace AlphaSquad.Api.Features.Exercises;
 
 /// <summary>
 /// Define os endpoints para o gerenciamento de Exercícios.

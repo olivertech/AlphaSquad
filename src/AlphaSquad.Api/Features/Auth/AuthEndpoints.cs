@@ -1,12 +1,5 @@
 namespace AlphaSquad.Api.Features.Auth;
 
-using AlphaSquad.Infrastructure.Auth;
-using AlphaSquad.Infrastructure.Persistence;
-using AlphaSquad.Shared.Contracts;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
-
 public static class AuthEndpoints
 {
     /// <summary>

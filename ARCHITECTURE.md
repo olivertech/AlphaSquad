@@ -52,3 +52,4 @@ To prevent replay attacks, the system implements **Refresh Token Rotation**:
 - **Cache**: Redis keys follow the pattern `AlphaSquad:{category}:{identifier}`.
 - **Database**: PostgreSQL serves as the primary source of truth.
 
+

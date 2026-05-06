@@ -10,6 +10,7 @@ global using AlphaSquad.Api.Features.Media;
 global using AlphaSquad.Shared.Helpers;
 global using AlphaSquad.Api.Features.Users;
 global using AlphaSquad.Infrastructure.Auth;
+global using AlphaSquad.Shared.DTOs.Exercises;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;
