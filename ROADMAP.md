@@ -12,12 +12,12 @@ This document tracks the evolution and planned features of the AlphaSquad platfo
 - [x] Secure claims parsing for User IDs.
 
 ### Phase 2: Tenant, Media & Features ?
-- [ ] Model `Feature` and `TenantFeature` entities.
-- [ ] Seed base features and link to `alpha-demo` tenant.
-- [ ] Implement `GET /api/tenants/current`.
-- [ ] Implement `PUT /api/tenants/current/logo`.
-- [ ] Implement `GET /api/tenants/current/features`.
-- [ ] Implement `GET /api/media/{id}`.
+- [x] Model `Feature` and `TenantFeature` entities.
+- [x] Seed base features and link to `alpha-demo` tenant.
+- [x] Implement `GET /api/tenants/current`.
+- [x] Implement `PUT /api/tenants/current/logo` with automatic old file deletion.
+- [x] Implement `GET /api/tenants/current/features`.
+- [x] Implement `GET /api/media/{id}`.
 
 ### Phase 3: Workouts & Exercises ??
 - [ ] Implement Exercise CRUD.

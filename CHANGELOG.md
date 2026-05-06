@@ -15,3 +15,12 @@ All notable changes to the AlphaSquad project will be documented here.
 - **Database Relationships**: Fixed the missing Foreign Key relationship between `AppUser` and `RefreshToken`.
 - **Null Safety**: Resolved potential null reference warnings when parsing User IDs from JWT claims.
 - **Comments**: Restored and expanded technical documentation within the code for didactic purposes.
+
+## [2026-05-06] - Tenant, Media & Features Implementation
+### Added
+- **Feature Management**: Implementation of `Feature` and `TenantFeature` entities to control access to modules.
+- **Feature Seeding**: Automatic seeding of base features linked to the `alpha-demo` tenant.
+- **Tenant Current Endpoints**: Implementation of `/api/tenants/current` and `/api/tenants/current/features`.
+- **Logo Management**: Implementation of `PUT /api/tenants/current/logo` with automatic deletion of old files from Cloudflare R2.
+- **Media Details**: Implementation of `GET /api/media/{id}` with tenant isolation.
+- **Logo Association**: Linked `Tenant` to `TenantMedia` via `LogoMediaId` for better storage management.

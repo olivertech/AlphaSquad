@@ -48,5 +48,6 @@ To prevent replay attacks, the system implements **Refresh Token Rotation**:
 ## ?? Infrastructure Integration
 
 - **Storage**: Files are organized in Cloudflare R2 using the path: `tenants/{tenantSlug}/media/{guid}_{fileName}`.
+- **Logo Management**: Tenant logos are linked to the `TenantMedia` entity, allowing precise tracking and deletion of the binary file in storage when updated.
 - **Cache**: Redis keys follow the pattern `AlphaSquad:{category}:{identifier}`.
 - **Database**: PostgreSQL serves as the primary source of truth.
