@@ -1,4 +1,6 @@
-ï»¿namespace AlphaSquad.Infrastructure.Persistence;
+namespace AlphaSquad.Infrastructure.Persistence;
+
+using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
 {
@@ -10,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<TenantMedia> TenantMedias => Set<TenantMedia>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,7 +24,8 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
             entity.Property(x => x.Slug).HasMaxLength(100).IsRequired();
-            entity.HasIndex(x => x.Slug).IsUnique();entity.Property(x => x.PrimaryColor).HasMaxLength(10).IsRequired();
+            entity.HasIndex(x => x.Slug).IsUnique();
+            entity.Property(x => x.PrimaryColor).HasMaxLength(10).IsRequired();
             entity.Property(x => x.SecondaryColor).HasMaxLength(10).IsRequired();
         });
 
@@ -30,7 +34,7 @@ public class AppDbContext : DbContext
             entity.ToTable("Users");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
-            entity.Property(x => x.Email).HasColumnType("citext").HasMaxLength(150).IsRequired(); //O citext Ã© um tipo de texto case-insensitive do PostgreSQL
+            entity.Property(x => x.Email).HasColumnType("citext").HasMaxLength(150).IsRequired();
             entity.Property(x => x.PasswordHash).IsRequired();
             entity.Property(x => x.Role).HasConversion<int>().IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.Email }).IsUnique();
@@ -55,6 +59,20 @@ public class AppDbContext : DbContext
                 .WithMany(x => x.Medias)
                 .HasForeignKey(x => x.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.ToTable("RefreshTokens");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Token).IsRequired();
+            entity.HasIndex(x => x.Token).IsUnique();
+            
+            // Define explicitamente a relação 1:N entre AppUser e RefreshToken
+            entity.HasOne(x => x.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
