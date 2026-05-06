@@ -22,6 +22,17 @@ public class CloudflareR2StorageService : IObjectStorageService
         );
     }
 
+    public async Task DeleteAsync(string key)
+    {
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _options.BucketName,
+            Key = key
+        };
+
+        await _client.DeleteObjectAsync(request);
+    }
+
     public async Task<UploadResult> UploadAsync(Stream fileStream, string fileName, string contentType, string path)
     {
         var sanitizedFileName = fileName.Replace(" ", "_");

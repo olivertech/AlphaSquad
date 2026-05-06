@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-
-namespace AlphaSquad.Api.Features.Media;
+﻿namespace AlphaSquad.Api.Features.Media;
 
 /// <summary>
 /// O MapMediaEndpoints define os endpoints relacionados à mídia, como upload de arquivos. 
@@ -29,7 +27,98 @@ public static class MediaEndpoints
             .Produces<UploadMediaResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
+        // Atulizar a midia (ex: renomear o arquivo)
+        group.MapPut("/{id:guid}/file", ReplaceFileAsync)
+            .RequireAuthorization()
+            .DisableAntiforgery()
+            .WithName("ReplaceMediaFile")
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces<TenantMediaResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound);
+
+        // Deletar a mídia
+        group.MapDelete("/{id:guid}", DeleteAsync)
+            .RequireAuthorization()
+            .WithName("DeleteMedia")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
+    }
+
+    private static async Task<IResult> ReplaceFileAsync(Guid id, 
+                                                        IFormFile file, 
+                                                        AppDbContext db,
+                                                        IObjectStorageService storage, 
+                                                        HttpContext context)
+    {
+        if (file is null || file.Length == 0)
+            return Results.BadRequest("File is required.");
+
+        var tenantId = context.GetTenantId();
+        var tenantSlug = context.GetTenantSlug();
+
+        // 1 - Buscar a mídia no banco de dados, garantindo que ela pertence ao tenant
+        var media = await db.TenantMedias.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+
+        if (media is null)
+            return Results.NotFound();
+
+        var oldStorageKey = media.StorageKey;
+
+        var path = $"tenants/{tenantSlug}/media";
+
+        using var stream = file.OpenReadStream();
+
+        // 2 - Fazer o upload do novo arquivo para o storage, obtendo a nova URL e StorageKey
+        var uploadResult = await storage.UploadAsync(stream,
+                                                     file.FileName,
+                                                     file.ContentType,
+                                                     path);
+
+        media.FileName = file.FileName;
+        media.ContentType = file.ContentType;
+        media.Size = file.Length;
+        media.StorageKey = uploadResult.Key;
+        media.Url = uploadResult.Url;
+
+        // 3 - Atualizar os dados da mídia no banco de dados
+        await db.SaveChangesAsync();
+
+        // 4 - Deletar o arquivo antigo do storage
+        await storage.DeleteAsync(oldStorageKey);
+
+        // 5 - Retornar os dados atualizados da mídia
+        return Results.Ok(new TenantMediaResponse
+        {
+            Id = media.Id,
+            TenantId = media.TenantId,
+            FileName = media.FileName,
+            ContentType = media.ContentType,
+            Size = media.Size,
+            StorageKey = media.StorageKey,
+            Url = media.Url,
+            CreatedAt = media.CreatedAt
+        });
+    }
+
+    private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, IObjectStorageService storage, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+
+        var media = await db.TenantMedias
+            .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+
+        if (media is null)
+            return Results.NotFound();
+
+        await storage.DeleteAsync(media.StorageKey);
+
+        db.TenantMedias.Remove(media);
+        await db.SaveChangesAsync();
+
+        return Results.NoContent();
     }
 
     private static async Task<IResult> UploadAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, HttpContext context)

@@ -19,3 +19,4 @@ global using Microsoft.OpenApi.Models;
 global using StackExchange.Redis;
 global using System.Security.Claims;
 global using Amazon.S3;
+global using Microsoft.AspNetCore.Http.HttpResults;
