@@ -39,7 +39,7 @@ AlphaSquad/
 │
 ├── src/
 │   ├── AlphaSquad.Api              → API principal (ASP.NET Core)
-│   ├── AlphaSquad.Infrastructure   → Dados, EF Core, Dapper, Redis
+│   ├── AlphaSquad.Infrastructure   → Dados, EF Core, Dapper, Redis, Storage
 │   └── AlphaSquad.Shared           → Contratos e modelos compartilhados
 │
 └── AlphaSquad.sln
@@ -50,9 +50,11 @@ AlphaSquad/
 ## 🧩 Abordagem Arquitetural
 
 * **Vertical Slice (Feature-first)**
+* **Minimal APIs**
 * **EF Core** → comandos (INSERT, UPDATE, DELETE)
 * **Dapper** → consultas (SELECT)
 * **Redis** → cache distribuído
+* **Cloudflare R2** → armazenamento de arquivos
 * **Multi-tenant (TenantId)**
 
 ---
@@ -62,17 +64,18 @@ AlphaSquad/
 ### Backend
 
 * .NET 10
-* ASP.NET Core Web API
+* ASP.NET Core (Minimal APIs)
 * Entity Framework Core
 * Dapper
 * PostgreSQL
 * Redis (Docker)
+* Cloudflare R2 (S3-compatible storage)
 
 ### Infraestrutura
 
 * VPS (Hostinger)
 * Docker
-* Armazenamento local (fase inicial)
+* Cloudflare (Storage)
 
 ### Mobile (futuro)
 
@@ -80,11 +83,9 @@ AlphaSquad/
 
 ---
 
-## ⚡ Cache Distribuído com Redis
+# ⚡ Cache Distribuído com Redis
 
-O projeto utiliza Redis para otimizar performance em leituras frequentes.
-
-### Estratégia adotada
+### Estratégia
 
 ```text
 Cache-aside (lazy loading)
@@ -92,37 +93,19 @@ Cache-aside (lazy loading)
 
 ### Fluxo
 
-1. Requisição consulta Redis
-2. Se existir → retorna (cache hit)
-3. Se não existir → busca no banco (cache miss)
-4. Armazena no Redis com TTL
+1. API consulta Redis
+2. Cache hit → retorna imediatamente
+3. Cache miss → consulta banco
+4. Persiste no Redis com TTL
 5. Retorna resposta
 
 ---
 
-### 🔁 Invalidação de Cache
-
-Implementada via eventos de escrita:
-
-```text
-PUT → invalida cache
-GET → reidrata cache
-```
-
-Exemplo:
+### 🔁 Invalidação
 
 ```csharp
 await cache.RemoveAsync(CacheKeys.TenantConfig(slug));
 ```
-
----
-
-### 🧠 Benefícios
-
-* Redução de carga no banco
-* Resposta mais rápida
-* Escalabilidade horizontal
-* Isolamento por tenant
 
 ---
 
@@ -134,88 +117,253 @@ AlphaSquad:tenant-config:{slug}
 
 ---
 
-### ⏱️ TTL (Time-To-Live)
+### 🧪 Monitoramento
 
-* Controle de expiração configurável
-* Evita dados obsoletos permanentes
-* Mantém Redis como cache, não fonte de verdade
-
----
-
-## 🧪 Monitoramento com RedisInsight
-
-Para inspeção e validação do cache, o projeto utiliza:
+Ferramenta utilizada:
 
 👉 **RedisInsight**
 
-### Permite:
+Permite:
 
-* Visualizar chaves em tempo real
-* Inspecionar valores JSON
-* Monitorar TTL
-* Validar cache hits/misses
-* Debug de comportamento do sistema
+* Visualização de chaves
+* Inspeção de payload JSON
+* Análise de TTL
+* Debug de cache
 
-Exemplo de chave visualizada:
+---
+
+# ☁️ Armazenamento com Cloudflare R2
+
+O projeto utiliza **Cloudflare R2** para armazenamento de arquivos (uploads de mídia).
+
+---
+
+## 📦 Estratégia
+
+* Compatível com API S3
+* Sem custo de egress (vantagem relevante)
+* Organização por tenant
+
+---
+
+## 📁 Estrutura lógica no storage
 
 ```text
-AlphaSquad:tenant-config:alpha-demo
+tenants/{tenantSlug}/media/{guid}_{fileName}
 ```
 
 ---
 
-## 🧠 Conceito White-Label
+## 🔐 Segurança
 
-* Backend único
-* Banco único (multi-tenant)
-* App customizado por academia:
-
-  * Logo
-  * Cores
-  * Nome
+* Upload autenticado via JWT
+* Tenant isolado via claims
+* Bucket privado
+* URL pública configurável
 
 ---
 
-## 🔐 Multi-Tenancy
+## ⚙️ Configuração (appsettings.json)
+
+```json
+"Storage": {
+  "Provider": "CloudflareR2",
+  "Endpoint": "https://<accountid>.r2.cloudflarestorage.com",
+  "AccessKey": "SEU_ACCESS_KEY",
+  "SecretKey": "SEU_SECRET_KEY",
+  "BucketName": "alphasquad-media",
+  "PublicBaseUrl": "https://SEU_DOMINIO_PUBLICO"
+}
+```
+
+---
+
+## 🔄 Fluxo de Upload
+
+1. Cliente envia `multipart/form-data`
+2. API valida arquivo
+3. Extrai TenantId e TenantSlug do JWT
+4. Faz upload para R2
+5. Persiste metadata no banco
+6. Retorna URL pública
+
+---
+
+# 🧩 Módulo de Mídia (Media)
+
+## Funcionalidades implementadas
+
+* Upload de arquivos
+* Atualização de arquivo
+* Exclusão de mídia
+* Listagem por tenant
+
+---
+
+## 📡 Endpoints
+
+### Upload
+
+```http
+POST /api/media/upload
+```
+
+---
+
+### Atualizar arquivo
+
+```http
+PUT /api/media/{id}/file
+```
+
+---
+
+### Remover mídia
+
+```http
+DELETE /api/media/{id}
+```
+
+---
+
+### Listar mídias do tenant
+
+```http
+GET /api/media
+```
+
+---
+
+## 🧠 Persistência
+
+Tabela:
+
+```text
+TenantMedias
+```
+
+Campos:
+
+* Id
+* TenantId
+* FileName
+* ContentType
+* Size
+* StorageKey
+* Url
+* CreatedAt
+
+---
+
+## 🔗 Integridade
+
+Relacionamento:
+
+```text
+Tenant (1) → (N) TenantMedias
+```
+
+---
+
+# 👤 Módulo de Usuários (Users)
+
+## Funcionalidades implementadas
+
+* CRUD completo de usuários
+* Isolamento por tenant
+* Validação de e-mail único por tenant
+* Hash de senha
+
+---
+
+## 📡 Endpoints
+
+### Listar usuários
+
+```http
+GET /api/users
+```
+
+---
+
+### Buscar por ID
+
+```http
+GET /api/users/{id}
+```
+
+---
+
+### Criar usuário
+
+```http
+POST /api/users
+```
+
+---
+
+### Atualizar usuário
+
+```http
+PUT /api/users/{id}
+```
+
+---
+
+### Remover usuário
+
+```http
+DELETE /api/users/{id}
+```
+
+---
+
+## 🔐 Segurança
+
+* Todos endpoints protegidos por JWT
+* TenantId extraído do token
+* Isolamento garantido por query
+
+---
+
+# 🧠 Multi-Tenancy
 
 Isolamento via:
 
 ```text
-TenantId
+TenantId (GUID)
 ```
 
-Todas as entidades são vinculadas a um tenant.
+Aplicado em:
+
+* Queries (WHERE TenantId)
+* Storage (path por tenant)
+* JWT (claims)
 
 ---
 
-## 🔑 Autenticação (em desenvolvimento)
+# 🔑 Autenticação
 
-* JWT (JSON Web Token)
+* JWT
 * Roles:
 
   * Admin
   * Teacher
   * Student
-* Isolamento por tenant
 
 ---
 
-## 🗄️ Banco de Dados
+# 🗄️ Banco de Dados
 
-### Entidades iniciais
+### Entidades
 
 * Tenants
 * Users
-
-### Estratégia
-
-* Model-first
-* Migrations via EF Core
-* Versionamento incremental
+* TenantMedias
 
 ---
 
-## 🚀 Como rodar o projeto
+# 🚀 Como rodar o projeto
 
 ### 1. Clonar
 
@@ -226,7 +374,7 @@ cd alphasquad
 
 ---
 
-### 2. Subir Redis (Docker)
+### 2. Subir Redis
 
 ```bash
 docker run -d -p 6379:6379 redis
@@ -242,21 +390,7 @@ Database: alphasquad_db
 
 ---
 
-### 4. Configurar connection strings
-
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Host=localhost;Port=5432;Database=alphasquad_db;Username=postgres;Password=SUA_SENHA"
-},
-"Redis": {
-  "ConnectionString": "localhost:6379",
-  "InstanceName": "AlphaSquad:"
-}
-```
-
----
-
-### 5. Rodar migrations
+### 4. Migrations
 
 ```bash
 dotnet ef database update \
@@ -266,7 +400,7 @@ dotnet ef database update \
 
 ---
 
-### 6. Executar API
+### 5. Executar API
 
 ```bash
 dotnet run --project src/AlphaSquad.Api
@@ -274,7 +408,7 @@ dotnet run --project src/AlphaSquad.Api
 
 ---
 
-### 7. Swagger
+### 6. Swagger
 
 ```text
 https://localhost:7054/swagger
@@ -282,70 +416,64 @@ https://localhost:7054/swagger
 
 ---
 
-## 📦 Padrões utilizados
+# 📦 Padrões utilizados
 
 * Clean Architecture (minimalista)
 * Vertical Slice Architecture
+* Minimal APIs
 * Cache-aside pattern
-* Separation of concerns
-* Dependency Injection
+* Multi-tenant isolation
+* S3-compatible storage abstraction
 
 ---
 
-## ⚠️ Status do Projeto
+# ⚠️ Status do Projeto
 
-🚧 Em desenvolvimento inicial
+🚧 Em desenvolvimento
 
-### Módulos
+### Módulos concluídos
 
 * [x] Estrutura base
 * [x] EF Core + PostgreSQL
 * [x] Redis (cache distribuído)
-* [x] Cache-aside + invalidação
-* [ ] Autenticação JWT
-* [ ] Multi-tenant middleware
-* [ ] App MAUI
+* [x] Cloudflare R2 (upload de mídia)
+* [x] Módulo de mídia (CRUD completo)
+* [x] Módulo de usuários (CRUD completo)
 
 ---
 
-## 🔮 Roadmap
+# 🔮 Próximos passos
 
-### Fase 1
+### Backend
 
-* Autenticação
-* Tenant
-* Users
+* [ ] Refresh Token
+* [ ] Change Password
+* [ ] Middleware de Tenant
+* [ ] Permissões por Role
+* [ ] Paginação e filtros
 
-### Fase 2
+### Produto
 
-* Workouts
-* Check-in
-* Progresso
-
-### Fase 3
-
-* Desafios
-* Ranking
-* Notificações
-
-### Fase 4
-
-* Social
-* Agenda
+* [ ] Workouts
+* [ ] Check-in
+* [ ] Progresso
+* [ ] Ranking
+* [ ] Notificações
 
 ---
 
-## 💡 Diferenciais
+# 💡 Diferenciais
 
-* Arquitetura simples e escalável
-* Multi-tenant desde o início
+* Arquitetura moderna com .NET 10
+* Multi-tenant desde o core
 * Cache distribuído com Redis
-* Preparado para mobile offline-first
-* Base para expansão com IA
+* Upload escalável com Cloudflare R2
+* Estrutura pronta para SaaS real
+* Forte apelo para portfólio técnico
 
 ---
 
-## 👨‍💻 Autor
+# 👨‍💻 Autor
 
 Marcelo Oliveira
 Senior .NET Developer
