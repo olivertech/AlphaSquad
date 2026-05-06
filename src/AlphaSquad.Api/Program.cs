@@ -1,3 +1,5 @@
+﻿using AlphaSquad.Api.Features.Exercises;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -5,7 +7,7 @@ builder.Services.AddDependencies();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddEndpointsApiExplorer();
 
-// Configura o Swagger para gerar a documentação da API, incluindo a definição de segurança para autenticação JWT.
+// Configura o Swagger para gerar a documentaÃ§Ã£o da API, incluindo a definiÃ§Ã£o de seguranÃ§a para autenticaÃ§Ã£o JWT.
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -40,13 +42,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configura o Entity Framework Core para usar o PostgreSQL como banco de dados, utilizando a string de conexão definida no appsettings.json.
+// Configura o Entity Framework Core para usar o PostgreSQL como banco de dados, utilizando a string de conexÃ£o definida no appsettings.json.
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// Configura as opções de JWT a partir da seção "Jwt" do appsettings.json, permitindo que sejam injetadas em outros serviços.
+// Configura as opÃ§Ãµes de JWT a partir da seÃ§Ã£o "Jwt" do appsettings.json, permitindo que sejam injetadas em outros serviÃ§os.
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
 //var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
@@ -74,7 +76,7 @@ builder.Services
         };
     });
 
-// Configura as opções de Redis a partir da seção "Redis" do appsettings.json, permitindo que sejam injetadas em outros serviços.
+// Configura as opÃ§Ãµes de Redis a partir da seÃ§Ã£o "Redis" do appsettings.json, permitindo que sejam injetadas em outros serviÃ§os.
 builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection("Redis"));
 
 //var redisOptions = builder.Configuration.GetSection("Redis").Get<RedisOptions>()!;
@@ -84,8 +86,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     return ConnectionMultiplexer.Connect(redisOptions.ConnectionString);
 });
 
-// Configura as opções de armazenamento a partir da seção "Storage" do appsettings.json, permitindo que sejam injetadas em outros
-// serviços relacionados ao armazenamento de arquivos, como o Cloudflare R2.
+// Configura as opÃ§Ãµes de armazenamento a partir da seÃ§Ã£o "Storage" do appsettings.json, permitindo que sejam injetadas em outros
+// serviÃ§os relacionados ao armazenamento de arquivos, como o Cloudflare R2.
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
 
 builder.Services.AddSingleton<IAmazonS3>(sp =>
@@ -110,7 +112,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Ao iniciar a aplicação, executa o seeding do banco de dados para garantir que o tenant demo e o usuário admin existam
+// Ao iniciar a aplicaÃ§Ã£o, executa o seeding do banco de dados para garantir que o tenant demo e o usuÃ¡rio admin existam
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
@@ -128,13 +130,12 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
-
-// Em vez de usar MapControllers, registramos os endpoints de autenticação, tenants e media diretamente,
-// utilizando os métodos de extensão MapAuthEndpoints, MapTenantEndpoints e MapMediaEndpoints.
+// Em vez de usar MapControllers, registramos os endpoints de autenticaÃ§Ã£o, tenants e media diretamente,
+// utilizando os mÃ©todos de extensÃ£o MapAuthEndpoints, MapTenantEndpoints e MapMediaEndpoints.
 app.MapAuthEndpoints();
 app.MapTenantEndpoints();
 app.MapMediaEndpoints();
 app.MapUserEndpoints();
+app.MapExerciseEndpoints();
 
 app.Run();

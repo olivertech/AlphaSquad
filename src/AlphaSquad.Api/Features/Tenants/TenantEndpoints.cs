@@ -1,36 +1,37 @@
-namespace AlphaSquad.Api.Features.Tenants;
+ï»¿namespace AlphaSquad.Api.Features.Tenants;
 
 using AlphaSquad.Infrastructure.Persistence;
 using AlphaSquad.Shared.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using AlphaSquad.Infrastructure.Caching;
 
 public static class TenantEndpoints
 {
     /// <summary>
     /// O TenantEndpoints define os endpoints relacionados aos tenants.
-    /// Organiza as rotas sob o prefixo (/api/tenants) e aplica tags para documentação.
+    /// Organiza as rotas sob o prefixo (/api/tenants) e aplica tags para documentaÃ§Ã£o.
     /// </summary>
     public static IEndpointRouteBuilder MapTenantEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/tenants")
             .WithTags("Tenants");
 
-        // Endpoint público para obter informações de um tenant por slug.
+        // Endpoint pÃºblico para obter informaÃ§Ãµes de um tenant por slug.
         group.MapGet("/by-slug/{slug}", GetBySlugAsync)
             .AllowAnonymous()
             .WithName("GetTenantBySlug")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Endpoint para atualizar as informações gerais do tenant.
+        // Endpoint para atualizar as informaÃ§Ãµes gerais do tenant.
         group.MapPut("/{id:guid}", UpdateAsync)
             .RequireAuthorization()
             .WithName("UpdateTenant")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Endpoint para obter as informações do Tenant do usuário autenticado.
+        // Endpoint para obter as informaÃ§Ãµes do Tenant do usuÃ¡rio autenticado.
         group.MapGet("/current", GetCurrentAsync)
             .RequireAuthorization()
             .WithName("GetCurrentTenant")
@@ -57,7 +58,7 @@ public static class TenantEndpoints
     }
 
     /// <summary>
-    /// Retorna os dados do Tenant associados ao usuário autenticado.
+    /// Retorna os dados do Tenant associados ao usuÃ¡rio autenticado.
     /// </summary>
     private static async Task<IResult> GetCurrentAsync(AppDbContext db, HttpContext context)
     {
@@ -80,9 +81,10 @@ public static class TenantEndpoints
     }
 
     /// <summary>
-    /// Atualiza a logo do Tenant atual, removendo a anterior do storage e salvando a nova.
+    /// Atualiza a logo do Tenant atual, removendo a anterior do storage, 
+    /// salvando a nova e invalidando o cache para garantir consistÃªncia imediata.
     /// </summary>
-    private static async Task<IResult> UpdateLogoAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, HttpContext context)
+    private static async Task<IResult> UpdateLogoAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, IRedisCacheService cache, HttpContext context)
     {
         if (file == null || file.Length == 0)
             return Results.BadRequest("Logo file is required.");
@@ -101,7 +103,6 @@ public static class TenantEndpoints
             if (oldLogo != null)
             {
                 await storage.DeleteAsync(oldLogo.StorageKey);
-                // Removemos o registro da mídia antiga para evitar lixo no banco
                 db.TenantMedias.Remove(oldLogo);
             }
         }
@@ -117,7 +118,7 @@ public static class TenantEndpoints
             path
         );
 
-        // 3. Criar novo registro de mídia para a logo
+        // 3. Criar novo registro de mÃ­dia para a logo
         var logoMedia = new TenantMedia
         {
             Id = Guid.NewGuid(),
@@ -131,11 +132,15 @@ public static class TenantEndpoints
 
         db.TenantMedias.Add(logoMedia);
         
-        // 4. Atualizar a referência no Tenant
+        // 4. Atualizar a referÃªncia no Tenant
         tenant.LogoUrl = uploadResult.Url;
         tenant.LogoMediaId = logoMedia.Id;
 
         await db.SaveChangesAsync();
+
+        // 5. InvalidaÃ§Ã£o do Cache: Remove a configuraÃ§Ã£o do tenant do Redis.
+        // Isso garante que a nova logo seja refletida imediatamente no endpoint GetBySlug.
+        await cache.RemoveAsync(CacheKeys.TenantConfig(tenantSlug));
 
         return Results.Ok(new TenantCurrentResponse
         {
@@ -150,7 +155,7 @@ public static class TenantEndpoints
     }
 
     /// <summary>
-    /// Retorna a lista de features habilitadas para o Tenant do usuário autenticado.
+    /// Retorna a lista de features habilitadas para o Tenant do usuÃ¡rio autenticado.
     /// </summary>
     private static async Task<IResult> GetCurrentFeaturesAsync(AppDbContext db, HttpContext context)
     {
@@ -169,6 +174,9 @@ public static class TenantEndpoints
         return Results.Ok(new TenantFeaturesResponse { Features = features });
     }
 
+    /// <summary>
+    /// Atualiza as informaÃ§Ãµes gerais de um tenant especÃ­fico, como nome, cores e logo.
+    /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id, UpdateTenantRequest request, AppDbContext db, IRedisCacheService cache)
     {
         var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == id);
@@ -188,6 +196,7 @@ public static class TenantEndpoints
 
         await db.SaveChangesAsync();
 
+        // Invalida o cache usando o slug antigo para garantir que a entrada anterior seja removida
         await cache.RemoveAsync(CacheKeys.TenantConfig(oldSlug));
 
         var response = new TenantConfigResponse
@@ -204,6 +213,10 @@ public static class TenantEndpoints
         return Results.Ok(response);
     }
 
+    /// <summary>
+    /// Recupera as informaÃ§Ãµes de um tenant ativo com base no slug fornecido, 
+    /// utilizando cache para otimizar o desempenho.
+    /// </summary>
     private static async Task<IResult> GetBySlugAsync(string slug, AppDbContext db, IRedisCacheService cache)
     {
         if (string.IsNullOrWhiteSpace(slug))

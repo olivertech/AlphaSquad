@@ -1,4 +1,4 @@
-# ??? AlphaSquad Architecture
+﻿# ??? AlphaSquad Architecture
 
 This document provides a technical overview of the AlphaSquad platform architecture, designed as a white-label SaaS for gym management.
 
@@ -51,3 +51,4 @@ To prevent replay attacks, the system implements **Refresh Token Rotation**:
 - **Logo Management**: Tenant logos are linked to the `TenantMedia` entity, allowing precise tracking and deletion of the binary file in storage when updated.
 - **Cache**: Redis keys follow the pattern `AlphaSquad:{category}:{identifier}`.
 - **Database**: PostgreSQL serves as the primary source of truth.
+
