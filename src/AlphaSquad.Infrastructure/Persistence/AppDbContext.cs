@@ -1,4 +1,4 @@
-namespace AlphaSquad.Infrastructure.Persistence;
+﻿namespace AlphaSquad.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +15,9 @@ public class AppDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Feature> Features => Set<Feature>();
     public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
+    public DbSet<Exercise> Exercises => Set<Exercise>();
+    public DbSet<Workout> Workouts => Set<Workout>();
+    public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,7 +33,6 @@ public class AppDbContext : DbContext
             entity.Property(x => x.PrimaryColor).HasMaxLength(10).IsRequired();
             entity.Property(x => x.SecondaryColor).HasMaxLength(10).IsRequired();
 
-            // Relacionamento com a Logo (1:1 opcional)
             entity.HasOne(x => x.LogoMedia)
                 .WithMany()
                 .HasForeignKey(x => x.LogoMediaId)
@@ -105,5 +107,44 @@ public class AppDbContext : DbContext
                 .HasForeignKey(x => x.FeatureId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<Exercise>(entity =>
+        {
+            entity.ToTable("Exercises");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
+            entity.Property(x => x.MuscleGroup).HasMaxLength(100).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.Media)
+                .WithMany()
+                .HasForeignKey(x => x.MediaId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Workout>(entity =>
+        {
+            entity.ToTable("Workouts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+        });
+
+        modelBuilder.Entity<WorkoutExercise>(entity =>
+        {
+            entity.ToTable("WorkoutExercises");
+            entity.HasKey(x => new { x.WorkoutId, x.ExerciseId });
+
+            entity.HasOne(x => x.Workout)
+                .WithMany(w => w.WorkoutExercises)
+                .HasForeignKey(x => x.WorkoutId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Exercise)
+                .WithMany(e => e.WorkoutExercises)
+                .HasForeignKey(x => x.ExerciseId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
+
