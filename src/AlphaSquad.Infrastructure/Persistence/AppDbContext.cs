@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<TenantMedia> TenantMedias => Set<TenantMedia>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Feature> Features => Set<Feature>();
+    public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +29,12 @@ public class AppDbContext : DbContext
             entity.HasIndex(x => x.Slug).IsUnique();
             entity.Property(x => x.PrimaryColor).HasMaxLength(10).IsRequired();
             entity.Property(x => x.SecondaryColor).HasMaxLength(10).IsRequired();
+
+            // Relacionamento com a Logo (1:1 opcional)
+            entity.HasOne(x => x.LogoMedia)
+                .WithMany()
+                .HasForeignKey(x => x.LogoMediaId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<AppUser>(entity =>
@@ -68,10 +76,33 @@ public class AppDbContext : DbContext
             entity.Property(x => x.Token).IsRequired();
             entity.HasIndex(x => x.Token).IsUnique();
             
-            // Define explicitamente a relação 1:N entre AppUser e RefreshToken
             entity.HasOne(x => x.User)
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Feature>(entity =>
+        {
+            entity.ToTable("Features");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(250);
+        });
+
+        modelBuilder.Entity<TenantFeature>(entity =>
+        {
+            entity.ToTable("TenantFeatures");
+            entity.HasKey(x => new { x.TenantId, x.FeatureId });
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany(t => t.TenantFeatures)
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Feature)
+                .WithMany(x => x.TenantFeatures)
+                .HasForeignKey(x => x.FeatureId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

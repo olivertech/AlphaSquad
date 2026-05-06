@@ -1,16 +1,15 @@
-﻿namespace AlphaSquad.Api.Features.Media;
+namespace AlphaSquad.Api.Features.Media;
+
+using AlphaSquad.Infrastructure.Persistence;
+using AlphaSquad.Shared.Contracts;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 /// <summary>
-/// O MapMediaEndpoints define os endpoints relacionados à mídia, como upload de arquivos. 
-/// Ele é usado para organizar e agrupar as rotas de mídia sob um prefixo 
-/// comum (/api/media) e aplicar tags para documentação.
-/// Com essa classe e método, o código de configuração dos endpoints de mídia 
-/// fica centralizado e fácil de manter, além de melhorar a clareza e a organização do código da API.
-/// No Program.cs, o método MapMediaEndpoints é chamado para registrar esses endpoints na aplicação, 
-/// ao invés de chamar MapControllers, garantindo que as rotas de mídia estejam disponíveis para os clientes da API.
+/// O MapMediaEndpoints define os endpoints relacionados � m�dia, como upload de arquivos. 
+/// Ele � usado para organizar e agrupar as rotas de m�dia sob um prefixo 
+/// comum (/api/media) e aplicar tags para documenta��o.
 /// </summary>
-/// <param name="app"></param>
-/// <returns></returns>
 public static class MediaEndpoints
 {
     public static IEndpointRouteBuilder MapMediaEndpoints(this IEndpointRouteBuilder app)
@@ -27,7 +26,7 @@ public static class MediaEndpoints
             .Produces<UploadMediaResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
-        // Atulizar a midia (ex: renomear o arquivo)
+        // Atualizar a midia (ex: renomear o arquivo)
         group.MapPut("/{id:guid}/file", ReplaceFileAsync)
             .RequireAuthorization()
             .DisableAntiforgery()
@@ -37,20 +36,52 @@ public static class MediaEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Deletar a mídia
+        // Deletar a m�dia
         group.MapDelete("/{id:guid}", DeleteAsync)
             .RequireAuthorization()
             .WithName("DeleteMedia")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Listar mídias do tenant com paginação
+        // Listar m�dias do tenant com pagina��o
         group.MapGet("/", GetAllAsync)
             .RequireAuthorization()
             .WithName("GetTenantMedias")
             .Produces<List<TenantMediaResponse>>(StatusCodes.Status200OK);
 
+        // Obter detalhes de uma m�dia espec�fica
+        group.MapGet("/{id:guid}", GetByIdAsync)
+            .RequireAuthorization()
+            .WithName("GetMediaById")
+            .Produces<MediaResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
+    }
+
+    /// <summary>
+    /// Obt�m os detalhes de um arquivo de m�dia espec�fico, garantindo que ele perten�a ao tenant do usu�rio.
+    /// </summary>
+    private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+
+        var media = await db.TenantMedias
+            .AsNoTracking()
+            .Where(x => x.Id == id && x.TenantId == tenantId)
+            .Select(x => new MediaResponse
+            {
+                Id = x.Id,
+                FileName = x.FileName,
+                ContentType = x.ContentType,
+                Url = x.Url
+            })
+            .FirstOrDefaultAsync();
+
+        if (media is null)
+            return Results.NotFound();
+
+        return Results.Ok(media);
     }
 
     private static async Task<IResult> GetAllAsync(AppDbContext db,
@@ -107,7 +138,6 @@ public static class MediaEndpoints
         var tenantId = context.GetTenantId();
         var tenantSlug = context.GetTenantSlug();
 
-        // 1 - Buscar a mídia no banco de dados, garantindo que ela pertence ao tenant
         var media = await db.TenantMedias.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
 
         if (media is null)
@@ -119,7 +149,6 @@ public static class MediaEndpoints
 
         using var stream = file.OpenReadStream();
 
-        // 2 - Fazer o upload do novo arquivo para o storage, obtendo a nova URL e StorageKey
         var uploadResult = await storage.UploadAsync(stream,
                                                      file.FileName,
                                                      file.ContentType,
@@ -131,13 +160,10 @@ public static class MediaEndpoints
         media.StorageKey = uploadResult.Key;
         media.Url = uploadResult.Url;
 
-        // 3 - Atualizar os dados da mídia no banco de dados
         await db.SaveChangesAsync();
 
-        // 4 - Deletar o arquivo antigo do storage
         await storage.DeleteAsync(oldStorageKey);
 
-        // 5 - Retornar os dados atualizados da mídia
         return Results.Ok(new TenantMediaResponse
         {
             Id = media.Id,
@@ -171,18 +197,14 @@ public static class MediaEndpoints
 
     private static async Task<IResult> UploadAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, HttpContext context)
     {
-        // 1. Validação do arquivo
         if (file == null || file.Length == 0)
             return Results.BadRequest("File is required.");
 
-        // 2. Recupera os dados do Tenant vindo do JWT
         var tenantId = context.GetTenantId();
         var tenantSlug = context.GetTenantSlug();
 
-        // 3. Caminho lógico no storage
         var path = $"tenants/{tenantSlug}/media";
 
-        // 4. Upload
         using var stream = file.OpenReadStream();
 
         var result = await storage.UploadAsync(
@@ -192,7 +214,6 @@ public static class MediaEndpoints
             path
         );
 
-        // 5. Persistência no banco
         var media = new TenantMedia
         {
             Id = Guid.NewGuid(),
@@ -208,7 +229,6 @@ public static class MediaEndpoints
         db.TenantMedias.Add(media);
         await db.SaveChangesAsync();
 
-        // 6. Retorno
         return Results.Ok(new
         {
             media.Id,

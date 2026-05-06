@@ -3,6 +3,7 @@ using System;
 using AlphaSquad.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlphaSquad.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506202147_FixTenantFeatureNavigation")]
+    partial class FixTenantFeatureNavigation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -128,9 +131,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid?>("LogoMediaId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("LogoUrl")
                         .HasColumnType("text");
 
@@ -155,8 +155,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LogoMediaId");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -237,16 +235,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.Tenant", b =>
-                {
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.TenantMedia", "LogoMedia")
-                        .WithMany()
-                        .HasForeignKey("LogoMediaId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("LogoMedia");
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.TenantFeature", b =>

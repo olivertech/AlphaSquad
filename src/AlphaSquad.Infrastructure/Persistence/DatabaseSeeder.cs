@@ -1,4 +1,4 @@
-ï»¿using AlphaSquad.Infrastructure.Auth;
+using AlphaSquad.Infrastructure.Auth;
 using AlphaSquad.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +23,7 @@ public class DatabaseSeeder
 
         var tenant = await _db.Tenants.FirstOrDefaultAsync(x => x.Slug == tenantSlug);
 
-        // Se o tenant nÃ£o existir, cria um novo tenant e um usuÃ¡rio admin para ele
+        // Se o tenant não existir, cria um novo tenant e um usuário admin para ele
         if (tenant is null)
         {
             tenant = new Tenant
@@ -46,7 +46,7 @@ public class DatabaseSeeder
 
         var adminExists = await _db.Users.AnyAsync(x => x.TenantId == tenant.Id && x.Email == adminEmail);
 
-        // Se o usuÃ¡rio admin nÃ£o existir, cria um novo usuÃ¡rio admin para o tenant demo
+        // Se o usuário admin não existir, cria um novo usuário admin para o tenant demo
         if (!adminExists)
         {
             var admin = new AppUser
@@ -64,5 +64,50 @@ public class DatabaseSeeder
             _db.Users.Add(admin);
             await _db.SaveChangesAsync();
         }
+
+        // Seed de Features
+        await SeedFeaturesAsync(tenant);
+    }
+
+    private async Task SeedFeaturesAsync(Tenant tenant)
+    {
+        var featuresToSeed = new List<(string Name, string Description)>
+        {
+            ("WORKOUTS", "Gestão de treinos e exercícios."),
+            ("CHECKIN", "Controle de entrada e frequência de alunos."),
+            ("SCHEDULE", "Agendamento de aulas e horários."),
+            ("MEDIA", "Gestão de mídias e arquivos do tenant."),
+            ("USER_MGMT", "Gestão avançada de usuários e permissões.")
+        };
+
+        foreach (var featureData in featuresToSeed)
+        {
+            var feature = await _db.Features.FirstOrDefaultAsync(x => x.Name == featureData.Name);
+            
+            if (feature is null)
+            {
+                feature = new Feature
+                {
+                    Id = Guid.NewGuid(),
+                    Name = featureData.Name,
+                    Description = featureData.Description
+                };
+                _db.Features.Add(feature);
+                await _db.SaveChangesAsync();
+            }
+
+            // Vincula a feature ao tenant demo se ainda não estiver vinculada
+            var exists = await _db.TenantFeatures.AnyAsync(x => x.TenantId == tenant.Id && x.FeatureId == feature.Id);
+            if (!exists)
+            {
+                _db.TenantFeatures.Add(new TenantFeature
+                {
+                    TenantId = tenant.Id,
+                    FeatureId = feature.Id
+                });
+            }
+        }
+
+        await _db.SaveChangesAsync();
     }
 }
