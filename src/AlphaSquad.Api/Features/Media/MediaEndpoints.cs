@@ -44,6 +44,7 @@ public static class MediaEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
+        // Listar mídias do tenant com paginação
         group.MapGet("/", GetAllAsync)
             .RequireAuthorization()
             .WithName("GetTenantMedias")

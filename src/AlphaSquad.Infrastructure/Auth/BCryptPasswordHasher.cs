@@ -1,5 +1,8 @@
 ﻿namespace AlphaSquad.Infrastructure.Auth;
 
+/// <summary>
+/// Classe BCryptPasswordHasher é responsável por fornecer funcionalidades de hash e verificação de senhas usando o algoritmo BCrypt.
+/// </summary>
 public class BCryptPasswordHasher : IBCryptPasswordHasher
 {
     public string Hash(string password)

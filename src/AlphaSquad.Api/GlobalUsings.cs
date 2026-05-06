@@ -8,6 +8,7 @@ global using AlphaSquad.Infrastructure.Caching;
 global using AlphaSquad.Infrastructure.Storage;
 global using AlphaSquad.Api.Features.Media;
 global using AlphaSquad.Shared.Helpers;
+global using AlphaSquad.Api.Features.Users;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;
@@ -19,4 +20,3 @@ global using Microsoft.OpenApi.Models;
 global using StackExchange.Redis;
 global using System.Security.Claims;
 global using Amazon.S3;
-global using Microsoft.AspNetCore.Http.HttpResults;

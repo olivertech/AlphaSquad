@@ -135,5 +135,6 @@ app.MapControllers();
 app.MapAuthEndpoints();
 app.MapTenantEndpoints();
 app.MapMediaEndpoints();
+app.MapUserEndpoints();
 
 app.Run();
