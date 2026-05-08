@@ -192,9 +192,3 @@ dotnet run --project src/AlphaSquad.Api
 ```text
 https://localhost:7054/swagger
 ```
-
-## Observacoes importantes
-
-- A documentacao agora reflete o estado real do workspace em 2026-05-07.
-- O modulo de workouts aparece no codigo e no modelo de dados, mas ainda deve ser tratado como frente em andamento ate validacao final completa.
-- A compilacao nao foi validada de ponta a ponta neste ambiente por limitacoes do runner do `dotnet`, entao os documentos abaixo foram alinhados pela leitura do codigo fonte e das migrations.
