@@ -2,37 +2,29 @@
 
 public static class TenantEndpoints
 {
-    /// <summary>
-    /// O TenantEndpoints define os endpoints relacionados aos tenants.
-    /// Organiza as rotas sob o prefixo (/api/tenants) e aplica tags para documentação.
-    /// </summary>
     public static IEndpointRouteBuilder MapTenantEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/tenants")
             .WithTags("Tenants");
 
-        // Endpoint público para obter informações de um tenant por slug.
         group.MapGet("/by-slug/{slug}", GetBySlugAsync)
             .AllowAnonymous()
             .WithName("GetTenantBySlug")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Endpoint para atualizar as informações gerais do tenant.
         group.MapPut("/{id:guid}", UpdateAsync)
             .RequireAuthorization()
             .WithName("UpdateTenant")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Endpoint para obter as informações do Tenant do usuário autenticado.
         group.MapGet("/current", GetCurrentAsync)
             .RequireAuthorization()
             .WithName("GetCurrentTenant")
             .Produces<TenantCurrentResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-        // Endpoint para atualizar a logo do Tenant atual.
         group.MapPut("/current/logo", UpdateLogoAsync)
             .RequireAuthorization()
             .DisableAntiforgery()
@@ -41,7 +33,6 @@ public static class TenantEndpoints
             .Produces<TenantCurrentResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
-        // Endpoint para obter as features habilitadas para o Tenant atual.
         group.MapGet("/current/features", GetCurrentFeaturesAsync)
             .RequireAuthorization()
             .WithName("GetCurrentTenantFeatures")
@@ -51,33 +42,29 @@ public static class TenantEndpoints
         return app;
     }
 
-    /// <summary>
-    /// Retorna os dados do Tenant associados ao usuário autenticado.
-    /// </summary>
     private static async Task<IResult> GetCurrentAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
-        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == tenantId);
+        var connection = db.Database.GetDbConnection();
+
+        const string sql = @"SELECT id, 
+                                    name, 
+                                    slug, 
+                                    logo_url AS LogoUrl, 
+                                    primary_color AS PrimaryColor, 
+                                    secondary_color AS SecondaryColor, 
+                                    is_active AS IsActive 
+                             FROM tenants 
+                             WHERE id = @Id";
+
+        var tenant = await connection.QueryFirstOrDefaultAsync<TenantCurrentResponse>(sql, new { Id = tenantId });
 
         if (tenant is null)
             return Results.NotFound();
 
-        return Results.Ok(new TenantCurrentResponse
-        {
-            Id = tenant.Id,
-            Name = tenant.Name,
-            Slug = tenant.Slug,
-            LogoUrl = tenant.LogoUrl,
-            PrimaryColor = tenant.PrimaryColor,
-            SecondaryColor = tenant.SecondaryColor,
-            IsActive = tenant.IsActive
-        });
+        return Results.Ok(tenant);
     }
 
-    /// <summary>
-    /// Atualiza a logo do Tenant atual, removendo a anterior do storage, 
-    /// salvando a nova e invalidando o cache para garantir consistência imediata.
-    /// </summary>
     private static async Task<IResult> UpdateLogoAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, IRedisCacheService cache, HttpContext context)
     {
         if (file == null || file.Length == 0)
@@ -90,7 +77,6 @@ public static class TenantEndpoints
         if (tenant is null)
             return Results.NotFound();
 
-        // 1. Remover a logo antiga do Storage se ela existir
         if (tenant.LogoMediaId.HasValue)
         {
             var oldLogo = await db.TenantMedias.FirstOrDefaultAsync(x => x.Id == tenant.LogoMediaId);
@@ -104,7 +90,6 @@ public static class TenantEndpoints
         var path = $"tenants/{tenantSlug}/logos";
         using var stream = file.OpenReadStream();
 
-        // 2. Fazer upload da nova logo
         var uploadResult = await storage.UploadAsync(
             stream,
             $"logo_{tenant.Id}.{Path.GetExtension(file.FileName)}",
@@ -112,7 +97,6 @@ public static class TenantEndpoints
             path
         );
 
-        // 3. Criar novo registro de mídia para a logo
         var logoMedia = new TenantMedia
         {
             Id = Guid.NewGuid(),
@@ -126,51 +110,39 @@ public static class TenantEndpoints
 
         db.TenantMedias.Add(logoMedia);
         
-        // 4. Atualizar a referência no Tenant
         tenant.LogoUrl = uploadResult.Url;
         tenant.LogoMediaId = logoMedia.Id;
 
         await db.SaveChangesAsync();
-
-        // 5. Invalidação do Cache: Remove a configuração do tenant do Redis.
-        // Isso garante que a nova logo seja refletida imediatamente no endpoint GetBySlug.
         await cache.RemoveAsync(CacheKeys.TenantConfig(tenantSlug));
 
-        return Results.Ok(new TenantCurrentResponse
-        {
-            Id = tenant.Id,
-            Name = tenant.Name,
-            Slug = tenant.Slug,
-            LogoUrl = tenant.LogoUrl,
-            PrimaryColor = tenant.PrimaryColor,
-            SecondaryColor = tenant.SecondaryColor,
-            IsActive = tenant.IsActive
-        });
+        return Results.Ok(new TenantCurrentResponse(
+            tenant.Id,
+            tenant.Name,
+            tenant.Slug,
+            tenant.LogoUrl,
+            tenant.PrimaryColor,
+            tenant.SecondaryColor,
+            tenant.IsActive
+        ));
     }
 
-    /// <summary>
-    /// Retorna a lista de features habilitadas para o Tenant do usuário autenticado.
-    /// </summary>
     private static async Task<IResult> GetCurrentFeaturesAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
+        var connection = db.Database.GetDbConnection();
 
-        var features = await db.TenantFeatures
-            .Where(x => x.TenantId == tenantId)
-            .Include(x => x.Feature)
-            .Select(x => new TenantFeaturesResponse.FeatureItem
-            {
-                Name = x.Feature.Name,
-                Description = x.Feature.Description
-            })
-            .ToListAsync();
+        const string sql = @"SELECT f.name, 
+                                    f.description 
+                             FROM tenant_features tf
+                             JOIN features f ON tf.feature_id = f.id
+                             WHERE tf.tenant_id = @TenantId";
 
-        return Results.Ok(new TenantFeaturesResponse { Features = features });
+        var features = await connection.QueryAsync<TenantFeaturesResponse.FeatureItem>(sql, new { TenantId = tenantId });
+
+        return Results.Ok(new TenantFeaturesResponse(features.ToList()));
     }
 
-    /// <summary>
-    /// Atualiza as informações gerais de um tenant específico, como nome, cores e logo.
-    /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id, UpdateTenantRequest request, AppDbContext db, IRedisCacheService cache)
     {
         var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == id);
@@ -189,56 +161,43 @@ public static class TenantEndpoints
         tenant.SecondaryColor = request.SecondaryColor.Trim();
 
         await db.SaveChangesAsync();
-
-        // Invalida o cache usando o slug antigo para garantir que a entrada anterior seja removida
         await cache.RemoveAsync(CacheKeys.TenantConfig(oldSlug));
 
-        var response = new TenantConfigResponse
-        {
-            Id = tenant.Id,
-            Name = tenant.Name,
-            Slug = tenant.Slug,
-            LogoUrl = tenant.LogoUrl,
-            PrimaryColor = tenant.PrimaryColor,
-            SecondaryColor = tenant.SecondaryColor,
-            IsActive = tenant.IsActive
-        };
-
-        return Results.Ok(response);
+        return Results.Ok(new TenantConfigResponse(
+            tenant.Id,
+            tenant.Name,
+            tenant.Slug,
+            tenant.LogoUrl,
+            tenant.PrimaryColor,
+            tenant.SecondaryColor,
+            tenant.IsActive
+        ));
     }
 
-    /// <summary>
-    /// Recupera as informações de um tenant ativo com base no slug fornecido, 
-    /// utilizando cache para otimizar o desempenho.
-    /// </summary>
     private static async Task<IResult> GetBySlugAsync(string slug, AppDbContext db, IRedisCacheService cache)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return Results.BadRequest("Tenant slug is required.");
 
         var normalizedSlug = slug.Trim().ToLower();
-
         var cacheKey = CacheKeys.TenantConfig(normalizedSlug);
-
         var cachedTenant = await cache.GetAsync<TenantConfigResponse>(cacheKey);
 
         if (cachedTenant is not null)
             return Results.Ok(cachedTenant);
                                                                                         
-        var tenant = await db.Tenants
-            .AsNoTracking()
-            .Where(x => x.Slug == normalizedSlug && x.IsActive)
-            .Select(x => new TenantConfigResponse
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Slug = x.Slug,
-                LogoUrl = x.LogoUrl,
-                PrimaryColor = x.PrimaryColor,
-                SecondaryColor = x.SecondaryColor,
-                IsActive = x.IsActive
-            })
-            .FirstOrDefaultAsync();
+        var connection = db.Database.GetDbConnection();
+        const string sql = @"SELECT id, 
+                                    name, 
+                                    slug, 
+                                    logo_url AS LogoUrl, 
+                                    primary_color AS PrimaryColor, 
+                                    secondary_color AS SecondaryColor, 
+                                    is_active AS IsActive 
+                             FROM tenants 
+                             WHERE slug = @Slug AND is_active = true";
+
+        var tenant = await connection.QueryFirstOrDefaultAsync<TenantConfigResponse>(sql, new { Slug = normalizedSlug });
 
         if (tenant is null)
             return Results.NotFound();

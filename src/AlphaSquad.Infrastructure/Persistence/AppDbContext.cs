@@ -25,13 +25,17 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Tenant>(entity =>
         {
-            entity.ToTable("Tenants");
+            entity.ToTable("tenants");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
-            entity.Property(x => x.Slug).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Slug).HasColumnName("slug").HasMaxLength(100).IsRequired();
             entity.HasIndex(x => x.Slug).IsUnique();
-            entity.Property(x => x.PrimaryColor).HasMaxLength(10).IsRequired();
-            entity.Property(x => x.SecondaryColor).HasMaxLength(10).IsRequired();
+            entity.Property(x => x.PrimaryColor).HasColumnName("primary_color").HasMaxLength(10).IsRequired();
+            entity.Property(x => x.SecondaryColor).HasColumnName("secondary_color").HasMaxLength(10).IsRequired();
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.LogoUrl).HasColumnName("logo_url");
+            entity.Property(x => x.LogoMediaId).HasColumnName("logo_media_id");
 
             entity.HasOne(x => x.LogoMedia)
                 .WithMany()
@@ -41,12 +45,16 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<AppUser>(entity =>
         {
-            entity.ToTable("Users");
+            entity.ToTable("users");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
-            entity.Property(x => x.Email).HasColumnType("citext").HasMaxLength(150).IsRequired();
-            entity.Property(x => x.PasswordHash).IsRequired();
-            entity.Property(x => x.Role).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Email).HasColumnName("email").HasColumnType("citext").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
+            entity.Property(x => x.Role).HasColumnName("role").HasConversion<int>().IsRequired();
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.HasIndex(x => new { x.TenantId, x.Email }).IsUnique();
 
             entity.HasOne(x => x.Tenant)
@@ -57,12 +65,16 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<TenantMedia>(entity =>
         {
-            entity.ToTable("TenantMedias");
+            entity.ToTable("tenant_medias");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.FileName).IsRequired();
-            entity.Property(x => x.ContentType).IsRequired();
-            entity.Property(x => x.StorageKey).IsRequired();
-            entity.Property(x => x.Url).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.FileName).HasColumnName("file_name").IsRequired();
+            entity.Property(x => x.ContentType).HasColumnName("content_type").IsRequired();
+            entity.Property(x => x.StorageKey).HasColumnName("storage_key").IsRequired();
+            entity.Property(x => x.Url).HasColumnName("url").IsRequired();
+            entity.Property(x => x.Size).HasColumnName("size");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.HasIndex(x => x.TenantId);
 
             entity.HasOne(x => x.Tenant)
@@ -73,9 +85,14 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {
-            entity.ToTable("RefreshTokens");
+            entity.ToTable("refresh_tokens");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Token).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Token).HasColumnName("token").IsRequired();
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.ExpiryDate).HasColumnName("expiry_date");
+            entity.Property(x => x.IsUsed).HasColumnName("is_used");
+            entity.Property(x => x.IsRevoked).HasColumnName("is_revoked");
             entity.HasIndex(x => x.Token).IsUnique();
             
             entity.HasOne(x => x.User)
@@ -86,16 +103,19 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Feature>(entity =>
         {
-            entity.ToTable("Features");
+            entity.ToTable("features");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
-            entity.Property(x => x.Description).HasMaxLength(250);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(250);
         });
 
         modelBuilder.Entity<TenantFeature>(entity =>
         {
-            entity.ToTable("TenantFeatures");
+            entity.ToTable("tenant_features");
             entity.HasKey(x => new { x.TenantId, x.FeatureId });
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.FeatureId).HasColumnName("feature_id");
 
             entity.HasOne(x => x.Tenant)
                 .WithMany(t => t.TenantFeatures)
@@ -110,10 +130,15 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Exercise>(entity =>
         {
-            entity.ToTable("Exercises");
+            entity.ToTable("exercises");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
-            entity.Property(x => x.MuscleGroup).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.MuscleGroup).HasColumnName("muscle_group").HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.MediaId).HasColumnName("media_id");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.HasIndex(x => x.TenantId);
 
             entity.HasOne(x => x.Media)
@@ -124,16 +149,21 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Workout>(entity =>
         {
-            entity.ToTable("Workouts");
+            entity.ToTable("workouts");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.HasIndex(x => x.TenantId);
         });
 
         modelBuilder.Entity<WorkoutExercise>(entity =>
         {
-            entity.ToTable("WorkoutExercises");
+            entity.ToTable("workout_exercises");
             entity.HasKey(x => new { x.WorkoutId, x.ExerciseId });
+            entity.Property(x => x.WorkoutId).HasColumnName("workout_id");
+            entity.Property(x => x.ExerciseId).HasColumnName("exercise_id");
 
             entity.HasOne(x => x.Workout)
                 .WithMany(w => w.WorkoutExercises)
@@ -147,4 +177,3 @@ public class AppDbContext : DbContext
         });
     }
 }
-

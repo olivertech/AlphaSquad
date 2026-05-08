@@ -1,6 +1,10 @@
 ﻿// App namespaces
 global using AlphaSquad.Infrastructure.Persistence;
 global using AlphaSquad.Shared.Contracts;
+global using AlphaSquad.Shared.DTOs.Auth;
+global using AlphaSquad.Shared.DTOs.Users;
+global using AlphaSquad.Shared.DTOs.Tenants;
+global using AlphaSquad.Shared.DTOs.Media;
 global using AlphaSquad.Api.Features.Auth;
 global using AlphaSquad.Api.Features.Tenants;
 global using AlphaSquad.Api.DependencyInjections;
@@ -21,5 +25,4 @@ global using Microsoft.OpenApi.Models;
 global using StackExchange.Redis;
 global using System.Security.Claims;
 global using Amazon.S3;
-global using System.IdentityModel.Tokens.Jwt;
-global using System.Security.Cryptography;
+global using Dapper;

@@ -8,32 +8,27 @@ public static class UserEndpoints
             .WithTags("Users")
             .RequireAuthorization();
 
-        // Endpoint para recupera todos os usuários
         group.MapGet("/", GetAllAsync)
             .WithName("GetUsers")
             .Produces<List<UserResponse>>(StatusCodes.Status200OK);
 
-        // Endpoint para recupera um usuário
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetUserById")
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Endpoint para criar usuário
         group.MapPost("/", CreateAsync)
             .WithName("CreateUser")
             .Produces<UserResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status409Conflict);
 
-        // Endpoint para atualizar usuário
         group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("UpdateUser")
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Endpoint para remover um usuario
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("DeleteUser")
             .Produces(StatusCodes.Status204NoContent)
@@ -45,23 +40,20 @@ public static class UserEndpoints
     private static async Task<IResult> GetAllAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
+        var connection = db.Database.GetDbConnection();
 
-        // Por padrão, somente os usuários ativos são retornados
-        var users = await db.Users
-            .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && !x.IsActive)
-            .OrderBy(x => x.Name)
-            .Select(x => new UserResponse
-            {
-                Id = x.Id,
-                TenantId = x.TenantId,
-                Name = x.Name,
-                Email = x.Email,
-                Role = x.Role,
-                IsActive = x.IsActive,
-                CreatedAt = x.CreatedAt
-            })
-            .ToListAsync();
+        const string sql = @"SELECT id, 
+                                    tenant_id AS TenantId, 
+                                    name, 
+                                    email, 
+                                    role, 
+                                    is_active AS IsActive, 
+                                    created_at AS CreatedAt 
+                             FROM users 
+                             WHERE tenant_id = @TenantId AND is_active = true 
+                             ORDER BY name";
+
+        var users = await connection.QueryAsync<UserResponse>(sql, new { TenantId = tenantId });
 
         return Results.Ok(users);
     }
@@ -69,21 +61,19 @@ public static class UserEndpoints
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
+        var connection = db.Database.GetDbConnection();
 
-        var user = await db.Users
-            .AsNoTracking()
-            .Where(x => x.Id == id && x.TenantId == tenantId)
-            .Select(x => new UserResponse
-            {
-                Id = x.Id,
-                TenantId = x.TenantId,
-                Name = x.Name,
-                Email = x.Email,
-                Role = x.Role,
-                IsActive = x.IsActive,
-                CreatedAt = x.CreatedAt
-            })
-            .FirstOrDefaultAsync();
+        const string sql = @"SELECT id, 
+                                    tenant_id AS TenantId, 
+                                    name, 
+                                    email, 
+                                    role, 
+                                    is_active AS IsActive, 
+                                    created_at AS CreatedAt 
+                             FROM users 
+                             WHERE id = @Id AND tenant_id = @TenantId";
+
+        var user = await connection.QueryFirstOrDefaultAsync<UserResponse>(sql, new { Id = id, TenantId = tenantId });
 
         if (user is null)
             return Results.NotFound();
@@ -119,7 +109,7 @@ public static class UserEndpoints
             TenantId = tenantId,
             Name = request.Name.Trim(),
             Email = email,
-            PasswordHash = passwordHasher.Hash(request.Password), // Hash da senha usando BCrypt
+            PasswordHash = passwordHasher.Hash(request.Password),
             Role = request.Role,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -128,16 +118,15 @@ public static class UserEndpoints
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        var response = new UserResponse
-        {
-            Id = user.Id,
-            TenantId = user.TenantId,
-            Name = user.Name,
-            Email = user.Email,
-            Role = user.Role,
-            IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
-        };
+        var response = new UserResponse(
+            user.Id,
+            user.TenantId,
+            user.Name,
+            user.Email,
+            user.Role,
+            user.IsActive,
+            user.CreatedAt
+        );
 
         return Results.Created($"/api/users/{user.Id}", response);
     }
@@ -163,16 +152,17 @@ public static class UserEndpoints
 
         await db.SaveChangesAsync();
 
-        return Results.Ok(new UserResponse
-        {
-            Id = user.Id,
-            TenantId = user.TenantId,
-            Name = user.Name,
-            Email = user.Email,
-            Role = user.Role,
-            IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
-        });
+        var response = new UserResponse(
+            user.Id,
+            user.TenantId,
+            user.Name,
+            user.Email,
+            user.Role,
+            user.IsActive,
+            user.CreatedAt
+        );
+
+        return Results.Ok(response);
     }
 
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, HttpContext context)
@@ -184,7 +174,6 @@ public static class UserEndpoints
         if (user is null)
             return Results.NotFound();
 
-        // Desativa o usuário em vez de deletar, para manter o histórico e evitar problemas de integridade referencial
         user.IsActive = false;
         
         await db.SaveChangesAsync();

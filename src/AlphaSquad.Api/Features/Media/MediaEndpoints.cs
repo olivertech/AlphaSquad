@@ -1,10 +1,5 @@
-namespace AlphaSquad.Api.Features.Media;
+ï»¿namespace AlphaSquad.Api.Features.Media;
 
-/// <summary>
-/// O MapMediaEndpoints define os endpoints relacionados à mídia, como upload de arquivos. 
-/// Ele é usado para organizar e agrupar as rotas de mídia sob um prefixo 
-/// comum (/api/media) e aplicar tags para documentação.
-/// </summary>
 public static class MediaEndpoints
 {
     public static IEndpointRouteBuilder MapMediaEndpoints(this IEndpointRouteBuilder app)
@@ -12,7 +7,6 @@ public static class MediaEndpoints
         var group = app.MapGroup("/api/media")
             .WithTags("Media");
 
-        // Upload de arquivo (imagem, logo, etc)
         group.MapPost("/upload", UploadAsync)
             .RequireAuthorization()
             .DisableAntiforgery()
@@ -21,7 +15,6 @@ public static class MediaEndpoints
             .Produces<UploadMediaResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
-        // Atualizar a midia (ex: renomear o arquivo)
         group.MapPut("/{id:guid}/file", ReplaceFileAsync)
             .RequireAuthorization()
             .DisableAntiforgery()
@@ -31,20 +24,17 @@ public static class MediaEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Deletar a mídia
         group.MapDelete("/{id:guid}", DeleteAsync)
             .RequireAuthorization()
             .WithName("DeleteMedia")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
-        // Listar mídias do tenant com paginação
         group.MapGet("/", GetAllAsync)
             .RequireAuthorization()
             .WithName("GetTenantMedias")
             .Produces<List<TenantMediaResponse>>(StatusCodes.Status200OK);
 
-        // Obter detalhes de uma mídia específica
         group.MapGet("/{id:guid}", GetByIdAsync)
             .RequireAuthorization()
             .WithName("GetMediaById")
@@ -54,24 +44,16 @@ public static class MediaEndpoints
         return app;
     }
 
-    /// <summary>
-    /// Obtém os detalhes de um arquivo de mídia específico, garantindo que ele pertença ao tenant do usuário.
-    /// </summary>
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
+        var connection = db.Database.GetDbConnection();
 
-        var media = await db.TenantMedias
-            .AsNoTracking()
-            .Where(x => x.Id == id && x.TenantId == tenantId)
-            .Select(x => new MediaResponse
-            {
-                Id = x.Id,
-                FileName = x.FileName,
-                ContentType = x.ContentType,
-                Url = x.Url
-            })
-            .FirstOrDefaultAsync();
+        const string sql = @"SELECT id, file_name AS FileName, content_type AS ContentType, url 
+                             FROM tenant_medias 
+                             WHERE id = @Id AND tenant_id = @TenantId";
+
+        var media = await connection.QueryFirstOrDefaultAsync<MediaResponse>(sql, new { Id = id, TenantId = tenantId });
 
         if (media is null)
             return Results.NotFound();
@@ -89,28 +71,23 @@ public static class MediaEndpoints
         page = page < 1 ? 1 : page;
         pageSize = pageSize is < 1 or > 100 ? 20 : pageSize;
 
-        var query = db.TenantMedias
-            .AsNoTracking()
-            .Where(x => x.TenantId == tenantId);
+        var connection = db.Database.GetDbConnection();
 
-        var total = await query.CountAsync();
+        const string countSql = @"SELECT COUNT(*) FROM tenant_medias WHERE tenant_id = @TenantId";
+        const string itemsSql = @"SELECT id, tenant_id AS TenantId, file_name AS FileName, content_type AS ContentType, 
+                                  size, storage_key AS StorageKey, url, created_at AS CreatedAt 
+                                  FROM tenant_medias 
+                                  WHERE tenant_id = @TenantId 
+                                  ORDER BY created_at DESC 
+                                  LIMIT @Limit OFFSET @Offset";
 
-        var items = await query
-            .OrderByDescending(x => x.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(x => new TenantMediaResponse
-            {
-                Id = x.Id,
-                TenantId = x.TenantId,
-                FileName = x.FileName,
-                ContentType = x.ContentType,
-                Size = x.Size,
-                StorageKey = x.StorageKey,
-                Url = x.Url,
-                CreatedAt = x.CreatedAt
-            })
-            .ToListAsync();
+        var total = await connection.ExecuteScalarAsync<int>(countSql, new { TenantId = tenantId });
+        var items = await connection.QueryAsync<TenantMediaResponse>(itemsSql, new 
+        { 
+            TenantId = tenantId, 
+            Limit = pageSize, 
+            Offset = (page - 1) * pageSize 
+        });
 
         return Results.Ok(new
         {
@@ -139,15 +116,10 @@ public static class MediaEndpoints
             return Results.NotFound();
 
         var oldStorageKey = media.StorageKey;
-
         var path = $"tenants/{tenantSlug}/media";
 
         using var stream = file.OpenReadStream();
-
-        var uploadResult = await storage.UploadAsync(stream,
-                                                     file.FileName,
-                                                     file.ContentType,
-                                                     path);
+        var uploadResult = await storage.UploadAsync(stream, file.FileName, file.ContentType, path);
 
         media.FileName = file.FileName;
         media.ContentType = file.ContentType;
@@ -156,20 +128,18 @@ public static class MediaEndpoints
         media.Url = uploadResult.Url;
 
         await db.SaveChangesAsync();
-
         await storage.DeleteAsync(oldStorageKey);
 
-        return Results.Ok(new TenantMediaResponse
-        {
-            Id = media.Id,
-            TenantId = media.TenantId,
-            FileName = media.FileName.ToLower(),
-            ContentType = media.ContentType,
-            Size = media.Size,
-            StorageKey = media.StorageKey,
-            Url = media.Url,
-            CreatedAt = media.CreatedAt
-        });
+        return Results.Ok(new TenantMediaResponse(
+            media.Id,
+            media.TenantId,
+            media.FileName.ToLower(),
+            media.ContentType,
+            media.Size,
+            media.StorageKey,
+            media.Url,
+            media.CreatedAt
+        ));
     }
 
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, IObjectStorageService storage, HttpContext context)
@@ -181,6 +151,15 @@ public static class MediaEndpoints
 
         if (media is null)
             return Results.NotFound();
+
+        // CORREÃ‡ÃƒO: Verificar se esta mÃ­dia Ã© a logo de algum tenant para evitar violaÃ§Ã£o de FK
+        var tenantWithLogo = await db.Tenants.FirstOrDefaultAsync(x => x.LogoMediaId == id);
+        if (tenantWithLogo != null)
+        {
+            tenantWithLogo.LogoMediaId = null;
+            tenantWithLogo.LogoUrl = null;
+            await db.SaveChangesAsync();
+        }
 
         await storage.DeleteAsync(media.StorageKey);
 
@@ -201,7 +180,6 @@ public static class MediaEndpoints
         var path = $"tenants/{tenantSlug}/media";
 
         using var stream = file.OpenReadStream();
-
         var result = await storage.UploadAsync(
             stream,
             file.FileName.ToLower(),

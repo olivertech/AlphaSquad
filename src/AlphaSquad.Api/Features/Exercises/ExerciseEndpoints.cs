@@ -1,14 +1,7 @@
 ﻿namespace AlphaSquad.Api.Features.Exercises;
 
-/// <summary>
-/// Define os endpoints para o gerenciamento de Exercícios.
-/// Segue o padrão de Vertical Slice, concentrando a lógica de acesso aos dados e regras de negócio para esta feature.
-/// </summary>
 public static class ExerciseEndpoints
 {
-    /// <summary>
-    /// Mapeia as rotas de Exercícios no sistema.
-    /// </summary>
     public static IEndpointRouteBuilder MapExerciseEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/exercises")
@@ -43,52 +36,45 @@ public static class ExerciseEndpoints
         return app;
     }
 
-    /// <summary>
-    /// Recupera todos os exercícios vinculados ao Tenant autenticado.
-    /// </summary>
     private static async Task<IResult> GetAllAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
+        var connection = db.Database.GetDbConnection();
 
-        var exercises = await db.Exercises
-            .AsNoTracking()
-            .Where(x => x.TenantId == tenantId)
-            .OrderBy(x => x.Name)
-            .Select(x => new ExerciseResponse(
-                x.Id,
-                x.Name,
-                x.MuscleGroup,
-                x.Description,
-                x.MediaId,
-                x.Media != null ? x.Media.Url : null,
-                x.CreatedAt
-            ))
-            .ToListAsync();
+        const string sql = @"SELECT e.id, 
+                                    e.name, 
+                                    e.muscle_group, 
+                                    e.description, 
+                                    e.media_id, 
+                                    m.url, 
+                                    e.created_at 
+                             FROM exercises e 
+                             LEFT JOIN tenant_medias m ON e.media_id = m.id 
+                             WHERE e.tenant_id = @TenantId 
+                             ORDER BY e.name";
 
-        return Results.Ok(exercises);
+        var exercises = await connection.QueryAsync<ExerciseResponse>(sql, new { TenantId = tenantId });
+
+        return Results.Ok(exercises.ToList());
     }
 
-    /// <summary>
-    /// Recupera um exercício específico por ID, garantindo que pertença ao Tenant autenticado.
-    /// </summary>
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
+        var connection = db.Database.GetDbConnection();
 
-        var exercise = await db.Exercises
-            .AsNoTracking()
-            .Include(x => x.Media)
-            .Where(x => x.Id == id && x.TenantId == tenantId)
-            .Select(x => new ExerciseResponse(
-                x.Id,
-                x.Name,
-                x.MuscleGroup,
-                x.Description,
-                x.MediaId,
-                x.Media != null ? x.Media.Url : null,
-                x.CreatedAt
-            ))
-            .FirstOrDefaultAsync();
+        const string sql = @"SELECT e.id, 
+                                    e.name, 
+                                    e.muscle_group, 
+                                    e.description, 
+                                    e.media_id, 
+                                    m.url, 
+                                    e.created_at 
+                             FROM exercises e 
+                             LEFT JOIN tenant_medias m ON e.media_id = m.id 
+                             WHERE e.id = @Id AND e.tenant_id = @TenantId";
+
+        var exercise = await connection.QueryFirstOrDefaultAsync<ExerciseResponse>(sql, new { Id = id, TenantId = tenantId });
 
         if (exercise is null)
             return Results.NotFound();
@@ -96,9 +82,6 @@ public static class ExerciseEndpoints
         return Results.Ok(exercise);
     }
 
-    /// <summary>
-    /// Cria um novo exercício para a academia autenticada.
-    /// </summary>
     private static async Task<IResult> CreateAsync(ExerciseCreateRequest request, AppDbContext db, HttpContext context)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -129,16 +112,13 @@ public static class ExerciseEndpoints
             exercise.MuscleGroup,
             exercise.Description,
             exercise.MediaId,
-            null, // A URL da mídia seria resolvida em uma consulta separada ou via Join
+            null, 
             exercise.CreatedAt
         );
 
         return Results.Created($"/api/exercises/{exercise.Id}", response);
     }
 
-    /// <summary>
-    /// Atualiza os dados de um exercício existente, validando a propriedade do Tenant.
-    /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id, ExerciseUpdateRequest request, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -174,9 +154,6 @@ public static class ExerciseEndpoints
         return Results.Ok(response);
     }
 
-    /// <summary>
-    /// Remove permanentemente um exercício do sistema.
-    /// </summary>
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
