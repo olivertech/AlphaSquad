@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Exercise> Exercises => Set<Exercise>();
     public DbSet<Workout> Workouts => Set<Workout>();
     public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
+    public DbSet<CheckIn> CheckIns => Set<CheckIn>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -173,6 +174,32 @@ public class AppDbContext : DbContext
             entity.HasOne(x => x.Exercise)
                 .WithMany(e => e.WorkoutExercises)
                 .HasForeignKey(x => x.ExerciseId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mapeia o registro de check-in com os vínculos de tenant e usuário.
+        modelBuilder.Entity<CheckIn>(entity =>
+        {
+            entity.ToTable("checkins");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.CheckedInAt).HasColumnName("checked_in_at");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.UserId);
+            // Este índice ajuda nas consultas por tenant, usuário e período.
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.CheckedInAt });
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

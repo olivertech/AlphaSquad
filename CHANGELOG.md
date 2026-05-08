@@ -16,6 +16,20 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 - O backend ja possui base consolidada para `Auth`, `Tenants`, `Media`, `Users` e `Exercises`.
 - O dominio de `Workout` ja aparece no modelo de dados, migrations e implementacao local, mas ainda deve ser tratado como modulo em evolucao.
 
+## [2026-05-07] - Check-in Module
+
+### Added
+
+- Entidade `CheckIn` com suporte a multi-tenancy.
+- Endpoint `POST /api/checkins` para registrar entrada do usuario autenticado.
+- Endpoint `GET /api/checkins/me` para consultar o historico do proprio usuario.
+- Endpoint `GET /api/checkins/tenant` para consulta paginada do tenant com filtro por usuario e periodo.
+- Regra para impedir check-in duplicado no mesmo dia.
+
+### Changed
+
+- `README.md` e `ROADMAP.md` atualizados para refletir a entrega inicial do modulo de check-in.
+
 ## [2026-05-06] - Authentication & Security Base
 
 ### Added

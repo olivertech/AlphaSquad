@@ -136,5 +136,6 @@ app.MapMediaEndpoints();
 app.MapUserEndpoints();
 app.MapExerciseEndpoints();
 app.MapWorkoutEndpoints();
+app.MapCheckInEndpoints();
 
 app.Run();

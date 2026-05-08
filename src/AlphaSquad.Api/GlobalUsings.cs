@@ -16,8 +16,10 @@ global using AlphaSquad.Shared.Helpers;
 global using AlphaSquad.Api.Features.Users;
 global using AlphaSquad.Infrastructure.Auth;
 global using AlphaSquad.Shared.DTOs.Exercises;
+global using AlphaSquad.Shared.DTOs.Checkins;
 global using AlphaSquad.Api.Features.Exercises;
 global using AlphaSquad.Api.Features.Workouts;
+global using AlphaSquad.Api.Features.Checkins;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;

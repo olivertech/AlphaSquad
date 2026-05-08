@@ -24,6 +24,7 @@ Features identificadas hoje:
 - `Media`
 - `Users`
 - `Exercises`
+- `Checkins`
 - `Workouts` em desenvolvimento no workspace
 
 ### Minimal APIs
@@ -42,6 +43,17 @@ Sem framework formal de CQRS, mas com divisao pragmatica:
 - `Dapper` para consultas e respostas enxutas
 
 Esse padrao aparece claramente em modulos como `Users`, `Media`, `Tenants`, `Exercises` e `Workouts`.
+
+### Foco didatico e documentacao em codigo
+
+Este projeto tambem tem um objetivo didatico e deve poder ser consultado futuramente por outros profissionais.
+
+Por isso, todo novo codigo deve seguir estas diretrizes:
+
+- classes e metodos novos devem trazer comentarios simples explicando o que fazem
+- comentarios devem ajudar leitura e manutencao, sem virar texto excessivo
+- regras de negocio, integracoes relevantes e pontos de isolamento multi-tenant devem ser comentados
+- a documentacao em codigo deve evoluir junto com as features, e nao ser tratada como etapa opcional
 
 ## Estrutura da solution
 
@@ -138,6 +150,7 @@ O backend usa dois tokens:
 - `Feature`
 - `TenantFeature`
 - `Exercise`
+- `CheckIn`
 - `Workout`
 - `WorkoutExercise`
 
@@ -231,6 +244,7 @@ Na inicializacao da aplicacao:
 - usuarios
 - media
 - exercicios
+- check-in
 
 ### Em progresso
 
