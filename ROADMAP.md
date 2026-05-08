@@ -1,39 +1,56 @@
-# ??? Project Roadmap
+# Project Roadmap
 
-This document tracks the evolution and planned features of the AlphaSquad platform.
+Este roadmap foi alinhado com o estado atual do codigo em 2026-05-07.
 
-## ?? Development Phases
+## Fase 1: Authentication & Security
 
-### Phase 1: Authentication & Security ?
-- [x] Implement Refresh Token rotation.
-- [x] Implement Change Password functionality.
-- [x] Implement Logout (session revocation).
-- [x] Fix database relationships for Refresh Tokens.
-- [x] Secure claims parsing for User IDs.
+- [x] Implement refresh token rotation
+- [x] Implement change password
+- [x] Implement logout com revogacao de sessoes
+- [x] Corrigir relacionamento de refresh tokens
+- [x] Tratar parse seguro de claims de usuario
+- [ ] Adicionar policies e permissoes por role
+- [ ] Centralizar tenant resolution em middleware
 
-### Phase 2: Tenant, Media & Features ?
-- [x] Model `Feature` and `TenantFeature` entities.
-- [x] Seed base features and link to `alpha-demo` tenant.
-- [x] Implement `GET /api/tenants/current`.
-- [x] Implement `PUT /api/tenants/current/logo` with automatic old file deletion.
-- [x] Implement `GET /api/tenants/current/features`.
-- [x] Implement `GET /api/media/{id}`.
+## Fase 2: Tenant, Media & Feature Access
 
-### Phase 3: Workouts & Exercises ??
-- [ ] Implement Exercise CRUD.
-- [ ] Implement Workout CRUD.
-- [ ] Implement Workout-Exercise association (`POST /api/workouts/{id}/exercises`).
+- [x] Modelar `Feature` e `TenantFeature`
+- [x] Seed de features base para o tenant demo
+- [x] Implementar `GET /api/tenants/current`
+- [x] Implementar `PUT /api/tenants/current/logo`
+- [x] Implementar `GET /api/tenants/current/features`
+- [x] Implementar `GET /api/media/{id}`
+- [x] Implementar CRUD de midias com storage externo
+- [x] Implementar cache de tenant por slug com Redis
 
-### Phase 4: Engagement & Scheduling ??
-- [ ] Implement Check-in system (`POST /api/checkins`).
-- [ ] Implement Check-in queries (`/me` and `/tenant`).
-- [ ] Implement Classes/Agendas CRUD.
-- [ ] Implement Class Booking system (`book` / `unbook`).
+## Fase 3: Exercises & Workouts
 
----
+- [x] Implementar Exercise CRUD
+- [ ] Consolidar Workout CRUD
+- [ ] Consolidar associacao treino-exercicio
+- [ ] Validar fluxos completos de treinos no workspace
+- [ ] Revisar regras de exclusao e integridade entre treinos, exercicios e midias
 
-## ?? Goals
-- [ ] Full multi-tenant isolation.
-- [ ] High performance via Redis caching.
-- [ ] Scalable media storage via Cloudflare R2.
-- [ ] Complete gym management workflow.
+Nota:
+O dominio de `Workout` e `WorkoutExercise` ja existe no modelo de dados e ha implementacao em andamento no workspace, mas ele ainda nao deve ser tratado como modulo fechado ate validacao final.
+
+## Fase 4: Engagement & Scheduling
+
+- [ ] Implementar check-in (`POST /api/checkins`)
+- [ ] Implementar consultas de check-in por aluno e por tenant
+- [ ] Implementar classes/agendas CRUD
+- [ ] Implementar booking e unbooking de aulas
+
+## Fase 5: Product Experience
+
+- [ ] Progresso do aluno
+- [ ] Ranking e desafios
+- [ ] Notificacoes
+- [ ] Estrutura para app mobile
+
+## Metas continuas
+
+- [ ] Garantir isolamento multi-tenant em todos os modulos
+- [ ] Padronizar paginacao e filtros
+- [ ] Aumentar cobertura de testes
+- [ ] Preparar configuracao por ambiente para deploy real

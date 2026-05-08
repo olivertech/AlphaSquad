@@ -1,481 +1,178 @@
-# 🚀 AlphaSquad Platform
+# AlphaSquad Platform
 
-**AlphaSquad** é uma plataforma SaaS **white-label para academias**, focada em **engajamento, retenção de alunos e experiência mobile**.
+AlphaSquad e uma plataforma SaaS white-label para academias, com foco em engajamento, retencao de alunos e operacao mobile-first.
 
-A proposta é permitir que academias tenham **seu próprio aplicativo personalizado**, sustentado por uma arquitetura **multi-tenant escalável e performática**.
+A proposta do produto e permitir que cada academia tenha seu proprio aplicativo com identidade visual, modulos habilitaveis por tenant e uma base tecnica preparada para crescimento.
 
----
+## Visao do produto
 
-## 🎯 Objetivo do Projeto
+- White-label para academias
+- Multi-tenant desde o backend
+- Foco em retencao, frequencia e experiencia do aluno
+- Base preparada para app mobile no futuro
 
-Permitir que academias:
+## Estado atual do projeto
 
-* Tenham um app próprio com sua marca (white-label)
-* Engajem alunos com treinos, desafios e comunicação
-* Aumentem retenção e frequência
-* Centralizem operações mobile
+O backend atual ja possui uma base funcional consistente para autenticacao, gestao de tenant, usuarios e midia, alem de modulos iniciais de dominio para exercicios e treinos.
 
----
+### Modulos consolidados
 
-## 🧠 Visão do Produto
+- Autenticacao com JWT
+- Refresh token rotation
+- Endpoint de sessao atual (`/api/auth/me`)
+- Change password com revogacao de sessoes
+- Logout com revogacao de refresh tokens
+- CRUD de usuarios com isolamento por tenant
+- Tenant config por slug com cache Redis
+- Tenant atual e features habilitadas
+- Upload e gestao de logo do tenant
+- CRUD de midias com Cloudflare R2
+- CRUD de exercicios
 
-> **Plataforma de engajamento para academias com foco em retenção de alunos**
+### Modulos em evolucao
 
----
+- Workouts/treinos
+- Associacao treino-exercicio
+- Permissoes por role
+- Check-in, agendas e reservas
+- Fluxos de engajamento do aluno
 
-## 🧱 Arquitetura
+## Arquitetura em resumo
 
-Abordagem **clean minimalista**, com foco em:
+- .NET 10
+- ASP.NET Core Minimal APIs
+- Vertical Slice Architecture
+- EF Core para escrita
+- Dapper para leitura
+- PostgreSQL como fonte principal de dados
+- Redis para cache distribuido
+- Cloudflare R2 para storage de arquivos
 
-* Simplicidade
-* Escalabilidade
-* Performance
-* Manutenibilidade
+## Estrutura da solution
 
-### Estrutura da Solution
-
-```
+```text
 AlphaSquad/
-│
-├── src/
-│   ├── AlphaSquad.Api              → API principal (ASP.NET Core)
-│   ├── AlphaSquad.Infrastructure   → Dados, EF Core, Dapper, Redis, Storage
-│   └── AlphaSquad.Shared           → Contratos e modelos compartilhados
-│
-└── AlphaSquad.sln
+|
++-- src/
+|   +-- AlphaSquad.Api
+|   +-- AlphaSquad.Infrastructure
+|   +-- AlphaSquad.Shared
+|
++-- AlphaSquad.slnx
 ```
 
----
+## Multi-tenancy
 
-## 🧩 Abordagem Arquitetural
+O isolamento e baseado em `TenantId` e aparece em tres camadas principais:
 
-* **Vertical Slice (Feature-first)**
-* **Minimal APIs**
-* **EF Core** → comandos (INSERT, UPDATE, DELETE)
-* **Dapper** → consultas (SELECT)
-* **Redis** → cache distribuído
-* **Cloudflare R2** → armazenamento de arquivos
-* **Multi-tenant (TenantId)**
+- Banco de dados: filtros por tenant nas queries
+- JWT: claims com `tenant_id` e `tenant_slug`
+- Storage: paths segregados por tenant
 
----
+## Endpoints principais
 
-## 🏗️ Stack Tecnológica
+### Auth
 
-### Backend
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `POST /api/auth/refresh`
+- `POST /api/auth/change-password`
+- `POST /api/auth/logout`
 
-* .NET 10
-* ASP.NET Core (Minimal APIs)
-* Entity Framework Core
-* Dapper
-* PostgreSQL
-* Redis (Docker)
-* Cloudflare R2 (S3-compatible storage)
+### Tenants
 
-### Infraestrutura
+- `GET /api/tenants/by-slug/{slug}`
+- `PUT /api/tenants/{id}`
+- `GET /api/tenants/current`
+- `PUT /api/tenants/current/logo`
+- `GET /api/tenants/current/features`
 
-* VPS (Hostinger)
-* Docker
-* Cloudflare (Storage)
+### Media
 
-### Mobile (futuro)
+- `POST /api/media/upload`
+- `GET /api/media`
+- `GET /api/media/{id}`
+- `PUT /api/media/{id}/file`
+- `DELETE /api/media/{id}`
 
-* .NET MAUI
+### Users
 
----
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `POST /api/users`
+- `PUT /api/users/{id}`
+- `DELETE /api/users/{id}`
 
-# ⚡ Cache Distribuído com Redis
+### Exercises
 
-### Estratégia
+- `GET /api/exercises`
+- `GET /api/exercises/{id}`
+- `POST /api/exercises`
+- `PUT /api/exercises/{id}`
+- `DELETE /api/exercises/{id}`
 
-```text
-Cache-aside (lazy loading)
-```
+## Banco de dados
 
-### Fluxo
+Entidades ja presentes no projeto:
 
-1. API consulta Redis
-2. Cache hit → retorna imediatamente
-3. Cache miss → consulta banco
-4. Persiste no Redis com TTL
-5. Retorna resposta
+- `Tenant`
+- `AppUser`
+- `RefreshToken`
+- `TenantMedia`
+- `Feature`
+- `TenantFeature`
+- `Exercise`
+- `Workout`
+- `WorkoutExercise`
 
----
+## Seed inicial
 
-### 🔁 Invalidação
+Ao subir a aplicacao, o projeto aplica migrations e garante a existencia de:
 
-```csharp
-await cache.RemoveAsync(CacheKeys.TenantConfig(slug));
-```
+- tenant demo `alpha-demo`
+- usuario admin `admin@alphasquad.app`
+- features base vinculadas ao tenant demo
 
----
+## Infra local
 
-### 🔑 Padrão de chave
-
-```text
-AlphaSquad:tenant-config:{slug}
-```
-
----
-
-### 🧪 Monitoramento
-
-Ferramenta utilizada:
-
-👉 **RedisInsight**
-
-Permite:
-
-* Visualização de chaves
-* Inspeção de payload JSON
-* Análise de TTL
-* Debug de cache
-
----
-
-# ☁️ Armazenamento com Cloudflare R2
-
-O projeto utiliza **Cloudflare R2** para armazenamento de arquivos (uploads de mídia).
-
----
-
-## 📦 Estratégia
-
-* Compatível com API S3
-* Sem custo de egress (vantagem relevante)
-* Organização por tenant
-
----
-
-## 📁 Estrutura lógica no storage
-
-```text
-tenants/{tenantSlug}/media/{guid}_{fileName}
-```
-
----
-
-## 🔐 Segurança
-
-* Upload autenticado via JWT
-* Tenant isolado via claims
-* Bucket privado
-* URL pública configurável
-
----
-
-## ⚙️ Configuração (appsettings.json)
-
-```json
-"Storage": {
-  "Provider": "CloudflareR2",
-  "Endpoint": "https://<accountid>.r2.cloudflarestorage.com",
-  "AccessKey": "SEU_ACCESS_KEY",
-  "SecretKey": "SEU_SECRET_KEY",
-  "BucketName": "alphasquad-media",
-  "PublicBaseUrl": "https://SEU_DOMINIO_PUBLICO"
-}
-```
-
----
-
-## 🔄 Fluxo de Upload
-
-1. Cliente envia `multipart/form-data`
-2. API valida arquivo
-3. Extrai TenantId e TenantSlug do JWT
-4. Faz upload para R2
-5. Persiste metadata no banco
-6. Retorna URL pública
-
----
-
-# 🧩 Módulo de Mídia (Media)
-
-## Funcionalidades implementadas
-
-* Upload de arquivos
-* Atualização de arquivo
-* Exclusão de mídia
-* Listagem por tenant
-
----
-
-## 📡 Endpoints
-
-### Upload
-
-```http
-POST /api/media/upload
-```
-
----
-
-### Atualizar arquivo
-
-```http
-PUT /api/media/{id}/file
-```
-
----
-
-### Remover mídia
-
-```http
-DELETE /api/media/{id}
-```
-
----
-
-### Listar mídias do tenant
-
-```http
-GET /api/media
-```
-
----
-
-## 🧠 Persistência
-
-Tabela:
-
-```text
-TenantMedias
-```
-
-Campos:
-
-* Id
-* TenantId
-* FileName
-* ContentType
-* Size
-* StorageKey
-* Url
-* CreatedAt
-
----
-
-## 🔗 Integridade
-
-Relacionamento:
-
-```text
-Tenant (1) → (N) TenantMedias
-```
-
----
-
-# 👤 Módulo de Usuários (Users)
-
-## Funcionalidades implementadas
-
-* CRUD completo de usuários
-* Isolamento por tenant
-* Validação de e-mail único por tenant
-* Hash de senha
-
----
-
-## 📡 Endpoints
-
-### Listar usuários
-
-```http
-GET /api/users
-```
-
----
-
-### Buscar por ID
-
-```http
-GET /api/users/{id}
-```
-
----
-
-### Criar usuário
-
-```http
-POST /api/users
-```
-
----
-
-### Atualizar usuário
-
-```http
-PUT /api/users/{id}
-```
-
----
-
-### Remover usuário
-
-```http
-DELETE /api/users/{id}
-```
-
----
-
-## 🔐 Segurança
-
-* Todos endpoints protegidos por JWT
-* TenantId extraído do token
-* Isolamento garantido por query
-
----
-
-# 🧠 Multi-Tenancy
-
-Isolamento via:
-
-```text
-TenantId (GUID)
-```
-
-Aplicado em:
-
-* Queries (WHERE TenantId)
-* Storage (path por tenant)
-* JWT (claims)
-
----
-
-# 🔑 Autenticação
-
-* JWT
-* Roles:
-
-  * Admin
-  * Teacher
-  * Student
-
----
-
-# 🗄️ Banco de Dados
-
-### Entidades
-
-* Tenants
-* Users
-* TenantMedias
-
----
-
-# 🚀 Como rodar o projeto
-
-### 1. Clonar
+O repositório possui `docker-compose.yml` para subir o Redis localmente:
 
 ```bash
-git clone https://github.com/seu-usuario/alphasquad.git
-cd alphasquad
+docker compose up -d
 ```
 
----
+O PostgreSQL atualmente deve estar disponivel separadamente, conforme a connection string configurada em `src/AlphaSquad.Api/appsettings.json`.
 
-### 2. Subir Redis
+## Como rodar
+
+### 1. Subir Redis
 
 ```bash
-docker run -d -p 6379:6379 redis
+docker compose up -d
 ```
 
----
+### 2. Garantir PostgreSQL local
 
-### 3. Configurar PostgreSQL
+Exemplo atual de configuracao:
 
 ```text
-Database: alphasquad_db
+Host=localhost;Port=5432;Database=AlphaSquad;Username=postgres;Password=123
 ```
 
----
-
-### 4. Migrations
-
-```bash
-dotnet ef database update \
---project src/AlphaSquad.Infrastructure \
---startup-project src/AlphaSquad.Api
-```
-
----
-
-### 5. Executar API
+### 3. Executar a API
 
 ```bash
 dotnet run --project src/AlphaSquad.Api
 ```
 
----
-
-### 6. Swagger
+### 4. Abrir o Swagger
 
 ```text
 https://localhost:7054/swagger
 ```
 
----
+## Observacoes importantes
 
-# 📦 Padrões utilizados
-
-* Clean Architecture (minimalista)
-* Vertical Slice Architecture
-* Minimal APIs
-* Cache-aside pattern
-* Multi-tenant isolation
-* S3-compatible storage abstraction
-
----
-
-# ⚠️ Status do Projeto
-
-🚧 Em desenvolvimento
-
-### Módulos concluídos
-
-* [x] Estrutura base
-* [x] EF Core + PostgreSQL
-* [x] Redis (cache distribuído)
-* [x] Cloudflare R2 (upload de mídia)
-* [x] Módulo de mídia (CRUD completo)
-* [x] Módulo de usuários (CRUD completo)
-
----
-
-# 🔮 Próximos passos
-
-### Backend
-
-* [ ] Refresh Token
-* [ ] Change Password
-* [ ] Middleware de Tenant
-* [ ] Permissões por Role
-* [ ] Paginação e filtros
-
-### Produto
-
-* [ ] Workouts
-* [ ] Check-in
-* [ ] Progresso
-* [ ] Ranking
-* [ ] Notificações
-
----
-
-# 💡 Diferenciais
-
-* Arquitetura moderna com .NET 10
-* Multi-tenant desde o core
-* Cache distribuído com Redis
-* Upload escalável com Cloudflare R2
-* Estrutura pronta para SaaS real
-* Forte apelo para portfólio técnico
-
----
-
-# 👨‍💻 Autor
-
-Marcelo Oliveira
-Senior .NET Developer
-🔗 [https://www.linkedin.com/in/marcelo-de-oliveira-60b26514/](https://www.linkedin.com/in/marcelo-de-oliveira-60b26514/)
-
+- A documentacao agora reflete o estado real do workspace em 2026-05-07.
+- O modulo de workouts aparece no codigo e no modelo de dados, mas ainda deve ser tratado como frente em andamento ate validacao final completa.
+- A compilacao nao foi validada de ponta a ponta neste ambiente por limitacoes do runner do `dotnet`, entao os documentos abaixo foram alinhados pela leitura do codigo fonte e das migrations.

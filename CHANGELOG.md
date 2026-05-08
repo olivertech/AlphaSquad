@@ -1,26 +1,45 @@
-# ?? Changelog
+# Changelog
 
-All notable changes to the AlphaSquad project will be documented here.
+Todas as mudancas relevantes do projeto sao registradas aqui.
+
+## [2026-05-07] - Documentation Alignment & Codebase Overview
+
+### Changed
+
+- Atualizada a documentacao da raiz para refletir o estado real do workspace.
+- Alinhado o `README.md` com os modulos atualmente presentes no backend.
+- Revisado o `ARCHITECTURE.md` para incluir `Exercises`, feature flags por tenant e o estado do dominio de `Workouts`.
+- Revisado o `ROADMAP.md` para marcar `Exercise CRUD` como concluido e `Workout` como frente em consolidacao.
+
+### Noted
+
+- O backend ja possui base consolidada para `Auth`, `Tenants`, `Media`, `Users` e `Exercises`.
+- O dominio de `Workout` ja aparece no modelo de dados, migrations e implementacao local, mas ainda deve ser tratado como modulo em evolucao.
 
 ## [2026-05-06] - Authentication & Security Base
+
 ### Added
-- **Refresh Token System**: Implemented full rotation logic to secure sessions.
-- **Change Password**: Added endpoint to allow users to update passwords with current password validation.
-- **Logout**: Added session revocation for all active refresh tokens.
-- **Infrastructure**: Created `RefreshToken` entity and configured it in `AppDbContext`.
-- **Security**: Integrated session termination during password changes.
-- **Documentation**: Created `ARCHITECTURE.md`, `ROADMAP.md`, and `CHANGELOG.md`.
+
+- Refresh token rotation com persistencia em banco.
+- Change password com validacao da senha atual.
+- Logout com revogacao de tokens ativos.
+- Entidade `RefreshToken` e configuracao no `AppDbContext`.
+- Revogacao de sessoes durante troca de senha.
+- Documentacao inicial de arquitetura, roadmap e changelog.
 
 ### Fixed
-- **Database Relationships**: Fixed the missing Foreign Key relationship between `AppUser` and `RefreshToken`.
-- **Null Safety**: Resolved potential null reference warnings when parsing User IDs from JWT claims.
-- **Comments**: Restored and expanded technical documentation within the code for didactic purposes.
+
+- Relacionamento entre `AppUser` e `RefreshToken`.
+- Null safety no parse de `UserId` vindo das claims.
+- Comentarios tecnicos restaurados e expandidos no codigo.
 
 ## [2026-05-06] - Tenant, Media & Features Implementation
+
 ### Added
-- **Feature Management**: Implementation of `Feature` and `TenantFeature` entities to control access to modules.
-- **Feature Seeding**: Automatic seeding of base features linked to the `alpha-demo` tenant.
-- **Tenant Current Endpoints**: Implementation of `/api/tenants/current` and `/api/tenants/current/features`.
-- **Logo Management**: Implementation of `PUT /api/tenants/current/logo` with automatic deletion of old files from Cloudflare R2.
-- **Media Details**: Implementation of `GET /api/media/{id}` with tenant isolation.
-- **Logo Association**: Linked `Tenant` to `TenantMedia` via `LogoMediaId` for better storage management.
+
+- `Feature` e `TenantFeature` para controle modular por tenant.
+- Seed automatico de features base para o tenant `alpha-demo`.
+- Endpoints `/api/tenants/current` e `/api/tenants/current/features`.
+- Endpoint `PUT /api/tenants/current/logo` com remocao automatica do arquivo anterior.
+- Endpoint `GET /api/media/{id}` com isolamento por tenant.
+- Relacao entre `Tenant` e `TenantMedia` via `LogoMediaId`.

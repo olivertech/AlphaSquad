@@ -5,6 +5,7 @@ global using AlphaSquad.Shared.DTOs.Auth;
 global using AlphaSquad.Shared.DTOs.Users;
 global using AlphaSquad.Shared.DTOs.Tenants;
 global using AlphaSquad.Shared.DTOs.Media;
+global using AlphaSquad.Shared.DTOs.Workouts;
 global using AlphaSquad.Api.Features.Auth;
 global using AlphaSquad.Api.Features.Tenants;
 global using AlphaSquad.Api.DependencyInjections;
@@ -15,6 +16,8 @@ global using AlphaSquad.Shared.Helpers;
 global using AlphaSquad.Api.Features.Users;
 global using AlphaSquad.Infrastructure.Auth;
 global using AlphaSquad.Shared.DTOs.Exercises;
+global using AlphaSquad.Api.Features.Exercises;
+global using AlphaSquad.Api.Features.Workouts;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;

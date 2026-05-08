@@ -1,6 +1,4 @@
-﻿using AlphaSquad.Api.Features.Exercises;
-
-var builder = WebApplication.CreateBuilder(args);
+﻿var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDependencies();
@@ -137,5 +135,6 @@ app.MapTenantEndpoints();
 app.MapMediaEndpoints();
 app.MapUserEndpoints();
 app.MapExerciseEndpoints();
+app.MapWorkoutEndpoints();
 
 app.Run();

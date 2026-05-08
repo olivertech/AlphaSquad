@@ -1,55 +1,247 @@
-﻿# ??? AlphaSquad Architecture
+# AlphaSquad Architecture
 
-This document provides a technical overview of the AlphaSquad platform architecture, designed as a white-label SaaS for gym management.
+Este documento descreve a arquitetura tecnica atual do AlphaSquad com base no codigo existente no workspace.
 
-## ?? Architectural Patterns
+## Objetivo arquitetural
 
-The project follows a **Clean Minimalist** approach with the following patterns:
+O sistema foi desenhado para sustentar um SaaS white-label para academias com:
 
-- **Vertical Slice Architecture (Feature-first)**: Code is organized by features rather than technical layers. This reduces coupling and makes the system easier to maintain and scale.
-- **Minimal APIs**: Leveraging ASP.NET Core 10 Minimal APIs for high performance and reduced boilerplate.
-- **Multi-tenancy (Silo Isolation)**: Data isolation is achieved via a `TenantId` (GUID) present in almost every entity. All queries are filtered by this ID to ensure that one gym cannot access another gym\'s data.
-- **Cache-Aside Pattern**: Uses Redis for distributed caching to reduce database load and improve response times for configuration and static data.
+- isolamento forte por tenant
+- simplicidade operacional
+- baixo acoplamento entre modulos
+- boa evolucao incremental por feature
 
-## ?? Solution Structure
+## Padroes adotados
 
-- **`AlphaSquad.Api`**: 
-    - Entry point of the application.
-    - Contains the endpoints organized by features (e.g., `Features/Auth`, `Features/Users`).
-    - Handles HTTP requests, validation, and responses.
-- **`AlphaSquad.Infrastructure`**: 
-    - Implements the "heavy lifting".
-    - **Persistence**: EF Core with PostgreSQL.
-    - **Auth**: JWT generation and password hashing (BCrypt).
-    - **Storage**: Cloudflare R2 integration via S3-compatible API.
-    - **Caching**: Redis implementation.
-- **`AlphaSquad.Shared`**: 
-    - Common contracts, DTOs, Enums, and helpers.
-    - Ensures a consistent data contract between the API and Infrastructure.
+### Vertical Slice Architecture
 
-## ?? Authentication & Security Flow
+Os endpoints sao organizados por feature em `src/AlphaSquad.Api/Features`, reduzindo dependencia entre modulos e favorecendo evolucao isolada de cada dominio.
 
-### Token Strategy
-The system uses a dual-token strategy to balance security and user experience:
-1. **Access Token (JWT)**: Short-lived token containing user identity and tenant info.
-2. **Refresh Token**: Long-lived, opaque, cryptographically strong string stored in the database.
+Features identificadas hoje:
 
-### Refresh Token Rotation
-To prevent replay attacks, the system implements **Refresh Token Rotation**:
-- When a user requests a new Access Token using a Refresh Token, the current Refresh Token is marked as `IsUsed`.
-- A brand new Refresh Token is generated and returned to the client.
-- If a used or revoked token is presented, the system can flag the session as compromised.
+- `Auth`
+- `Tenants`
+- `Media`
+- `Users`
+- `Exercises`
+- `Workouts` em desenvolvimento no workspace
 
-### Security Safeguards
-- **Password Hashing**: Uses BCrypt for secure storage.
-- **Session Termination**: Changing a password or logging out explicitly revokes all active Refresh Tokens for that user.
-- **Case-Insensitive Emails**: Uses PostgreSQL `citext` to prevent duplicate accounts with different casing.
+### Minimal APIs
 
-## ?? Infrastructure Integration
+A API usa ASP.NET Core Minimal APIs para:
 
-- **Storage**: Files are organized in Cloudflare R2 using the path: `tenants/{tenantSlug}/media/{guid}_{fileName}`.
-- **Logo Management**: Tenant logos are linked to the `TenantMedia` entity, allowing precise tracking and deletion of the binary file in storage when updated.
-- **Cache**: Redis keys follow the pattern `AlphaSquad:{category}:{identifier}`.
-- **Database**: PostgreSQL serves as the primary source of truth.
+- reduzir boilerplate
+- manter o fluxo HTTP direto e legivel
+- documentar endpoints via Swagger com menor sobrecarga
 
+### CQRS leve
 
+Sem framework formal de CQRS, mas com divisao pragmatica:
+
+- `EF Core` para escrita e controle de entidades
+- `Dapper` para consultas e respostas enxutas
+
+Esse padrao aparece claramente em modulos como `Users`, `Media`, `Tenants`, `Exercises` e `Workouts`.
+
+## Estrutura da solution
+
+```text
+src/
+  AlphaSquad.Api
+  AlphaSquad.Infrastructure
+  AlphaSquad.Shared
+```
+
+### AlphaSquad.Api
+
+Responsavel por:
+
+- bootstrapping da aplicacao
+- autenticacao e autorizacao
+- definicao de endpoints
+- Swagger
+- composicao dos modulos
+
+### AlphaSquad.Infrastructure
+
+Responsavel por:
+
+- `AppDbContext`
+- entidades e mapeamentos EF Core
+- migrations
+- JWT service
+- password hashing com BCrypt
+- Redis
+- Cloudflare R2
+- seeding inicial
+
+### AlphaSquad.Shared
+
+Responsavel por:
+
+- DTOs
+- enums
+- helpers compartilhados
+
+## Multi-tenancy
+
+O isolamento multi-tenant e baseado em `TenantId` como identificador primario de segregacao.
+
+### Onde o isolamento acontece
+
+- claims do JWT: `tenant_id` e `tenant_slug`
+- queries SQL filtradas por tenant
+- entidades persistidas com `tenant_id`
+- paths de storage separados por tenant
+
+### Risco arquitetural a observar
+
+O isolamento hoje depende principalmente da disciplina nos endpoints e queries. Ainda nao existe um middleware central de tenant ou uma camada mais automatica de enforcement.
+
+## Autenticacao e sessao
+
+### Estrategia de token
+
+O backend usa dois tokens:
+
+- access token JWT
+- refresh token opaco persistido no banco
+
+### Fluxo atual
+
+1. Usuario autentica via `tenant slug + email + password`
+2. API gera access token com claims de usuario e tenant
+3. API gera refresh token aleatorio e persiste no banco
+4. No refresh, o token anterior e marcado como usado
+5. Um novo refresh token e emitido
+
+### Salvaguardas implementadas
+
+- BCrypt para hash de senha
+- rotacao de refresh token
+- revogacao de sessao no logout
+- revogacao de todas as sessoes ao trocar senha
+- emails case-insensitive via `citext`
+
+## Persistencia
+
+### Banco principal
+
+- PostgreSQL
+
+### Entidades atuais
+
+- `Tenant`
+- `AppUser`
+- `RefreshToken`
+- `TenantMedia`
+- `Feature`
+- `TenantFeature`
+- `Exercise`
+- `Workout`
+- `WorkoutExercise`
+
+### Convencoes observadas
+
+- nomes de tabelas em snake_case
+- chaves `Guid`
+- relacionamentos explicitos no `AppDbContext`
+- soft delete em usuarios via `IsActive`
+- delete fisico em algumas entidades, como media, exercise e workout
+
+## Cache distribuido
+
+### Tecnologia
+
+- Redis
+
+### Estrategia
+
+- cache-aside
+
+### Caso de uso atual claro
+
+- configuracao de tenant por slug
+
+### Padrao de chave
+
+```text
+AlphaSquad:{category}:{identifier}
+```
+
+Exemplo no codigo:
+
+```text
+AlphaSquad:tenant-config:{slug}
+```
+
+## Storage de arquivos
+
+### Tecnologia
+
+- Cloudflare R2 via API S3-compatible
+
+### Organizacao de paths
+
+```text
+tenants/{tenantSlug}/media
+tenants/{tenantSlug}/logos
+```
+
+### Uso atual
+
+- upload de midias
+- troca de arquivo de midia
+- upload/substituicao de logo do tenant
+- exclusao do binario antigo ao trocar logo
+
+## Feature flags por tenant
+
+O projeto ja possui base para habilitacao modular por tenant com:
+
+- `Feature`
+- `TenantFeature`
+
+Hoje o seed inicial cria e vincula features como:
+
+- `WORKOUTS`
+- `CHECKIN`
+- `SCHEDULE`
+- `MEDIA`
+- `USER_MGMT`
+
+## Seed e bootstrap
+
+Na inicializacao da aplicacao:
+
+1. migrations sao aplicadas
+2. tenant demo `alpha-demo` e garantido
+3. usuario admin inicial e garantido
+4. features base sao criadas e associadas ao tenant demo
+
+## Estado atual da arquitetura
+
+### Consolidado
+
+- base multi-tenant
+- auth com refresh token
+- cache Redis
+- storage R2
+- tenant config e features
+- usuarios
+- media
+- exercicios
+
+### Em progresso
+
+- workouts e composicao treino-exercicio
+- autorizacao mais fina por role
+- modulos operacionais de academia como check-in e agenda
+
+## Pendencias tecnicas relevantes
+
+- middleware central de tenant
+- politica de autorizacao por role/permissao
+- cobertura automatizada de testes
+- padronizacao de paginacao para todos os modulos
+- endurecimento de configuracoes sensiveis por ambiente
