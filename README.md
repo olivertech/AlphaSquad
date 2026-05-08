@@ -1,8 +1,8 @@
 # AlphaSquad Platform
 
-AlphaSquad e uma plataforma SaaS white-label para academias, com foco em engajamento, retencao de alunos e operacao mobile-first.
+AlphaSquad e uma plataforma SaaS white-label para academias, com foco em engajamento, retencao de alunos, operacao mobile-first e construcao de comunidade.
 
-A proposta do produto e permitir que cada academia tenha seu proprio aplicativo com identidade visual, modulos habilitaveis por tenant e uma base tecnica preparada para crescimento.
+A proposta do produto e permitir que cada academia tenha seu proprio aplicativo com identidade visual, modulos habilitaveis por tenant e uma base tecnica preparada para crescimento incremental.
 
 ## Visao do produto
 
@@ -10,10 +10,12 @@ A proposta do produto e permitir que cada academia tenha seu proprio aplicativo 
 - Multi-tenant desde o backend
 - Foco em retencao, frequencia e experiencia do aluno
 - Base preparada para app mobile no futuro
+- Comunidade digital interna entre alunos, professores e gestao
+- Gamificacao como diferencial central do ecossistema
 
-## Estado atual do projeto
+## Momento atual do projeto
 
-O backend atual ja possui uma base funcional consistente para autenticacao, gestao de tenant, usuarios e midia, alem de modulos iniciais de dominio para exercicios e treinos.
+O backend atual ja possui uma base funcional consistente para autenticacao, gestao de tenant, usuarios, midia e modulos operacionais da academia.
 
 ### Modulos consolidados
 
@@ -31,14 +33,83 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Check-in com consultas por usuario e por tenant
 - CRUD basico de aulas/agendas
 - Booking e unbooking de aulas
+- Swagger com descricoes curtas nos endpoints principais
 
-### Modulos em evolucao
+### Modulos em consolidacao
 
 - Workouts/treinos
 - Associacao treino-exercicio
 - Permissoes por role
-- Reservas de aulas
-- Fluxos de engajamento do aluno
+- Padronizacao de paginacao e filtros
+
+### Proximas frentes core do produto
+
+- Loja de produtos personalizados da academia com Stripe
+- Rede social interna da academia
+- Gamificacao com pontuacao, ranking mensal e recompensas
+- Profile do usuario com dados, foto, username e plano ativo
+- Mural de eventos e acoes outdoor promovidas pela academia
+- Multi-idioma com traducao dinamica de conteudo no backend em uma V2
+
+## Diferenciais estrategicos planejados
+
+### 1. Loja interna da academia
+
+Modulo para anuncio e venda de produtos personalizados do tenant, com foco em experiencia mobile e navegacao por feed infinito.
+
+Capacidades previstas:
+
+- listagem paginada com scroll infinito
+- cards ou lista linear de produtos
+- fotos, descricao, variacoes de cor e tamanho
+- controle de estoque e disponibilidade
+- fluxo de compra com Stripe
+
+### 2. Rede social do tenant
+
+Feed social interno onde todos os usuarios da mesma academia visualizam as publicacoes de alunos e professores.
+
+Capacidades previstas:
+
+- posts com imagem e descricao curta
+- feed global por tenant
+- likes
+- comentarios simples em nivel unico
+- sem threads ou respostas encadeadas nesta fase
+
+### 3. Gamificacao
+
+Camada transversal de engajamento que transforma a participacao no ecossistema em pontos e reconhecimento.
+
+Capacidades previstas:
+
+- pontuacao por acoes relevantes
+- ranking mensal por tenant
+- premiacao para top 3 do mes
+- integracao futura com beneficios da loja e mensalidade
+
+### 4. Profile do usuario
+
+Area pessoal para concentrar dados basicos da conta e relacao do usuario com a academia.
+
+Capacidades previstas:
+
+- nome, email e username
+- foto de perfil
+- troca de senha
+- plano ativo
+- acesso aos dados pessoais do usuario autenticado
+
+### 5. Mural de eventos da academia
+
+Canal institucional usado pela gestao da academia para divulgar eventos, acoes sociais, apoiadores, registros de atividades e iniciativas outdoor.
+
+Capacidades previstas:
+
+- feed visual leve e atrativo
+- publicacoes exclusivas da gestao
+- imagens e descricao
+- navegacao vertical com carregamento incremental
 
 ## Arquitetura em resumo
 
@@ -50,6 +121,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - PostgreSQL como fonte principal de dados
 - Redis para cache distribuido
 - Cloudflare R2 para storage de arquivos
+- Stripe planejado para pagamentos
 
 ## Estrutura da solution
 
@@ -71,6 +143,8 @@ O isolamento e baseado em `TenantId` e aparece em tres camadas principais:
 - Banco de dados: filtros por tenant nas queries
 - JWT: claims com `tenant_id` e `tenant_slug`
 - Storage: paths segregados por tenant
+
+Toda nova feature deve preservar esse isolamento em leituras, gravacoes, integracoes e arquivos.
 
 ## Endpoints principais
 
@@ -114,6 +188,15 @@ O isolamento e baseado em `TenantId` e aparece em tres camadas principais:
 - `PUT /api/exercises/{id}`
 - `DELETE /api/exercises/{id}`
 
+### Workouts
+
+- `GET /api/workouts`
+- `GET /api/workouts/{id}`
+- `POST /api/workouts`
+- `PUT /api/workouts/{id}`
+- `DELETE /api/workouts/{id}`
+- `POST /api/workouts/{id}/assign-exercises`
+
 ### Checkins
 
 - `POST /api/checkins`
@@ -147,6 +230,33 @@ Entidades ja presentes no projeto:
 - `GymClass`
 - `ClassBooking`
 
+Entidades estrategicas previstas para as proximas fases:
+
+- `Product`
+- `ProductVariant`
+- `Order`
+- `OrderItem`
+- `PaymentTransaction`
+- `SocialPost`
+- `PostLike`
+- `PostComment`
+- `GamificationEvent`
+- `PointsLedger`
+- `MonthlyRanking`
+- `UserProfile`
+- `MembershipPlanSnapshot`
+- `EventPost`
+
+## Foco didatico
+
+O projeto tambem tem objetivo didatico.
+
+Por isso, todo novo codigo deve:
+
+- trazer comentarios simples e objetivos em classes e metodos novos
+- explicar regras de negocio importantes sem excesso de texto
+- ajudar futuros profissionais a entender a feature pelo proprio codigo
+
 ## Seed inicial
 
 Ao subir a aplicacao, o projeto aplica migrations e garante a existencia de:
@@ -157,7 +267,7 @@ Ao subir a aplicacao, o projeto aplica migrations e garante a existencia de:
 
 ## Infra local
 
-O repositório possui `docker-compose.yml` para subir o Redis localmente:
+O repositorio possui `docker-compose.yml` para subir o Redis localmente:
 
 ```bash
 docker compose up -d
@@ -181,13 +291,25 @@ Exemplo atual de configuracao:
 Host=localhost;Port=5432;Database=AlphaSquad;Username=postgres;Password=123
 ```
 
-### 3. Executar a API
+### 3. Gerar migration localmente quando houver mudancas de modelo
+
+Exemplo:
+
+```powershell
+Add-Migration NomeDaMigration -Project AlphaSquad.Infrastructure -StartupProject AlphaSquad.Api
+Update-Database -Project AlphaSquad.Infrastructure -StartupProject AlphaSquad.Api
+```
+
+Observacao:
+As migrations devem ser geradas localmente pelo desenvolvedor responsavel pela rodada atual.
+
+### 4. Executar a API
 
 ```bash
 dotnet run --project src/AlphaSquad.Api
 ```
 
-### 4. Abrir o Swagger
+### 5. Abrir o Swagger
 
 ```text
 https://localhost:7054/swagger

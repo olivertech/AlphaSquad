@@ -2,6 +2,11 @@
 
 public static class WorkoutEndpoints
 {
+    /// <summary>
+    /// Registra os endpoints do modulo de treinos.
+    /// As consultas ficam disponiveis para qualquer usuario autenticado do tenant,
+    /// enquanto as operacoes de escrita exigem perfil de gestao.
+    /// </summary>
     public static IEndpointRouteBuilder MapWorkoutEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/workouts")
@@ -22,33 +27,41 @@ public static class WorkoutEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("CreateWorkout")
             .WithSummary("Cria um novo treino no tenant atual.")
             .WithDescription("Cadastra um treino com nome, descrição e objetivo para uso dentro do tenant da sessão.")
             .Produces<WorkoutResponse>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("UpdateWorkout")
             .WithSummary("Atualiza um treino do tenant atual.")
             .WithDescription("Permite alterar nome, objetivo, descrição e status ativo de um treino existente.")
             .Produces<WorkoutResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("DeleteWorkout")
             .WithSummary("Remove um treino do tenant atual.")
             .WithDescription("Exclui um treino pelo identificador, respeitando o isolamento do tenant autenticado.")
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/exercises", AssignExercisesAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("AssignWorkoutExercises")
             .WithSummary("Define os exercícios de um treino.")
             .WithDescription("Substitui a composição atual do treino por uma nova lista ordenada de exercícios do mesmo tenant.")
             .Produces<WorkoutDetailsResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         return app;
@@ -83,7 +96,7 @@ public static class WorkoutEndpoints
                                       FROM workout_exercises we
                                       JOIN workouts w ON w.id = we.workout_id
                                       JOIN exercises e ON we.exercise_id = e.id
-                                      LEFT JOIN tenant_medias m ON e.media_id = m.id
+                                      LEFT JOIN tenant_medias m ON e.media_id = m.id AND m.tenant_id = @TenantId
                                       WHERE we.workout_id = @WorkoutId
                                         AND w.tenant_id = @TenantId
                                         AND e.tenant_id = @TenantId
@@ -101,8 +114,9 @@ public static class WorkoutEndpoints
 
     private static async Task<IResult> CreateAsync(WorkoutCreateRequest request, AppDbContext db, HttpContext context)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
-            return Results.BadRequest("Workout name is required.");
+        var validation = ValidateWorkoutRequest(request.Name);
+        if (validation is not null)
+            return validation;
 
         var tenantId = context.GetTenantId();
 
@@ -111,8 +125,8 @@ public static class WorkoutEndpoints
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             Name = request.Name.Trim(),
-            Description = request.Description,
-            Goal = request.Goal,
+            Description = NormalizeOptional(request.Description),
+            Goal = NormalizeOptional(request.Goal),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -132,6 +146,10 @@ public static class WorkoutEndpoints
 
     private static async Task<IResult> UpdateAsync(Guid id, WorkoutUpdateRequest request, AppDbContext db, HttpContext context)
     {
+        var validation = ValidateWorkoutRequest(request.Name);
+        if (validation is not null)
+            return validation;
+
         var tenantId = context.GetTenantId();
         var workout = await db.Workouts.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
 
@@ -139,8 +157,8 @@ public static class WorkoutEndpoints
             return Results.NotFound();
 
         workout.Name = request.Name.Trim();
-        workout.Description = request.Description;
-        workout.Goal = request.Goal;
+        workout.Description = NormalizeOptional(request.Description);
+        workout.Goal = NormalizeOptional(request.Goal);
         workout.IsActive = request.IsActive;
 
         await db.SaveChangesAsync();
@@ -180,26 +198,36 @@ public static class WorkoutEndpoints
         if (requests == null || requests.Count == 0)
             return Results.BadRequest("Exercise list is required.");
 
+        var assignmentsValidation = ValidateAssignments(requests);
+        if (assignmentsValidation is not null)
+            return assignmentsValidation;
+
+        var requestedExerciseIds = requests
+            .Select(x => x.ExerciseId)
+            .Distinct()
+            .ToList();
+
+        var validExercisesCount = await db.Exercises
+            .CountAsync(x => requestedExerciseIds.Contains(x.Id) && x.TenantId == tenantId);
+
+        if (validExercisesCount != requestedExerciseIds.Count)
+            return Results.BadRequest("One or more exercises do not belong to this tenant.");
+
         // Remove current associations to replace with new set
         var existingAssocs = await db.WorkoutExercises.Where(x => x.WorkoutId == id).ToListAsync();
         db.WorkoutExercises.RemoveRange(existingAssocs);
 
         foreach (var req in requests)
         {
-            // Validar se o exercício pertence ao tenant
-            var exerciseExists = await db.Exercises.AnyAsync(x => x.Id == req.ExerciseId && x.TenantId == tenantId);
-            if (!exerciseExists)
-                return Results.BadRequest($"Exercise {req.ExerciseId} does not belong to this tenant.");
-
             db.WorkoutExercises.Add(new WorkoutExercise
             {
                 WorkoutId = id,
                 ExerciseId = req.ExerciseId,
                 Order = req.Order,
                 Sets = req.Sets,
-                Reps = req.Reps,
+                Reps = req.Reps.Trim(),
                 RestTime = req.RestTime,
-                Notes = req.Notes
+                Notes = NormalizeOptional(req.Notes)
             });
         }
 
@@ -228,7 +256,7 @@ public static class WorkoutEndpoints
                                       FROM workout_exercises we
                                       JOIN workouts w ON w.id = we.workout_id
                                       JOIN exercises e ON we.exercise_id = e.id
-                                      LEFT JOIN tenant_medias m ON e.media_id = m.id
+                                      LEFT JOIN tenant_medias m ON e.media_id = m.id AND m.tenant_id = @TenantId
                                       WHERE we.workout_id = @WorkoutId
                                         AND w.tenant_id = @TenantId
                                         AND e.tenant_id = @TenantId
@@ -238,5 +266,54 @@ public static class WorkoutEndpoints
         var exercisesRes = await connection.QueryAsync<WorkoutExerciseResponse>(exercisesSql, new { WorkoutId = id, TenantId = tenantId });
 
         return Results.Ok(new WorkoutDetailsResponse(workoutRes!, exercisesRes.ToList()));
+    }
+
+    /// <summary>
+    /// Valida o payload principal do treino antes da persistencia.
+    /// </summary>
+    private static IResult? ValidateWorkoutRequest(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return Results.BadRequest("Workout name is required.");
+
+        return null;
+    }
+
+    /// <summary>
+    /// Valida a composicao enviada para o treino.
+    /// Isso ajuda a impedir inconsistencias simples antes de gravar a associacao.
+    /// </summary>
+    private static IResult? ValidateAssignments(List<ExerciseAssignmentRequest> requests)
+    {
+        if (requests.Select(x => x.ExerciseId).Distinct().Count() != requests.Count)
+            return Results.BadRequest("Exercise list cannot contain duplicated exercises.");
+
+        if (requests.Select(x => x.Order).Distinct().Count() != requests.Count)
+            return Results.BadRequest("Exercise list cannot contain duplicated order values.");
+
+        foreach (var request in requests)
+        {
+            if (request.Order <= 0)
+                return Results.BadRequest("Exercise order must be greater than zero.");
+
+            if (request.Sets <= 0)
+                return Results.BadRequest("Exercise sets must be greater than zero.");
+
+            if (string.IsNullOrWhiteSpace(request.Reps))
+                return Results.BadRequest("Exercise reps are required.");
+
+            if (request.RestTime < 0)
+                return Results.BadRequest("Exercise rest time cannot be negative.");
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Normaliza campos opcionais para evitar persistencia de textos vazios.
+    /// </summary>
+    private static string? NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

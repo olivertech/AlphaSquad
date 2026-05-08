@@ -157,8 +157,16 @@ public class AppDbContext : DbContext
             entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.TenantId).HasColumnName("tenant_id");
             entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.Goal).HasColumnName("goal");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<WorkoutExercise>(entity =>
@@ -167,6 +175,11 @@ public class AppDbContext : DbContext
             entity.HasKey(x => new { x.WorkoutId, x.ExerciseId });
             entity.Property(x => x.WorkoutId).HasColumnName("workout_id");
             entity.Property(x => x.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(x => x.Order).HasColumnName("order");
+            entity.Property(x => x.Sets).HasColumnName("sets");
+            entity.Property(x => x.Reps).HasColumnName("reps").IsRequired();
+            entity.Property(x => x.RestTime).HasColumnName("rest_time");
+            entity.Property(x => x.Notes).HasColumnName("notes");
 
             entity.HasOne(x => x.Workout)
                 .WithMany(w => w.WorkoutExercises)

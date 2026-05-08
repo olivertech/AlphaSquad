@@ -2,6 +2,20 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-08] - Product Vision Expansion & Planning
+
+### Changed
+
+- Atualizado o `README.md` para refletir o momento atual do backend e a nova visao de produto do AlphaSquad.
+- Atualizado o `ARCHITECTURE.md` para incluir os modulos estrategicos `Store`, `Social`, `Gamification`, `Profiles` e `Events`.
+- Atualizado o `ROADMAP.md` com nova ordem recomendada de implementacao, fases por dominio e dependencias entre modulos.
+- Registrada a direcao de V2 para multi-idioma com traducao dinamica de conteudo no backend.
+
+### Noted
+
+- Loja interna, rede social, gamificacao, profile do usuario e mural de eventos passam a ser tratados como pilares core do produto.
+- A implementacao deve seguir ordem que reduza retrabalho entre profile, loja, feeds sociais e gamificacao.
+
 ## [2026-05-07] - Documentation Alignment & Codebase Overview
 
 ### Changed

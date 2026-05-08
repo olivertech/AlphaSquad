@@ -15,6 +15,7 @@ global using AlphaSquad.Api.Features.Media;
 global using AlphaSquad.Shared.Helpers;
 global using AlphaSquad.Api.Features.Users;
 global using AlphaSquad.Infrastructure.Auth;
+global using AlphaSquad.Shared.Enums;
 global using AlphaSquad.Shared.DTOs.Classes;
 global using AlphaSquad.Shared.DTOs.Exercises;
 global using AlphaSquad.Shared.DTOs.Checkins;

@@ -29,6 +29,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("CreateClass")
             .WithSummary("Cria uma nova aula no tenant atual.")
             .WithDescription("Cadastra uma aula com horário, capacidade, local e instrutor opcional, restrito a perfis de gestão.")
@@ -37,6 +38,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("UpdateClass")
             .WithSummary("Atualiza uma aula do tenant atual.")
             .WithDescription("Permite alterar os dados principais da aula, incluindo status ativo e instrutor.")
@@ -46,6 +48,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("DeleteClass")
             .WithSummary("Remove uma aula do tenant atual.")
             .WithDescription("Exclui fisicamente uma aula pelo identificador, restrito a perfis com permissão de gestão.")
@@ -178,9 +181,6 @@ public static class ClassEndpoints
     /// </summary>
     private static async Task<IResult> CreateAsync(CreateGymClassRequest request, AppDbContext db, HttpContext context)
     {
-        if (!CanManageClasses(context.User))
-            return Results.Forbid();
-
         var tenantId = context.GetTenantId();
         var validation = await ValidateRequestAsync(request.Name, request.StartsAt, request.EndsAt, request.Capacity, request.InstructorUserId, tenantId, db);
         if (validation is not null)
@@ -213,9 +213,6 @@ public static class ClassEndpoints
     /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id, UpdateGymClassRequest request, AppDbContext db, HttpContext context)
     {
-        if (!CanManageClasses(context.User))
-            return Results.Forbid();
-
         var tenantId = context.GetTenantId();
         var gymClass = await db.Set<GymClass>().FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
 
@@ -247,9 +244,6 @@ public static class ClassEndpoints
     /// </summary>
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, HttpContext context)
     {
-        if (!CanManageClasses(context.User))
-            return Results.Forbid();
-
         var tenantId = context.GetTenantId();
         var gymClass = await db.Set<GymClass>().FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
 
@@ -385,15 +379,6 @@ public static class ClassEndpoints
                              WHERE gc.id = @Id AND gc.tenant_id = @TenantId";
 
         return (await connection.QueryFirstAsync<GymClassResponse>(sql, new { Id = id, TenantId = tenantId }))!;
-    }
-
-    /// <summary>
-    /// Define quais perfis podem gerenciar o cadastro de aulas.
-    /// </summary>
-    private static bool CanManageClasses(ClaimsPrincipal user)
-    {
-        var role = user.FindFirstValue(ClaimTypes.Role);
-        return role is nameof(UserRole.Admin) or nameof(UserRole.Teacher);
     }
 
     /// <summary>

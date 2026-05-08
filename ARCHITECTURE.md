@@ -1,6 +1,6 @@
 # AlphaSquad Architecture
 
-Este documento descreve a arquitetura tecnica atual do AlphaSquad com base no codigo existente no workspace.
+Este documento descreve a arquitetura tecnica atual do AlphaSquad com base no codigo existente no workspace e no direcionamento de produto definido para as proximas fases.
 
 ## Objetivo arquitetural
 
@@ -10,6 +10,7 @@ O sistema foi desenhado para sustentar um SaaS white-label para academias com:
 - simplicidade operacional
 - baixo acoplamento entre modulos
 - boa evolucao incremental por feature
+- base pronta para experiencias mobile, sociais e transacionais
 
 ## Padroes adotados
 
@@ -26,7 +27,15 @@ Features identificadas hoje:
 - `Exercises`
 - `Checkins`
 - `Classes`
-- `Workouts` em desenvolvimento no workspace
+- `Workouts`
+
+Features estrategicas planejadas:
+
+- `Store`
+- `Social`
+- `Gamification`
+- `Profiles`
+- `Events`
 
 ### Minimal APIs
 
@@ -41,9 +50,9 @@ A API usa ASP.NET Core Minimal APIs para:
 Sem framework formal de CQRS, mas com divisao pragmatica:
 
 - `EF Core` para escrita e controle de entidades
-- `Dapper` para consultas e respostas enxutas
+- `Dapper` para consultas, respostas enxutas e listagens paginadas
 
-Esse padrao aparece claramente em modulos como `Users`, `Media`, `Tenants`, `Exercises` e `Workouts`.
+Esse padrao deve continuar nas novas features, principalmente em fluxos de feed, loja, ranking e mural de eventos.
 
 ### Foco didatico e documentacao em codigo
 
@@ -87,6 +96,7 @@ Responsavel por:
 - Redis
 - Cloudflare R2
 - seeding inicial
+- futuras integracoes externas, como Stripe
 
 ### AlphaSquad.Shared
 
@@ -95,6 +105,7 @@ Responsavel por:
 - DTOs
 - enums
 - helpers compartilhados
+- contratos usados entre features
 
 ## Multi-tenancy
 
@@ -106,6 +117,16 @@ O isolamento multi-tenant e baseado em `TenantId` como identificador primario de
 - queries SQL filtradas por tenant
 - entidades persistidas com `tenant_id`
 - paths de storage separados por tenant
+
+### Regra para novas features
+
+Toda feature nova deve aplicar isolamento por tenant em:
+
+- leitura
+- escrita
+- cache
+- storage
+- integracoes externas
 
 ### Risco arquitetural a observar
 
@@ -179,6 +200,13 @@ O backend usa dois tokens:
 
 - configuracao de tenant por slug
 
+### Casos de uso futuros recomendados
+
+- cache de feed social paginado por tenant
+- cache de catalogo publico da loja
+- cache de ranking mensal
+- cache de mural institucional
+
 ### Padrao de chave
 
 ```text
@@ -211,6 +239,13 @@ tenants/{tenantSlug}/logos
 - upload/substituicao de logo do tenant
 - exclusao do binario antigo ao trocar logo
 
+### Uso futuro planejado
+
+- imagens de produtos
+- fotos de posts sociais
+- fotos de profile
+- banners e imagens de eventos
+
 ## Feature flags por tenant
 
 O projeto ja possui base para habilitacao modular por tenant com:
@@ -225,6 +260,167 @@ Hoje o seed inicial cria e vincula features como:
 - `SCHEDULE`
 - `MEDIA`
 - `USER_MGMT`
+
+Essa base pode evoluir para habilitar tambem:
+
+- `STORE`
+- `SOCIAL`
+- `GAMIFICATION`
+- `PROFILE`
+- `EVENTS`
+
+## Dominios estrategicos planejados
+
+### Store
+
+Objetivo:
+Permitir venda de produtos personalizados da academia dentro do app.
+
+Capacidades previstas:
+
+- catalogo por tenant
+- variacoes de produto como cor e tamanho
+- imagens
+- estoque e disponibilidade
+- carrinho e pedido
+- integracao com Stripe para pagamento
+
+Entidades provaveis:
+
+- `Product`
+- `ProductVariant`
+- `Order`
+- `OrderItem`
+- `PaymentTransaction`
+
+Consideracoes arquiteturais:
+
+- paginação cursor-based ou page-based para feed infinito
+- webhook de pagamento para confirmacao de pedidos
+- separacao entre preco exibido, pedido e transacao
+
+### Social
+
+Objetivo:
+Criar um feed interno da academia para fortalecer comunidade e interacao.
+
+Capacidades previstas:
+
+- post com imagem e descricao curta
+- feed global por tenant
+- likes
+- comentarios simples em nivel unico
+
+Entidades provaveis:
+
+- `SocialPost`
+- `PostLike`
+- `PostComment`
+
+Consideracoes arquiteturais:
+
+- listagem paginada por data
+- contadores agregados de likes e comentarios
+- moderacao simples no futuro
+
+### Gamification
+
+Objetivo:
+Pontuar acoes do usuario no ecossistema e gerar ranking mensal.
+
+Capacidades previstas:
+
+- eventos de pontuacao
+- ledger de pontos
+- ranking mensal por tenant
+- premios e beneficios associados
+
+Entidades provaveis:
+
+- `GamificationEvent`
+- `PointsLedger`
+- `MonthlyRanking`
+- `RewardPolicy`
+
+Consideracoes arquiteturais:
+
+- pontuacao desacoplada por eventos de dominio
+- regras configuraveis por tenant no futuro
+- possibilidade de reprocessamento de ranking
+
+### Profiles
+
+Objetivo:
+Dar ao usuario uma area central de informacoes pessoais e de vinculacao com a academia.
+
+Capacidades previstas:
+
+- foto de perfil
+- username
+- dados basicos
+- plano ativo
+- troca de senha
+
+Entidades provaveis:
+
+- extensao de `AppUser`
+- `MembershipPlanSnapshot` ou entidade equivalente
+
+Consideracoes arquiteturais:
+
+- evitar duplicacao entre `Auth`, `Users` e `Profile`
+- separar dados de administracao de dados da experiencia do aluno
+
+### Events
+
+Objetivo:
+Criar um mural institucional da academia para eventos, acoes sociais e comunicacao visual.
+
+Capacidades previstas:
+
+- posts exclusivos da gestao
+- feed visual vertical
+- imagens e textos
+- ordenacao cronologica
+
+Entidades provaveis:
+
+- `EventPost`
+- `EventMedia` ou reuso controlado de `TenantMedia`
+
+Consideracoes arquiteturais:
+
+- permissao de escrita restrita a gestao
+- leitura ampla para usuarios do tenant
+- reaproveitamento do padrao de feed e paginação
+
+## Multi-idioma em V2
+
+O projeto deve considerar desde ja uma futura camada multi-idioma com:
+
+- portugues
+- ingles
+- espanhol
+
+### Requisito adicional importante
+
+A internacionalizacao nao deve se limitar ao app cliente. O backend tambem precisara devolver conteudo textual no idioma desejado pelo usuario.
+
+### Direcao arquitetural recomendada
+
+- receber idioma preferencial por header, claim ou configuracao de profile
+- identificar campos que sao conteudo livre e podem exigir traducao dinamica
+- preservar texto original armazenado
+- produzir traducao sob demanda via integracao de IA em componentes especificos
+- cachear traducoes por idioma e tenant quando fizer sentido
+
+### Cuidado arquitetural
+
+Nem todo conteudo deve ser traduzido em tempo real desde o inicio. O ideal e separar:
+
+- textos de interface: responsabilidade do app cliente
+- textos institucionais e de negocio vindos do backend: candidatos a traducao
+- conteudo social gerado por usuarios: politica de traducao futura, com custo e privacidade avaliados
 
 ## Seed e bootstrap
 
@@ -255,7 +451,15 @@ Na inicializacao da aplicacao:
 
 - workouts e composicao treino-exercicio
 - autorizacao mais fina por role
-- modulos operacionais de academia como check-in e agenda
+- endurecimento de isolamento multi-tenant
+
+### Planejado como core de produto
+
+- loja interna
+- rede social do tenant
+- gamificacao
+- profile do usuario
+- mural institucional de eventos
 
 ## Pendencias tecnicas relevantes
 
@@ -264,3 +468,5 @@ Na inicializacao da aplicacao:
 - cobertura automatizada de testes
 - padronizacao de paginacao para todos os modulos
 - endurecimento de configuracoes sensiveis por ambiente
+- padrao comum para feeds infinitos
+- padrao comum para integracoes externas e webhooks

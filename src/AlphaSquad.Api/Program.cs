@@ -106,7 +106,16 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
     );
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Policy base para acoes exclusivas de administracao do tenant.
+    options.AddPolicy(AuthorizationPolicies.AdminOnly, policy =>
+        policy.RequireRole(nameof(UserRole.Admin)));
+
+    // Policy base para operacoes gerenciais compartilhadas entre administradores e professores.
+    options.AddPolicy(AuthorizationPolicies.AdminOrTeacher, policy =>
+        policy.RequireRole(nameof(UserRole.Admin), nameof(UserRole.Teacher)));
+});
 
 var app = builder.Build();
 

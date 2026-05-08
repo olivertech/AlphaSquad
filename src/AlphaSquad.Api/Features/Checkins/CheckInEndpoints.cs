@@ -31,6 +31,7 @@ public static class CheckInEndpoints
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/tenant", GetTenantCheckInsAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("GetTenantCheckIns")
             .WithSummary("Lista os check-ins do tenant atual.")
             .WithDescription("Retorna os check-ins do tenant para visão administrativa, com filtro opcional por usuário e período.")
@@ -168,9 +169,6 @@ public static class CheckInEndpoints
                                                               int page = 1,
                                                               int pageSize = 20)
     {
-        if (!CanViewTenantCheckIns(context.User))
-            return Results.Forbid();
-
         var tenantId = context.GetTenantId();
         page = page < 1 ? 1 : page;
         pageSize = pageSize is < 1 or > 100 ? 20 : pageSize;
@@ -245,12 +243,4 @@ public static class CheckInEndpoints
         return Guid.Parse(userIdClaim);
     }
 
-    /// <summary>
-    /// Define quais perfis podem visualizar o consolidado de check-ins do tenant.
-    /// </summary>
-    private static bool CanViewTenantCheckIns(ClaimsPrincipal user)
-    {
-        var role = user.FindFirstValue(ClaimTypes.Role);
-        return role is nameof(UserRole.Admin) or nameof(UserRole.Teacher);
-    }
 }

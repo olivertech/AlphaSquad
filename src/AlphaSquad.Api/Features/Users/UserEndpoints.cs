@@ -22,26 +22,32 @@ public static class UserEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateUser")
             .WithSummary("Cria um novo usuário no tenant atual.")
             .WithDescription("Cadastra um usuário com senha, role e vínculo ao tenant autenticado.")
             .Produces<UserResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status409Conflict);
 
         group.MapPut("/{id:guid}", UpdateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateUser")
             .WithSummary("Atualiza um usuário do tenant atual.")
             .WithDescription("Permite alterar nome, role e status ativo de um usuário pertencente ao tenant da sessão.")
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("DeleteUser")
             .WithSummary("Desativa um usuário do tenant atual.")
             .WithDescription("Realiza a exclusão lógica do usuário, marcando-o como inativo no banco.")
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         return app;

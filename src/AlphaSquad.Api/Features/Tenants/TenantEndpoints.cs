@@ -16,11 +16,12 @@ public static class TenantEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPut("/{id:guid}", UpdateAsync)
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateTenant")
             .WithSummary("Atualiza os dados do tenant autenticado.")
             .WithDescription("Permite alterar nome, logo e cores do tenant atual, respeitando o isolamento multi-tenant.")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/current", GetCurrentAsync)
@@ -32,13 +33,14 @@ public static class TenantEndpoints
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPut("/current/logo", UpdateLogoAsync)
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .DisableAntiforgery()
             .WithName("UpdateTenantLogo")
             .WithSummary("Atualiza a logo do tenant atual.")
             .WithDescription("Faz upload da nova logo no storage, remove o arquivo anterior quando existir e atualiza o vínculo do tenant.")
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<TenantCurrentResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status400BadRequest);
 
         group.MapGet("/current/features", GetCurrentFeaturesAsync)
