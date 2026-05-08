@@ -22,25 +22,31 @@ public static class ExerciseEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("CreateExercise")
             .WithSummary("Cria um novo exercício no tenant atual.")
             .WithDescription("Cadastra um exercício com grupo muscular, descrição e mídia opcional pertencente ao mesmo tenant.")
             .Produces<ExerciseResponse>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("UpdateExercise")
             .WithSummary("Atualiza um exercício do tenant atual.")
             .WithDescription("Permite alterar os dados de um exercício já existente, incluindo a mídia opcional associada.")
             .Produces<ExerciseResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("DeleteExercise")
             .WithSummary("Remove um exercício do tenant atual.")
             .WithDescription("Exclui um exercício pelo identificador, desde que ele pertença ao tenant da sessão.")
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         return app;
