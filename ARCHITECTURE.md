@@ -28,6 +28,8 @@ Features identificadas hoje:
 - `Checkins`
 - `Classes`
 - `Workouts`
+- `Profile`
+- `Plans`
 
 Features estrategicas planejadas:
 
@@ -176,6 +178,8 @@ Visao resumida do estado atual:
 - `Auth`: acesso anonimo apenas para login e refresh; endpoints de sessao exigem autenticacao
 - `Tenants`: consulta publica por slug anonima; alteracoes de tenant e logo restritas a `Admin`
 - `Users`: leitura administrativa e escrita restritas a `Admin` ou `Teacher`, com operacoes sensiveis de escrita restritas a `Admin`
+- `Profile`: acesso ao proprio profile para usuarios autenticados, com escrita restrita ao contexto do proprio usuario
+- `Plans`: leitura e gestao administrativa restritas a `Admin` ou `Teacher`
 - `Media`: listagem, upload, troca e exclusao restritos a `Admin` ou `Teacher`
 - `Exercises`: leitura para autenticados; escrita restrita a `Admin` ou `Teacher`
 - `Workouts`: leitura para autenticados; escrita restrita a `Admin` ou `Teacher`
@@ -257,6 +261,9 @@ O backend usa dois tokens:
 - `ClassBooking`
 - `Workout`
 - `WorkoutExercise`
+- `UserProfile`
+- `MembershipPlan`
+- `UserMembership`
 
 ### Convencoes observadas
 
@@ -443,13 +450,46 @@ Capacidades previstas:
 
 Entidades provaveis:
 
-- extensao de `AppUser`
+- `UserProfile`
 - `MembershipPlanSnapshot` ou entidade equivalente
 
 Consideracoes arquiteturais:
 
 - evitar duplicacao entre `Auth`, `Users` e `Profile`
 - separar dados de administracao de dados da experiencia do aluno
+
+Estado atual:
+
+- leitura do proprio profile
+- atualizacao de nome e username
+- troca de e-mail com validacao de senha atual e unicidade por tenant
+- upload e remocao de foto de profile
+- validacao mais forte de e-mail e username
+- `ActivePlan` ligado ao dominio real de planos
+- integracao de `Profile` com `login` e `/api/auth/me`
+
+### Plans
+
+Objetivo:
+Representar o catalogo de planos da academia e o vinculo ativo de cada usuario a um plano real.
+
+Capacidades atuais:
+
+- cadastro e atualizacao de planos por gestao
+- atribuicao de plano a usuario do tenant
+- controle de um unico plano ativo por usuario
+- integracao direta com `Profile` e `Auth`
+
+Entidades atuais:
+
+- `MembershipPlan`
+- `UserMembership`
+
+Consideracoes arquiteturais:
+
+- o vinculo de plano e multi-tenant desde a origem
+- a atribuicao encerra o plano ativo anterior do usuario
+- o nome do plano ativo e projetado no profile e na sessao autenticada
 
 ### Events
 
@@ -522,6 +562,8 @@ Na inicializacao da aplicacao:
 - storage R2
 - tenant config e features
 - usuarios
+- profile do usuario
+- planos e vinculos de plano
 - media
 - exercicios
 - check-in

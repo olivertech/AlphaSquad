@@ -22,7 +22,28 @@ public record AuthenticatedUserResponse(
     Guid Id, 
     string Name, 
     string Email, 
-    UserRole Role
+    UserRole Role,
+    string? Username,
+    string? ProfilePhotoUrl,
+    Guid? ActivePlanId,
+    string? ActivePlan,
+    decimal? ActivePlanPrice,
+    int? ActivePlanDurationDays
+);
+
+public record AuthenticatedSessionResponse(
+    Guid UserId,
+    string Name,
+    string Email,
+    UserRole Role,
+    string? Username,
+    string? ProfilePhotoUrl,
+    Guid? ActivePlanId,
+    string? ActivePlan,
+    decimal? ActivePlanPrice,
+    int? ActivePlanDurationDays,
+    Guid TenantId,
+    string TenantSlug
 );
 
 public record AuthenticatedTenantResponse(

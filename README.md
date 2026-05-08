@@ -34,6 +34,8 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Check-in com consultas por usuario e por tenant
 - CRUD basico de aulas/agendas
 - Booking e unbooking de aulas
+- Profile do usuario autenticado com dados basicos e foto
+- Dominio inicial de planos com atribuicao de plano ativo por usuario
 - Swagger com descricoes curtas nos endpoints principais
 
 ### Modulos em consolidacao
@@ -47,7 +49,6 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Loja de produtos personalizados da academia com Stripe
 - Rede social interna da academia
 - Gamificacao com pontuacao, ranking mensal e recompensas
-- Profile do usuario com dados, foto, username e plano ativo
 - Mural de eventos e acoes outdoor promovidas pela academia
 - Multi-idioma com traducao dinamica de conteudo no backend em uma V2
 
@@ -99,6 +100,17 @@ Capacidades previstas:
 - troca de senha
 - plano ativo
 - acesso aos dados pessoais do usuario autenticado
+
+Status atual:
+
+- `GET /api/profile/me`
+- `PUT /api/profile/me`
+- `PUT /api/profile/me/email`
+- `PUT /api/profile/me/photo`
+- `DELETE /api/profile/me/photo`
+- validacao mais forte de formato de e-mail e username
+- `ActivePlan` agora ligado a um dominio real de planos
+- integracao com `login` e `/api/auth/me` para devolver dados de profile junto da sessao
 
 ### 5. Mural de eventos da academia
 
@@ -274,6 +286,21 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `POST /api/classes/{id}/book`
 - `DELETE /api/classes/{id}/book`
 
+### Profile
+
+- `GET /api/profile/me`
+- `PUT /api/profile/me`
+- `PUT /api/profile/me/email`
+- `PUT /api/profile/me/photo`
+- `DELETE /api/profile/me/photo`
+
+### Plans
+
+- `GET /api/plans`
+- `POST /api/plans`
+- `PUT /api/plans/{id}`
+- `POST /api/plans/{id}/assign`
+
 ## Banco de dados
 
 Entidades ja presentes no projeto:
@@ -290,6 +317,9 @@ Entidades ja presentes no projeto:
 - `CheckIn`
 - `GymClass`
 - `ClassBooking`
+- `UserProfile`
+- `MembershipPlan`
+- `UserMembership`
 
 Entidades estrategicas previstas para as proximas fases:
 

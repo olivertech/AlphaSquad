@@ -65,12 +65,22 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 ## Fase 5: User Profile
 
-- [ ] Criar endpoint `GET /api/profile/me`
-- [ ] Criar endpoint `PUT /api/profile/me`
-- [ ] Permitir upload e troca de foto de perfil
-- [ ] Permitir definicao de `username`
-- [ ] Expor plano ativo do usuario
+- [x] Criar endpoint `GET /api/profile/me`
+- [x] Criar endpoint `PUT /api/profile/me`
+- [x] Integrar `Profile` com `login` e `/api/auth/me`
+- [x] Permitir troca de e-mail com validacoes proprias
+- [x] Permitir upload e troca de foto de perfil
+- [x] Permitir definicao de `username`
+- [x] Expor plano ativo do usuario a partir de um dominio real de planos
 - [ ] Integrar area de profile com troca de senha ja existente
+
+## Fase 5.1: Plans & Memberships
+
+- [x] Modelar `MembershipPlan`
+- [x] Modelar `UserMembership`
+- [x] Implementar CRUD administrativo inicial de planos
+- [x] Implementar atribuicao de plano ativo para usuario
+- [ ] Evoluir planos para cobranca, ciclo financeiro e historico mais rico
 
 ## Fase 6: Store & Stripe Commerce
 

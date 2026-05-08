@@ -3,6 +3,7 @@ using System;
 using AlphaSquad.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlphaSquad.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260508192823_AddMembershipPlansAndUserMemberships")]
+    partial class AddMembershipPlansAndUserMemberships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -479,10 +482,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("ChangedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("changed_by_user_id");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -503,11 +502,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("starts_at");
 
-                    b.Property<string>("StatusReason")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("status_reason");
-
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
@@ -517,8 +511,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ChangedByUserId");
 
                     b.HasIndex("MembershipPlanId");
 
@@ -814,11 +806,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.UserMembership", b =>
                 {
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "ChangedByUser")
-                        .WithMany()
-                        .HasForeignKey("ChangedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AlphaSquad.Infrastructure.Persistence.MembershipPlan", "MembershipPlan")
                         .WithMany("UserMemberships")
                         .HasForeignKey("MembershipPlanId")
@@ -836,8 +823,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ChangedByUser");
 
                     b.Navigation("MembershipPlan");
 

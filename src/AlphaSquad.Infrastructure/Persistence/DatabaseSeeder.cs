@@ -1,4 +1,4 @@
-using AlphaSquad.Infrastructure.Auth;
+Ôªøusing AlphaSquad.Infrastructure.Auth;
 using AlphaSquad.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +23,7 @@ public class DatabaseSeeder
 
         var tenant = await _db.Tenants.FirstOrDefaultAsync(x => x.Slug == tenantSlug);
 
-        // Se o tenant n„o existir, cria um novo tenant e um usu·rio admin para ele
+        // Se o tenant n√£o existir, cria um novo tenant e um usu√°rio admin para ele
         if (tenant is null)
         {
             tenant = new Tenant
@@ -46,7 +46,7 @@ public class DatabaseSeeder
 
         var adminExists = await _db.Users.AnyAsync(x => x.TenantId == tenant.Id && x.Email == adminEmail);
 
-        // Se o usu·rio admin n„o existir, cria um novo usu·rio admin para o tenant demo
+        // Se o usu√°rio admin n√£o existir, cria um novo usu√°rio admin para o tenant demo
         if (!adminExists)
         {
             var admin = new AppUser
@@ -67,17 +67,20 @@ public class DatabaseSeeder
 
         // Seed de Features
         await SeedFeaturesAsync(tenant);
+
+        // Seed de planos base para o tenant demo
+        await SeedMembershipPlansAsync(tenant);
     }
 
     private async Task SeedFeaturesAsync(Tenant tenant)
     {
         var featuresToSeed = new List<(string Name, string Description)>
         {
-            ("WORKOUTS", "Gest„o de treinos e exercÌcios."),
-            ("CHECKIN", "Controle de entrada e frequÍncia de alunos."),
-            ("SCHEDULE", "Agendamento de aulas e hor·rios."),
-            ("MEDIA", "Gest„o de mÌdias e arquivos do tenant."),
-            ("USER_MGMT", "Gest„o avanÁada de usu·rios e permissıes.")
+            ("WORKOUTS", "Gest√£o de treinos e exerc√≠cios."),
+            ("CHECKIN", "Controle de entrada e frequ√™ncia de alunos."),
+            ("SCHEDULE", "Agendamento de aulas e hor√°rios."),
+            ("MEDIA", "Gest√£o de m√≠dias e arquivos do tenant."),
+            ("USER_MGMT", "Gest√£o avan√ßada de usu√°rios e permiss√µes.")
         };
 
         foreach (var featureData in featuresToSeed)
@@ -96,7 +99,7 @@ public class DatabaseSeeder
                 await _db.SaveChangesAsync();
             }
 
-            // Vincula a feature ao tenant demo se ainda n„o estiver vinculada
+            // Vincula a feature ao tenant demo se ainda n√£o estiver vinculada
             var exists = await _db.TenantFeatures.AnyAsync(x => x.TenantId == tenant.Id && x.FeatureId == feature.Id);
             if (!exists)
             {
@@ -110,4 +113,40 @@ public class DatabaseSeeder
 
         await _db.SaveChangesAsync();
     }
+
+    private async Task SeedMembershipPlansAsync(Tenant tenant)
+    {
+        var plansToSeed = new List<(string Name, string Description, decimal Price, int DurationDays)>
+        {
+            ("Basic", "Basic plan", 120.00m, 365),
+            ("Advanced", "Basic advanced", 145.00m, 365),
+            ("Premium", "Basic premium", 220.00m, 365)
+        };
+
+        foreach (var planData in plansToSeed)
+        {
+            var existingPlan = await _db.MembershipPlans
+                .FirstOrDefaultAsync(x => x.TenantId == tenant.Id && x.Name == planData.Name);
+
+            if (existingPlan is not null)
+            {
+                continue;
+            }
+
+            _db.MembershipPlans.Add(new MembershipPlan
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenant.Id,
+                Name = planData.Name,
+                Description = planData.Description,
+                Price = planData.Price,
+                DurationDays = planData.DurationDays,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _db.SaveChangesAsync();
+    }
 }
+

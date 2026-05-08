@@ -25,8 +25,8 @@ public static class AuthEndpoints
             .RequireAuthorization()
             .WithName("Me")
             .WithSummary("Retorna os dados do usuário autenticado.")
-            .WithDescription("Lê as claims do JWT atual e devolve informações de usuário, role e tenant da sessão.")
-            .Produces<AuthenticatedUserResponse>(StatusCodes.Status200OK)
+            .WithDescription("Retorna os dados atuais do usuário autenticado, combinando claims de sessão com informações persistidas de profile.")
+            .Produces<AuthenticatedSessionResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/refresh", RefreshAsync)
@@ -57,24 +57,31 @@ public static class AuthEndpoints
         return app;
     }
 
-    private static IResult MeAsync(ClaimsPrincipal user)
+    private static async Task<IResult> MeAsync(AppDbContext db, ClaimsPrincipal user)
     {
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        var name = user.FindFirstValue(ClaimTypes.Name);
-        var email = user.FindFirstValue(ClaimTypes.Email);
-        var role = user.FindFirstValue(ClaimTypes.Role);
         var tenantId = user.FindFirstValue("tenant_id");
-        var tenantSlug = user.FindFirstValue("tenant_slug");
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(tenantId))
+            return Results.Unauthorized();
 
-        return Results.Ok(new
-        {
-            UserId = userId,
-            Name = name,
-            Email = email,
-            Role = role,
-            TenantId = tenantId,
-            TenantSlug = tenantSlug
-        });
+        var authenticatedUser = await BuildAuthenticatedUserResponseAsync(Guid.Parse(userId), Guid.Parse(tenantId), db);
+        if (authenticatedUser is null)
+            return Results.Unauthorized();
+
+        return Results.Ok(new AuthenticatedSessionResponse(
+            authenticatedUser.Id,
+            authenticatedUser.Name,
+            authenticatedUser.Email,
+            authenticatedUser.Role,
+            authenticatedUser.Username,
+            authenticatedUser.ProfilePhotoUrl,
+            authenticatedUser.ActivePlanId,
+            authenticatedUser.ActivePlan,
+            authenticatedUser.ActivePlanPrice,
+            authenticatedUser.ActivePlanDurationDays,
+            Guid.Parse(tenantId),
+            user.FindFirstValue("tenant_slug") ?? string.Empty
+        ));
     }
 
     private static async Task<IResult> LoginAsync([FromBody] LoginRequest request,
@@ -94,6 +101,10 @@ public static class AuthEndpoints
         var user = await db.Users.FirstOrDefaultAsync(x => x.Email == request.Email.Trim().ToLower() && x.TenantId == tenant.Id && x.IsActive);
         if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
             return Results.Unauthorized();
+
+        var hasActiveMembership = await HasActiveMembershipAsync(user.Id, tenant.Id, db);
+        if (!hasActiveMembership)
+            return Results.Json(new { message = "Only users with an active membership plan can access the platform." }, statusCode: StatusCodes.Status401Unauthorized);
 
         var accessToken = jwtService.GenerateAccessToken(user, tenant, out var expiresAt);
         var newRefreshToken = jwtService.GenerateRefreshToken();
@@ -119,7 +130,7 @@ public static class AuthEndpoints
             accessToken,
             expiresAt,
             newRefreshToken,
-            new AuthenticatedUserResponse(user.Id, user.Name, user.Email, user.Role),
+            (await BuildAuthenticatedUserResponseAsync(user.Id, tenant.Id, db))!,
             new AuthenticatedTenantResponse(tenant.Id, tenant.Name, tenant.Slug, tenant.LogoUrl, tenant.PrimaryColor, tenant.SecondaryColor)
         );
 
@@ -149,6 +160,10 @@ public static class AuthEndpoints
         if (tenant is null)
             return Results.Unauthorized();
 
+        var hasActiveMembership = await HasActiveMembershipAsync(user.Id, tenant.Id, db);
+        if (!hasActiveMembership)
+            return Results.Json(new { message = "Only users with an active membership plan can access the platform." }, statusCode: StatusCodes.Status401Unauthorized);
+
         var accessToken = jwtService.GenerateAccessToken(user, tenant, out var expiresAt);
         var newRefreshToken = jwtService.GenerateRefreshToken();
 
@@ -171,7 +186,7 @@ public static class AuthEndpoints
             accessToken,
             expiresAt,
             newRefreshToken,
-            new AuthenticatedUserResponse(user.Id, user.Name, user.Email, user.Role),
+            (await BuildAuthenticatedUserResponseAsync(user.Id, tenant.Id, db))!,
             new AuthenticatedTenantResponse(tenant.Id, tenant.Name, tenant.Slug, tenant.LogoUrl, tenant.PrimaryColor, tenant.SecondaryColor)
         );
 
@@ -229,5 +244,78 @@ public static class AuthEndpoints
         await db.SaveChangesAsync();
 
         return Results.NoContent();
+    }
+
+    /// <summary>
+    /// Reconstroi a visao autenticada do usuario unindo dados centrais e dados de profile.
+    /// </summary>
+    private static async Task<AuthenticatedUserResponse?> BuildAuthenticatedUserResponseAsync(Guid userId, Guid tenantId, AppDbContext db)
+    {
+        var connection = db.Database.GetDbConnection();
+
+        const string sql = @"SELECT u.id,
+                                    u.name,
+                                    u.email,
+                                    u.role,
+                                    up.username,
+                                    up.profile_photo_url AS ProfilePhotoUrl,
+                                    active_plan.membership_plan_id AS ActivePlanId,
+                                    active_plan.name AS ActivePlan,
+                                    active_plan.price AS ActivePlanPrice,
+                                    active_plan.duration_days AS ActivePlanDurationDays
+                             FROM users u
+                             LEFT JOIN user_profiles up
+                               ON up.user_id = u.id
+                              AND up.tenant_id = u.tenant_id
+                             LEFT JOIN LATERAL (
+                                 SELECT um.membership_plan_id,
+                                        mp.name,
+                                        mp.price,
+                                        mp.duration_days
+                                 FROM user_memberships um
+                                 JOIN membership_plans mp
+                                   ON mp.id = um.membership_plan_id
+                                  AND mp.tenant_id = um.tenant_id
+                                 WHERE um.user_id = u.id
+                                   AND um.tenant_id = u.tenant_id
+                                   AND um.is_active = true
+                                   AND mp.is_active = true
+                                   AND um.starts_at <= @Now
+                                   AND (um.ends_at IS NULL OR um.ends_at > @Now)
+                                 ORDER BY um.starts_at DESC, um.created_at DESC
+                                 LIMIT 1
+                             ) active_plan ON true
+                             WHERE u.id = @UserId
+                               AND u.tenant_id = @TenantId
+                               AND u.is_active = true";
+
+        return await connection.QueryFirstOrDefaultAsync<AuthenticatedUserResponse>(sql, new
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Now = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// Verifica se o usuario possui um unico vinculo de plano atualmente valido para acessar a plataforma.
+    /// O plano precisa estar ativo, dentro da vigencia e no mesmo tenant do usuario.
+    /// </summary>
+    private static async Task<bool> HasActiveMembershipAsync(Guid userId, Guid tenantId, AppDbContext db)
+    {
+        var now = DateTime.UtcNow;
+
+        return await db.UserMemberships
+            .Join(db.MembershipPlans,
+                membership => new { membership.MembershipPlanId, membership.TenantId },
+                plan => new { MembershipPlanId = plan.Id, plan.TenantId },
+                (membership, plan) => new { membership, plan })
+            .AnyAsync(x =>
+                x.membership.UserId == userId &&
+                x.membership.TenantId == tenantId &&
+                x.membership.IsActive &&
+                x.plan.IsActive &&
+                x.membership.StartsAt <= now &&
+                (!x.membership.EndsAt.HasValue || x.membership.EndsAt > now));
     }
 }

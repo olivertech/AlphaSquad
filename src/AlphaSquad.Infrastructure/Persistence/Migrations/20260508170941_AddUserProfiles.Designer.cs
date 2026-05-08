@@ -3,6 +3,7 @@ using System;
 using AlphaSquad.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlphaSquad.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260508170941_AddUserProfiles")]
+    partial class AddUserProfiles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -271,50 +274,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.ToTable("gym_classes", (string)null);
                 });
 
-            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.MembershipPlan", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<int>("DurationDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("duration_days");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("name");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric(10,2)")
-                        .HasColumnName("price");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tenant_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("membership_plans", (string)null);
-                });
-
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -470,65 +429,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("tenant_medias", (string)null);
-                });
-
-            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.UserMembership", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("ChangedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("changed_by_user_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime?>("EndsAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ends_at");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<Guid>("MembershipPlanId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("membership_plan_id");
-
-                    b.Property<DateTime>("StartsAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("starts_at");
-
-                    b.Property<string>("StatusReason")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("status_reason");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tenant_id");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChangedByUserId");
-
-                    b.HasIndex("MembershipPlanId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("TenantId", "UserId", "IsActive");
-
-                    b.ToTable("user_memberships", (string)null);
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.UserProfile", b =>
@@ -750,17 +650,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.MembershipPlan", b =>
-                {
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.RefreshToken", b =>
                 {
                     b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "User")
@@ -810,40 +699,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.UserMembership", b =>
-                {
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "ChangedByUser")
-                        .WithMany()
-                        .HasForeignKey("ChangedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.MembershipPlan", "MembershipPlan")
-                        .WithMany("UserMemberships")
-                        .HasForeignKey("MembershipPlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ChangedByUser");
-
-                    b.Navigation("MembershipPlan");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.UserProfile", b =>
@@ -920,11 +775,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.GymClass", b =>
                 {
                     b.Navigation("Bookings");
-                });
-
-            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.MembershipPlan", b =>
-                {
-                    b.Navigation("UserMemberships");
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.Tenant", b =>

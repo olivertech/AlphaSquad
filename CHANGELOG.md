@@ -28,6 +28,49 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 
 - A documentacao agora deixa explicito que o AlphaSquad combina varias camadas de seguranca para ambientes de academia com operacao white-label e multi-tenant.
 
+## [2026-05-08] - Profile Module Base
+
+### Added
+
+- Entidade `UserProfile` para separar dados de experiencia do usuario dos dados centrais de autenticacao.
+- Endpoint `GET /api/profile/me` para leitura do proprio profile.
+- Endpoint `PUT /api/profile/me` para atualizacao de nome e username.
+- Endpoint `PUT /api/profile/me/photo` para upload e substituicao da foto de profile.
+- Endpoint `DELETE /api/profile/me/photo` para remocao da foto de profile.
+
+### Changed
+
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir a entrega inicial do modulo de profile.
+
+### Noted
+
+- O campo de plano ativo foi preparado como snapshot informativo para integracao futura com o dominio de planos.
+
+## [2026-05-08] - Profile & Auth Integration
+
+### Added
+
+- Endpoint `PUT /api/profile/me/email` para troca segura de e-mail com validacao de senha atual.
+
+### Changed
+
+- `login` e `/api/auth/me` agora devolvem dados complementares de profile, como `username`, foto e plano ativo.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir a ampliacao do modulo de profile.
+
+## [2026-05-08] - Profile Validation & Plans Domain
+
+### Added
+
+- Entidade `MembershipPlan` para representar o catalogo de planos da academia.
+- Entidade `UserMembership` para representar o plano ativo e o historico de vinculo do usuario.
+- Endpoints administrativos de planos para listagem, criacao, atualizacao e atribuicao de plano a usuario.
+
+### Changed
+
+- `Profile` agora aplica validacao mais forte de formato de e-mail e regras de `username`.
+- `ActivePlan` deixou de depender de snapshot solto e passou a ser projetado a partir de um dominio real de planos.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir a nova base de planos.
+
 ## [2026-05-07] - Documentation Alignment & Codebase Overview
 
 ### Changed

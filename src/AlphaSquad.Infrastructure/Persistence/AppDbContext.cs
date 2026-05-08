@@ -21,6 +21,9 @@ public class AppDbContext : DbContext
     public DbSet<CheckIn> CheckIns => Set<CheckIn>();
     public DbSet<GymClass> GymClasses => Set<GymClass>();
     public DbSet<ClassBooking> ClassBookings => Set<ClassBooking>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<MembershipPlan> MembershipPlans => Set<MembershipPlan>();
+    public DbSet<UserMembership> UserMemberships => Set<UserMembership>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -279,6 +282,103 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mapeia os dados de profile do usuario, separados do nucleo de autenticacao.
+        modelBuilder.Entity<UserProfile>(entity =>
+        {
+            entity.ToTable("user_profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.Username).HasColumnName("username").HasMaxLength(50);
+            entity.Property(x => x.ProfilePhotoUrl).HasColumnName("profile_photo_url");
+            entity.Property(x => x.ProfileMediaId).HasColumnName("profile_media_id");
+            entity.Property(x => x.ActivePlan).HasColumnName("active_plan").HasMaxLength(150);
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.UserId).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Username }).IsUnique();
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.ProfileMedia)
+                .WithMany()
+                .HasForeignKey(x => x.ProfileMediaId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Mapeia o catalogo de planos da academia.
+        modelBuilder.Entity<MembershipPlan>(entity =>
+        {
+            entity.ToTable("membership_plans");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.Price).HasColumnName("price").HasColumnType("numeric(10,2)");
+            entity.Property(x => x.DurationDays).HasColumnName("duration_days");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Mapeia o vinculo entre usuario e plano.
+        modelBuilder.Entity<UserMembership>(entity =>
+        {
+            entity.ToTable("user_memberships");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.MembershipPlanId).HasColumnName("membership_plan_id");
+            entity.Property(x => x.StartsAt).HasColumnName("starts_at");
+            entity.Property(x => x.EndsAt).HasColumnName("ends_at");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.StatusReason).HasColumnName("status_reason").HasMaxLength(300);
+            entity.Property(x => x.ChangedByUserId).HasColumnName("changed_by_user_id");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.MembershipPlanId);
+            entity.HasIndex(x => x.ChangedByUserId);
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.IsActive });
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.MembershipPlan)
+                .WithMany(x => x.UserMemberships)
+                .HasForeignKey(x => x.MembershipPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
