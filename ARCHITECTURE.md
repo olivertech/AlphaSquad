@@ -153,6 +153,7 @@ O backend usa dois tokens:
 - `Exercise`
 - `CheckIn`
 - `GymClass`
+- `ClassBooking`
 - `Workout`
 - `WorkoutExercise`
 
@@ -248,6 +249,7 @@ Na inicializacao da aplicacao:
 - exercicios
 - check-in
 - classes/agendas
+- reservas de aulas
 
 ### Em progresso
 

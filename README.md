@@ -30,6 +30,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - CRUD de exercicios
 - Check-in com consultas por usuario e por tenant
 - CRUD basico de aulas/agendas
+- Booking e unbooking de aulas
 
 ### Modulos em evolucao
 
@@ -126,6 +127,8 @@ O isolamento e baseado em `TenantId` e aparece em tres camadas principais:
 - `POST /api/classes`
 - `PUT /api/classes/{id}`
 - `DELETE /api/classes/{id}`
+- `POST /api/classes/{id}/book`
+- `DELETE /api/classes/{id}/book`
 
 ## Banco de dados
 
@@ -142,6 +145,7 @@ Entidades ja presentes no projeto:
 - `WorkoutExercise`
 - `CheckIn`
 - `GymClass`
+- `ClassBooking`
 
 ## Seed inicial
 

@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
     public DbSet<CheckIn> CheckIns => Set<CheckIn>();
     public DbSet<GymClass> GymClasses => Set<GymClass>();
+    public DbSet<ClassBooking> ClassBookings => Set<ClassBooking>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -234,6 +235,37 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.InstructorUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Mapeia a reserva de aula com vínculos de tenant, aula e usuário.
+        modelBuilder.Entity<ClassBooking>(entity =>
+        {
+            entity.ToTable("class_bookings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.GymClassId).HasColumnName("gym_class_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.BookedAt).HasColumnName("booked_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.GymClassId);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => new { x.GymClassId, x.UserId }).IsUnique();
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.GymClass)
+                .WithMany(x => x.Bookings)
+                .HasForeignKey(x => x.GymClassId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

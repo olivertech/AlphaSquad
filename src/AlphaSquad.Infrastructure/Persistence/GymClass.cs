@@ -70,4 +70,9 @@ public class GymClass
     /// Objeto de navegação para o instrutor vinculado à aula.
     /// </summary>
     public AppUser? InstructorUser { get; set; }
+
+    /// <summary>
+    /// Reservas vinculadas a esta aula.
+    /// </summary>
+    public ICollection<ClassBooking> Bookings { get; set; } = [];
 }

@@ -39,7 +39,7 @@ O dominio de `Workout` e `WorkoutExercise` ja existe no modelo de dados e ha imp
 - [x] Implementar check-in (`POST /api/checkins`)
 - [x] Implementar consultas de check-in por aluno e por tenant
 - [x] Implementar classes/agendas CRUD
-- [ ] Implementar booking e unbooking de aulas
+- [x] Implementar booking e unbooking de aulas
 
 ## Fase 5: Product Experience
 

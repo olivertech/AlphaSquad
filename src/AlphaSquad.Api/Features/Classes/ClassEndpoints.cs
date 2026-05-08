@@ -43,6 +43,20 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapPost("/{id:guid}/book", BookAsync)
+            .WithName("BookClass")
+            .Produces<ClassBookingResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
+
+        group.MapDelete("/{id:guid}/book", UnbookAsync)
+            .WithName("UnbookClass")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
     }
 
@@ -235,6 +249,73 @@ public static class ClassEndpoints
     }
 
     /// <summary>
+    /// Cria uma reserva para o usuário autenticado em uma aula do tenant atual.
+    /// </summary>
+    private static async Task<IResult> BookAsync(Guid id, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+        var userId = GetUserId(context.User);
+
+        var appUser = await db.Users.FirstOrDefaultAsync(x => x.Id == userId && x.TenantId == tenantId && x.IsActive);
+        if (appUser is null)
+            return Results.Unauthorized();
+
+        var gymClass = await db.GymClasses.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId && x.IsActive);
+        if (gymClass is null)
+            return Results.NotFound();
+
+        if (gymClass.StartsAt <= DateTime.UtcNow)
+            return Results.BadRequest("Class has already started or finished.");
+
+        var alreadyBooked = await db.ClassBookings.AnyAsync(x => x.GymClassId == id && x.UserId == userId && x.TenantId == tenantId);
+        if (alreadyBooked)
+            return Results.Conflict("User is already booked for this class.");
+
+        var currentBookings = await db.ClassBookings.CountAsync(x => x.GymClassId == id && x.TenantId == tenantId);
+        if (currentBookings >= gymClass.Capacity)
+            return Results.BadRequest("Class is already full.");
+
+        var booking = new ClassBooking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            GymClassId = id,
+            UserId = userId,
+            BookedAt = DateTime.UtcNow
+        };
+
+        db.ClassBookings.Add(booking);
+        await db.SaveChangesAsync();
+
+        return Results.Created($"/api/classes/{id}/book", new ClassBookingResponse(
+            booking.Id,
+            gymClass.Id,
+            gymClass.Name,
+            appUser.Id,
+            appUser.Name,
+            booking.BookedAt
+        ));
+    }
+
+    /// <summary>
+    /// Remove a reserva do usuário autenticado para uma aula do tenant atual.
+    /// </summary>
+    private static async Task<IResult> UnbookAsync(Guid id, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+        var userId = GetUserId(context.User);
+
+        var booking = await db.ClassBookings.FirstOrDefaultAsync(x => x.GymClassId == id && x.UserId == userId && x.TenantId == tenantId);
+        if (booking is null)
+            return Results.NotFound();
+
+        db.ClassBookings.Remove(booking);
+        await db.SaveChangesAsync();
+
+        return Results.NoContent();
+    }
+
+    /// <summary>
     /// Valida as regras principais do payload antes de persistir a aula.
     /// </summary>
     private static async Task<IResult?> ValidateRequestAsync(string name,
@@ -299,6 +380,18 @@ public static class ClassEndpoints
     {
         var role = user.FindFirstValue(ClaimTypes.Role);
         return role is nameof(UserRole.Admin) or nameof(UserRole.Teacher);
+    }
+
+    /// <summary>
+    /// Extrai o identificador do usuário autenticado a partir das claims do JWT.
+    /// </summary>
+    private static Guid GetUserId(ClaimsPrincipal user)
+    {
+        var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userIdClaim))
+            throw new UnauthorizedAccessException("User not found in token.");
+
+        return Guid.Parse(userIdClaim);
     }
 
     /// <summary>

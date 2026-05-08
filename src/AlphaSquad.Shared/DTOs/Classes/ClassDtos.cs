@@ -43,3 +43,15 @@ public record GymClassResponse(
     bool IsActive,
     DateTime CreatedAt
 );
+
+/// <summary>
+/// DTO de resposta para uma reserva de aula.
+/// </summary>
+public record ClassBookingResponse(
+    Guid Id,
+    Guid GymClassId,
+    string ClassName,
+    Guid UserId,
+    string UserName,
+    DateTime BookedAt
+);

@@ -44,6 +44,21 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 
 - `README.md` e `ROADMAP.md` atualizados para refletir a entrega do CRUD basico de aulas.
 
+## [2026-05-08] - Class Booking Flow
+
+### Added
+
+- Entidade `ClassBooking` para representar reservas de aula.
+- Endpoint `POST /api/classes/{id}/book` para reservar uma aula.
+- Endpoint `DELETE /api/classes/{id}/book` para cancelar a própria reserva.
+- Validação de capacidade máxima da aula.
+- Bloqueio de reserva duplicada para o mesmo usuário na mesma aula.
+- Bloqueio de reserva para aulas já iniciadas.
+
+### Changed
+
+- `README.md` e `ROADMAP.md` atualizados para refletir a entrega do fluxo de booking.
+
 ## [2026-05-06] - Authentication & Security Base
 
 ### Added
