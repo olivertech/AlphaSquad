@@ -196,13 +196,13 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ends_at");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
                     b.Property<Guid?>("InstructorUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("instructor_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Location")
                         .HasMaxLength(150)
@@ -501,17 +501,6 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.Navigation("Media");
                 });
 
-            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.RefreshToken", b =>
-                {
-                    b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "User")
-                        .WithMany("RefreshTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.GymClass", b =>
                 {
                     b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "InstructorUser")
@@ -528,6 +517,17 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.Navigation("InstructorUser");
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.RefreshToken", b =>
+                {
+                    b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.Tenant", b =>

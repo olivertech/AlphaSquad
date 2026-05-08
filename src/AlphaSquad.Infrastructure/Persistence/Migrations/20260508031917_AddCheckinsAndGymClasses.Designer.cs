@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlphaSquad.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260508025446_AddCheckins")]
-    partial class AddCheckins
+    [Migration("20260508031917_AddCheckinsAndGymClasses")]
+    partial class AddCheckinsAndGymClasses
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -174,6 +174,67 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("features", (string)null);
+                });
+
+            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.GymClass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("capacity");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ends_at");
+
+                    b.Property<Guid?>("InstructorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("instructor_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("location");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstructorUserId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StartsAt");
+
+                    b.ToTable("gym_classes", (string)null);
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.RefreshToken", b =>
@@ -441,6 +502,24 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Media");
+                });
+
+            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.GymClass", b =>
+                {
+                    b.HasOne("AlphaSquad.Infrastructure.Persistence.AppUser", "InstructorUser")
+                        .WithMany()
+                        .HasForeignKey("InstructorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AlphaSquad.Infrastructure.Persistence.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InstructorUser");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.RefreshToken", b =>

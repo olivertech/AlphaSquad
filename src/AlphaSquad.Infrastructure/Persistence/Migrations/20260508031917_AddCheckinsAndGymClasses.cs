@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AlphaSquad.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddGymClasses : Migration
+    public partial class AddCheckinsAndGymClasses : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,14 +45,14 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_gym_classes_tenant_id",
-                table: "gym_classes",
-                column: "tenant_id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_gym_classes_instructor_user_id",
                 table: "gym_classes",
                 column: "instructor_user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_gym_classes_tenant_id",
+                table: "gym_classes",
+                column: "tenant_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_gym_classes_tenant_id_starts_at",
