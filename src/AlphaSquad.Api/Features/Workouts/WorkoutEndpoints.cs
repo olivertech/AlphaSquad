@@ -69,9 +69,12 @@ public static class WorkoutEndpoints
         const string exercisesSql = @"SELECT we.exercise_id AS ExerciseId, e.name AS ExerciseName, m.url AS MediaUrl, 
                                       we.""order"", we.sets, we.reps, we.rest_time AS RestTime, we.notes 
                                       FROM workout_exercises we
+                                      JOIN workouts w ON w.id = we.workout_id
                                       JOIN exercises e ON we.exercise_id = e.id
                                       LEFT JOIN tenant_medias m ON e.media_id = m.id
-                                      WHERE we.workout_id = @WorkoutId 
+                                      WHERE we.workout_id = @WorkoutId
+                                        AND w.tenant_id = @TenantId
+                                        AND e.tenant_id = @TenantId
                                       ORDER BY we.""order\""";
 
         var workout = await connection.QueryFirstOrDefaultAsync<WorkoutResponse>(workoutSql, new { Id = id, TenantId = tenantId });
@@ -79,7 +82,7 @@ public static class WorkoutEndpoints
         if (workout is null)
             return Results.NotFound();
 
-        var exercises = await connection.QueryAsync<WorkoutExerciseResponse>(exercisesSql, new { WorkoutId = id });
+        var exercises = await connection.QueryAsync<WorkoutExerciseResponse>(exercisesSql, new { WorkoutId = id, TenantId = tenantId });
 
         return Results.Ok(new WorkoutDetailsResponse(workout, exercises.ToList()));
     }
@@ -199,7 +202,8 @@ public static class WorkoutEndpoints
                                            is_active AS IsActive, 
                                            created_at AS CreatedAt 
                                     FROM workouts 
-                                    WHERE id = @Id";
+                                    WHERE id = @Id
+                                      AND tenant_id = @TenantId";
 
         const string exercisesSql = @"SELECT we.exercise_id AS ExerciseId, 
                                              e.name AS ExerciseName, 
@@ -210,14 +214,17 @@ public static class WorkoutEndpoints
                                              we.rest_time AS RestTime, 
                                              we.notes 
                                       FROM workout_exercises we
+                                      JOIN workouts w ON w.id = we.workout_id
                                       JOIN exercises e ON we.exercise_id = e.id
                                       LEFT JOIN tenant_medias m ON e.media_id = m.id
-                                      WHERE we.workout_id = @WorkoutId 
+                                      WHERE we.workout_id = @WorkoutId
+                                        AND w.tenant_id = @TenantId
+                                        AND e.tenant_id = @TenantId
                                       ORDER BY we.""order\""";
 
-        var workoutRes = await connection.QueryFirstOrDefaultAsync<WorkoutResponse>(workoutSql, new { Id = id });
-        var exercisesRes = await connection.QueryAsync<WorkoutExerciseResponse>(exercisesSql, new { WorkoutId = id });
+        var workoutRes = await connection.QueryFirstOrDefaultAsync<WorkoutResponse>(workoutSql, new { Id = id, TenantId = tenantId });
+        var exercisesRes = await connection.QueryAsync<WorkoutExerciseResponse>(exercisesSql, new { WorkoutId = id, TenantId = tenantId });
 
-        return Results.Ok(new WorkoutDetailsResponse(workoutRes, exercisesRes.ToList()));
+        return Results.Ok(new WorkoutDetailsResponse(workoutRes!, exercisesRes.ToList()));
     }
 }
