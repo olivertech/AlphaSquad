@@ -25,6 +25,7 @@ Features identificadas hoje:
 - `Users`
 - `Exercises`
 - `Checkins`
+- `Classes`
 - `Workouts` em desenvolvimento no workspace
 
 ### Minimal APIs
@@ -151,6 +152,7 @@ O backend usa dois tokens:
 - `TenantFeature`
 - `Exercise`
 - `CheckIn`
+- `GymClass`
 - `Workout`
 - `WorkoutExercise`
 
@@ -245,6 +247,7 @@ Na inicializacao da aplicacao:
 - media
 - exercicios
 - check-in
+- classes/agendas
 
 ### Em progresso
 

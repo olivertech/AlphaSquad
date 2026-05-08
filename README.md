@@ -29,13 +29,14 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - CRUD de midias com Cloudflare R2
 - CRUD de exercicios
 - Check-in com consultas por usuario e por tenant
+- CRUD basico de aulas/agendas
 
 ### Modulos em evolucao
 
 - Workouts/treinos
 - Associacao treino-exercicio
 - Permissoes por role
-- Agendas e reservas
+- Reservas de aulas
 - Fluxos de engajamento do aluno
 
 ## Arquitetura em resumo
@@ -118,6 +119,14 @@ O isolamento e baseado em `TenantId` e aparece em tres camadas principais:
 - `GET /api/checkins/me`
 - `GET /api/checkins/tenant`
 
+### Classes
+
+- `GET /api/classes`
+- `GET /api/classes/{id}`
+- `POST /api/classes`
+- `PUT /api/classes/{id}`
+- `DELETE /api/classes/{id}`
+
 ## Banco de dados
 
 Entidades ja presentes no projeto:
@@ -132,6 +141,7 @@ Entidades ja presentes no projeto:
 - `Workout`
 - `WorkoutExercise`
 - `CheckIn`
+- `GymClass`
 
 ## Seed inicial
 

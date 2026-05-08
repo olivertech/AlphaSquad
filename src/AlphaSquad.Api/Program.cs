@@ -134,6 +134,7 @@ app.MapAuthEndpoints();
 app.MapTenantEndpoints();
 app.MapMediaEndpoints();
 app.MapUserEndpoints();
+app.MapClassEndpoints();
 app.MapExerciseEndpoints();
 app.MapWorkoutEndpoints();
 app.MapCheckInEndpoints();

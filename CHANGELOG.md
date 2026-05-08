@@ -30,6 +30,20 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 
 - `README.md` e `ROADMAP.md` atualizados para refletir a entrega inicial do modulo de check-in.
 
+## [2026-05-08] - Classes & Scheduling Base
+
+### Added
+
+- Entidade `GymClass` para representar aulas e agendas do tenant.
+- Endpoints `GET /api/classes`, `GET /api/classes/{id}`, `POST /api/classes`, `PUT /api/classes/{id}` e `DELETE /api/classes/{id}`.
+- Filtros por periodo e status na listagem de aulas.
+- Validacao de instrutor por tenant e por role (`Teacher` ou `Admin`).
+- Migration inicial do modulo de classes/agendas.
+
+### Changed
+
+- `README.md` e `ROADMAP.md` atualizados para refletir a entrega do CRUD basico de aulas.
+
 ## [2026-05-06] - Authentication & Security Base
 
 ### Added

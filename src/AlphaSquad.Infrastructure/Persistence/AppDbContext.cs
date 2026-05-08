@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<Workout> Workouts => Set<Workout>();
     public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
     public DbSet<CheckIn> CheckIns => Set<CheckIn>();
+    public DbSet<GymClass> GymClasses => Set<GymClass>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -201,6 +202,38 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mapeia a agenda de aulas com vínculos de tenant e instrutor.
+        modelBuilder.Entity<GymClass>(entity =>
+        {
+            entity.ToTable("gym_classes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.InstructorUserId).HasColumnName("instructor_user_id");
+            entity.Property(x => x.StartsAt).HasColumnName("starts_at");
+            entity.Property(x => x.EndsAt).HasColumnName("ends_at");
+            entity.Property(x => x.Location).HasColumnName("location").HasMaxLength(150);
+            entity.Property(x => x.Capacity).HasColumnName("capacity");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.InstructorUserId);
+            // Este índice ajuda na listagem e nos filtros por período dentro do tenant.
+            entity.HasIndex(x => new { x.TenantId, x.StartsAt });
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.InstructorUser)
+                .WithMany()
+                .HasForeignKey(x => x.InstructorUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
