@@ -10,26 +10,36 @@ public static class ExerciseEndpoints
 
         group.MapGet("/", GetAllAsync)
             .WithName("GetExercises")
+            .WithSummary("Lista os exercícios do tenant atual.")
+            .WithDescription("Retorna os exercícios cadastrados para o tenant, incluindo mídia associada quando existir.")
             .Produces<List<ExerciseResponse>>(StatusCodes.Status200OK);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetExerciseById")
+            .WithSummary("Busca um exercício específico do tenant atual.")
+            .WithDescription("Retorna o detalhamento de um exercício pelo identificador, respeitando o tenant da sessão.")
             .Produces<ExerciseResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
             .WithName("CreateExercise")
+            .WithSummary("Cria um novo exercício no tenant atual.")
+            .WithDescription("Cadastra um exercício com grupo muscular, descrição e mídia opcional pertencente ao mesmo tenant.")
             .Produces<ExerciseResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);
 
         group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("UpdateExercise")
+            .WithSummary("Atualiza um exercício do tenant atual.")
+            .WithDescription("Permite alterar os dados de um exercício já existente, incluindo a mídia opcional associada.")
             .Produces<ExerciseResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("DeleteExercise")
+            .WithSummary("Remove um exercício do tenant atual.")
+            .WithDescription("Exclui um exercício pelo identificador, desde que ele pertença ao tenant da sessão.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 

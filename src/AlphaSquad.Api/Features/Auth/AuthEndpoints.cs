@@ -15,6 +15,8 @@ public static class AuthEndpoints
         group.MapPost("/login", LoginAsync)
             .AllowAnonymous()
             .WithName("Login")
+            .WithSummary("Autentica um usuário no tenant informado.")
+            .WithDescription("Valida tenant, e-mail e senha e retorna access token, refresh token e dados básicos do usuário autenticado.")
             .Produces<LoginResponse>(StatusCodes.Status200OK)
             .Produces<string>(StatusCodes.Status400BadRequest)
             .Produces<string>(StatusCodes.Status401Unauthorized);
@@ -22,12 +24,16 @@ public static class AuthEndpoints
         group.MapGet("/me", MeAsync)
             .RequireAuthorization()
             .WithName("Me")
+            .WithSummary("Retorna os dados do usuário autenticado.")
+            .WithDescription("Lê as claims do JWT atual e devolve informações de usuário, role e tenant da sessão.")
             .Produces<AuthenticatedUserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/refresh", RefreshAsync)
             .AllowAnonymous()
             .WithName("Refresh")
+            .WithSummary("Renova a sessão a partir de um refresh token válido.")
+            .WithDescription("Valida o refresh token, aplica rotação do token e devolve um novo par de tokens de autenticação.")
             .Produces<LoginResponse>(StatusCodes.Status200OK)
             .Produces<string>(StatusCodes.Status400BadRequest)
             .Produces<string>(StatusCodes.Status401Unauthorized);
@@ -35,12 +41,16 @@ public static class AuthEndpoints
         group.MapPost("/change-password", ChangePasswordAsync)
             .RequireAuthorization()
             .WithName("ChangePassword")
+            .WithSummary("Altera a senha do usuário autenticado.")
+            .WithDescription("Exige a senha atual, grava a nova senha com hash e revoga as sessões ativas do usuário.")
             .Produces<string>(StatusCodes.Status200OK)
             .Produces<string>(StatusCodes.Status400BadRequest);
 
         group.MapPost("/logout", LogoutAsync)
             .RequireAuthorization()
             .WithName("Logout")
+            .WithSummary("Encerra a sessão atual do usuário.")
+            .WithDescription("Revoga os refresh tokens ativos do usuário autenticado para impedir novas renovações de sessão.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status401Unauthorized);
         

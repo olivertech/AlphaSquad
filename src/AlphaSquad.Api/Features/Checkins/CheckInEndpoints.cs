@@ -16,6 +16,8 @@ public static class CheckInEndpoints
 
         group.MapPost("/", CreateAsync)
             .WithName("CreateCheckIn")
+            .WithSummary("Registra um check-in para o usuário autenticado.")
+            .WithDescription("Cria um registro de entrada no tenant atual, respeitando a regra de um check-in por dia.")
             .Produces<CheckInResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
@@ -23,11 +25,15 @@ public static class CheckInEndpoints
 
         group.MapGet("/me", GetMyCheckInsAsync)
             .WithName("GetMyCheckIns")
+            .WithSummary("Lista os check-ins do usuário autenticado.")
+            .WithDescription("Retorna o histórico paginado de check-ins do próprio usuário, com filtro opcional por período.")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/tenant", GetTenantCheckInsAsync)
             .WithName("GetTenantCheckIns")
+            .WithSummary("Lista os check-ins do tenant atual.")
+            .WithDescription("Retorna os check-ins do tenant para visão administrativa, com filtro opcional por usuário e período.")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);

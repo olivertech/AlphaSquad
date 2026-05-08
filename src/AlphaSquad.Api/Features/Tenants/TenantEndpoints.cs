@@ -10,18 +10,24 @@ public static class TenantEndpoints
         group.MapGet("/by-slug/{slug}", GetBySlugAsync)
             .AllowAnonymous()
             .WithName("GetTenantBySlug")
+            .WithSummary("Busca a configuração pública de um tenant pelo slug.")
+            .WithDescription("Retorna dados básicos de branding e ativação do tenant, com apoio de cache Redis.")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPut("/{id:guid}", UpdateAsync)
             .RequireAuthorization()
             .WithName("UpdateTenant")
+            .WithSummary("Atualiza os dados do tenant autenticado.")
+            .WithDescription("Permite alterar nome, logo e cores do tenant atual, respeitando o isolamento multi-tenant.")
             .Produces<TenantConfigResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/current", GetCurrentAsync)
             .RequireAuthorization()
             .WithName("GetCurrentTenant")
+            .WithSummary("Retorna o tenant da sessão atual.")
+            .WithDescription("Consulta os dados completos do tenant associado ao token JWT enviado na requisição.")
             .Produces<TenantCurrentResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
@@ -29,6 +35,8 @@ public static class TenantEndpoints
             .RequireAuthorization()
             .DisableAntiforgery()
             .WithName("UpdateTenantLogo")
+            .WithSummary("Atualiza a logo do tenant atual.")
+            .WithDescription("Faz upload da nova logo no storage, remove o arquivo anterior quando existir e atualiza o vínculo do tenant.")
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<TenantCurrentResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
@@ -36,6 +44,8 @@ public static class TenantEndpoints
         group.MapGet("/current/features", GetCurrentFeaturesAsync)
             .RequireAuthorization()
             .WithName("GetCurrentTenantFeatures")
+            .WithSummary("Lista as features habilitadas para o tenant atual.")
+            .WithDescription("Retorna os módulos e capacidades liberados para o tenant associado à sessão atual.")
             .Produces<TenantFeaturesResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
         

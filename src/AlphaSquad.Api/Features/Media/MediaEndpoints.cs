@@ -11,6 +11,8 @@ public static class MediaEndpoints
             .RequireAuthorization()
             .DisableAntiforgery()
             .WithName("UploadMedia")
+            .WithSummary("Faz upload de uma mídia para o tenant atual.")
+            .WithDescription("Armazena o arquivo no storage configurado e cria o registro da mídia vinculado ao tenant da sessão.")
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<UploadMediaResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
@@ -19,6 +21,8 @@ public static class MediaEndpoints
             .RequireAuthorization()
             .DisableAntiforgery()
             .WithName("ReplaceMediaFile")
+            .WithSummary("Substitui o arquivo de uma mídia existente.")
+            .WithDescription("Envia um novo arquivo para o storage, atualiza os metadados da mídia e remove o binário anterior.")
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<TenantMediaResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
@@ -27,17 +31,23 @@ public static class MediaEndpoints
         group.MapDelete("/{id:guid}", DeleteAsync)
             .RequireAuthorization()
             .WithName("DeleteMedia")
+            .WithSummary("Remove uma mídia do tenant atual.")
+            .WithDescription("Exclui o arquivo no storage e remove o registro da mídia, respeitando vínculos ativos com o tenant.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/", GetAllAsync)
             .RequireAuthorization()
             .WithName("GetTenantMedias")
+            .WithSummary("Lista as mídias do tenant atual.")
+            .WithDescription("Retorna uma lista paginada das mídias cadastradas para o tenant autenticado.")
             .Produces<List<TenantMediaResponse>>(StatusCodes.Status200OK);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
             .RequireAuthorization()
             .WithName("GetMediaById")
+            .WithSummary("Busca uma mídia específica do tenant atual.")
+            .WithDescription("Retorna os dados de uma mídia pelo identificador, desde que ela pertença ao tenant da sessão.")
             .Produces<MediaResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 

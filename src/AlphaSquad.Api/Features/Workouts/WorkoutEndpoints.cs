@@ -10,31 +10,43 @@ public static class WorkoutEndpoints
 
         group.MapGet("/", GetAllAsync)
             .WithName("GetWorkouts")
+            .WithSummary("Lista os treinos do tenant atual.")
+            .WithDescription("Retorna os treinos cadastrados para o tenant autenticado.")
             .Produces<List<WorkoutResponse>>(StatusCodes.Status200OK);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetWorkoutById")
+            .WithSummary("Busca um treino específico do tenant atual.")
+            .WithDescription("Retorna o treino e a lista ordenada de exercícios associados a ele.")
             .Produces<WorkoutDetailsResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
             .WithName("CreateWorkout")
+            .WithSummary("Cria um novo treino no tenant atual.")
+            .WithDescription("Cadastra um treino com nome, descrição e objetivo para uso dentro do tenant da sessão.")
             .Produces<WorkoutResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);
 
         group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("UpdateWorkout")
+            .WithSummary("Atualiza um treino do tenant atual.")
+            .WithDescription("Permite alterar nome, objetivo, descrição e status ativo de um treino existente.")
             .Produces<WorkoutResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("DeleteWorkout")
+            .WithSummary("Remove um treino do tenant atual.")
+            .WithDescription("Exclui um treino pelo identificador, respeitando o isolamento do tenant autenticado.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/exercises", AssignExercisesAsync)
             .WithName("AssignWorkoutExercises")
+            .WithSummary("Define os exercícios de um treino.")
+            .WithDescription("Substitui a composição atual do treino por uma nova lista ordenada de exercícios do mesmo tenant.")
             .Produces<WorkoutDetailsResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);

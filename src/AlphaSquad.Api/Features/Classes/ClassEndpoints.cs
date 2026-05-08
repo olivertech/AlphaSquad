@@ -16,22 +16,30 @@ public static class ClassEndpoints
 
         group.MapGet("/", GetAllAsync)
             .WithName("GetClasses")
+            .WithSummary("Lista as aulas do tenant atual.")
+            .WithDescription("Retorna uma lista paginada de aulas com filtros por período e status ativo.")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetClassById")
+            .WithSummary("Busca uma aula específica do tenant atual.")
+            .WithDescription("Retorna o detalhamento de uma aula pelo identificador, incluindo dados do instrutor quando existir.")
             .Produces<GymClassResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
             .WithName("CreateClass")
+            .WithSummary("Cria uma nova aula no tenant atual.")
+            .WithDescription("Cadastra uma aula com horário, capacidade, local e instrutor opcional, restrito a perfis de gestão.")
             .Produces<GymClassResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("UpdateClass")
+            .WithSummary("Atualiza uma aula do tenant atual.")
+            .WithDescription("Permite alterar os dados principais da aula, incluindo status ativo e instrutor.")
             .Produces<GymClassResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status403Forbidden)
@@ -39,12 +47,16 @@ public static class ClassEndpoints
 
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("DeleteClass")
+            .WithSummary("Remove uma aula do tenant atual.")
+            .WithDescription("Exclui fisicamente uma aula pelo identificador, restrito a perfis com permissão de gestão.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/book", BookAsync)
             .WithName("BookClass")
+            .WithSummary("Reserva uma vaga em uma aula.")
+            .WithDescription("Cria a reserva da aula para o usuário autenticado, respeitando capacidade, duplicidade e horário da aula.")
             .Produces<ClassBookingResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
@@ -53,6 +65,8 @@ public static class ClassEndpoints
 
         group.MapDelete("/{id:guid}/book", UnbookAsync)
             .WithName("UnbookClass")
+            .WithSummary("Cancela a reserva da aula para o usuário autenticado.")
+            .WithDescription("Remove a reserva existente do usuário para a aula informada dentro do tenant atual.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);

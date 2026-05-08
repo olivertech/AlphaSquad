@@ -10,27 +10,37 @@ public static class UserEndpoints
 
         group.MapGet("/", GetAllAsync)
             .WithName("GetUsers")
+            .WithSummary("Lista os usuários ativos do tenant atual.")
+            .WithDescription("Retorna os usuários ativos vinculados ao tenant da sessão, ordenados por nome.")
             .Produces<List<UserResponse>>(StatusCodes.Status200OK);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetUserById")
+            .WithSummary("Busca um usuário específico do tenant atual.")
+            .WithDescription("Retorna os dados de um usuário pelo identificador, respeitando o isolamento multi-tenant.")
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
             .WithName("CreateUser")
+            .WithSummary("Cria um novo usuário no tenant atual.")
+            .WithDescription("Cadastra um usuário com senha, role e vínculo ao tenant autenticado.")
             .Produces<UserResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status409Conflict);
 
         group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("UpdateUser")
+            .WithSummary("Atualiza um usuário do tenant atual.")
+            .WithDescription("Permite alterar nome, role e status ativo de um usuário pertencente ao tenant da sessão.")
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("DeleteUser")
+            .WithSummary("Desativa um usuário do tenant atual.")
+            .WithDescription("Realiza a exclusão lógica do usuário, marcando-o como inativo no banco.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
