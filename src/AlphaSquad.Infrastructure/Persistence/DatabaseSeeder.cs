@@ -80,7 +80,8 @@ public class DatabaseSeeder
             ("CHECKIN", "Controle de entrada e frequência de alunos."),
             ("SCHEDULE", "Agendamento de aulas e horários."),
             ("MEDIA", "Gestão de mídias e arquivos do tenant."),
-            ("USER_MGMT", "Gestão avançada de usuários e permissões.")
+            ("USER_MGMT", "Gestão avançada de usuários e permissões."),
+            ("STORE", "Loja interna com produtos personalizados da academia.")
         };
 
         foreach (var featureData in featuresToSeed)

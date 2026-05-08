@@ -36,6 +36,9 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Booking e unbooking de aulas
 - Profile do usuario autenticado com dados basicos e foto
 - Dominio inicial de planos com atribuicao de plano ativo por usuario
+- Historico de planos por usuario com motivo de status e auditoria de troca
+- Consultas de retencao para usuarios sem plano ativo e usuarios sem check-in recente
+- Base inicial da loja com catalogo de produtos e variantes
 - Swagger com descricoes curtas nos endpoints principais
 
 ### Modulos em consolidacao
@@ -111,6 +114,19 @@ Status atual:
 - validacao mais forte de formato de e-mail e username
 - `ActivePlan` agora ligado a um dominio real de planos
 - integracao com `login` e `/api/auth/me` para devolver dados de profile junto da sessao
+
+### 4.1. Planos, historico e retencao
+
+O dominio de planos deixou de ser apenas um campo informativo e passou a sustentar regras reais de acesso, historico e reengajamento.
+
+Capacidades atuais:
+
+- apenas usuarios com plano ativo podem acessar a plataforma
+- um unico plano ativo por usuario por vez
+- troca de plano preserva o historico anterior
+- historico com motivo do status e usuario responsavel pela alteracao
+- consulta de usuarios sem plano ativo ha X dias
+- consulta de usuarios com plano vigente que estao ha X dias sem check-in
 
 ### 5. Mural de eventos da academia
 
@@ -275,6 +291,7 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `POST /api/checkins`
 - `GET /api/checkins/me`
 - `GET /api/checkins/tenant`
+- `GET /api/checkins/inactive-users`
 
 ### Classes
 
@@ -300,6 +317,19 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `POST /api/plans`
 - `PUT /api/plans/{id}`
 - `POST /api/plans/{id}/assign`
+- `GET /api/plans/users/{userId}/history`
+- `GET /api/plans/inactive-users`
+
+### Store
+
+- `GET /api/store/products`
+- `GET /api/store/products/{id}`
+- `POST /api/store/products`
+- `PUT /api/store/products/{id}`
+- `DELETE /api/store/products/{id}`
+- `POST /api/store/products/{id}/variants`
+- `PUT /api/store/products/{productId}/variants/{variantId}`
+- `DELETE /api/store/products/{productId}/variants/{variantId}`
 
 ## Banco de dados
 
@@ -320,6 +350,8 @@ Entidades ja presentes no projeto:
 - `UserProfile`
 - `MembershipPlan`
 - `UserMembership`
+- `Product`
+- `ProductVariant`
 
 Entidades estrategicas previstas para as proximas fases:
 
@@ -355,6 +387,7 @@ Ao subir a aplicacao, o projeto aplica migrations e garante a existencia de:
 - tenant demo `alpha-demo`
 - usuario admin `admin@alphasquad.app`
 - features base vinculadas ao tenant demo
+- planos base `Basic`, `Advanced` e `Premium` para o tenant demo
 
 ## Infra local
 

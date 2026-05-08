@@ -149,5 +149,6 @@ app.MapWorkoutEndpoints();
 app.MapCheckInEndpoints();
 app.MapProfileEndpoints();
 app.MapPlanEndpoints();
+app.MapStoreEndpoints();
 
 app.Run();

@@ -2,6 +2,44 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-08] - Store Module Base
+
+### Added
+
+- Entidade `Product` para representar itens da loja interna do tenant.
+- Entidade `ProductVariant` para representar variacoes comerciais como tamanho, cor, preco e estoque.
+- Endpoints de catalogo da loja para listagem paginada e detalhe de produto.
+- Endpoints administrativos para criar, atualizar e remover produtos e variantes.
+
+### Changed
+
+- `AppDbContext` atualizado com o mapeamento do dominio inicial de loja.
+- `DatabaseSeeder` atualizado para incluir a feature `STORE` no tenant demo.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir a entrega inicial da loja.
+
+### Noted
+
+- Esta primeira rodada prepara a base do catalogo e da gestao de produtos, deixando fluxo de compra, pedido e Stripe para a proxima etapa.
+
+## [2026-05-08] - Plans History & Retention Queries
+
+### Added
+
+- Campos de historico em `UserMembership` para motivo de status e usuario responsavel pela alteracao.
+- Endpoint `GET /api/plans/users/{userId}/history` para historico de planos por usuario.
+- Endpoint `GET /api/plans/inactive-users` para usuarios sem plano ativo ha X dias.
+- Endpoint `GET /api/checkins/inactive-users` para usuarios com plano vigente sem check-in ha X dias.
+
+### Changed
+
+- O acesso ao sistema agora exige plano ativo valido no `login` e no `refresh`.
+- A atribuicao de plano passou a registrar motivo da troca e o usuario responsavel.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir o pacote de historico, retencao e reengajamento.
+
+### Noted
+
+- O dominio de planos agora tambem serve como base para futuras campanhas comerciais de retorno e acoes de reengajamento ligadas a check-in e gamificacao.
+
 ## [2026-05-08] - Product Vision Expansion & Planning
 
 ### Changed

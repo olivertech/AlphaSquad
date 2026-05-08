@@ -1,4 +1,4 @@
-# Project Roadmap
+﻿# Project Roadmap
 
 Este roadmap foi alinhado com o estado atual do codigo e com a visao estrategica definida em 2026-05-08.
 
@@ -13,17 +13,19 @@ Este roadmap foi alinhado com o estado atual do codigo e com a visao estrategica
 
 1. Consolidar `Workouts` e autorizacao base
 2. Implementar `Profile`
-3. Implementar `Store`
-4. Implementar `Events`
-5. Implementar `Social`
-6. Implementar `Gamification`
-7. Evoluir para `Multi-language` em V2
+3. Consolidar `Plans`, historico e retencao
+4. Implementar `Store`
+5. Implementar `Events`
+6. Implementar `Social`
+7. Implementar `Gamification`
+8. Evoluir para `Multi-language` em V2
 
 Essa ordem foi escolhida para reduzir retrabalho:
 
 - `Profile` ajuda `Social`, `Store` e `Gamification`
+- `Plans` fortalece acesso comercial, historico e campanhas de retorno antes da loja e da gamificacao
 - `Store` cria a base de beneficios e recompensas futuras
-- `Events` e `Social` compartilham padroes de feed e paginação
+- `Events` e `Social` compartilham padroes de feed e paginaÃ§Ã£o
 - `Gamification` depende de eventos gerados pelos modulos anteriores
 
 ## Fase 1: Authentication, Security & Tenant Foundation
@@ -33,7 +35,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Implement logout com revogacao de sessoes
 - [x] Corrigir relacionamento de refresh tokens
 - [x] Tratar parse seguro de claims de usuario
-- [ ] Adicionar policies e permissoes por role
+- [x] Adicionar policies e permissoes por role
 - [ ] Centralizar tenant resolution em middleware
 
 ## Fase 2: Tenant, Media & Feature Access
@@ -50,8 +52,8 @@ Essa ordem foi escolhida para reduzir retrabalho:
 ## Fase 3: Exercises, Workouts & Training Experience
 
 - [x] Implementar Exercise CRUD
-- [ ] Consolidar Workout CRUD
-- [ ] Consolidar associacao treino-exercicio
+- [x] Consolidar Workout CRUD
+- [x] Consolidar associacao treino-exercicio
 - [ ] Validar fluxos completos de treinos no workspace
 - [ ] Revisar regras de exclusao e integridade entre treinos, exercicios e midias
 
@@ -80,17 +82,30 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Modelar `UserMembership`
 - [x] Implementar CRUD administrativo inicial de planos
 - [x] Implementar atribuicao de plano ativo para usuario
-- [ ] Evoluir planos para cobranca, ciclo financeiro e historico mais rico
+- [x] Restringir acesso ao sistema para usuarios com plano ativo valido
+- [x] Preservar historico de planos por usuario
+- [x] Registrar motivo de status e usuario responsavel pela troca
+- [x] Expor historico de planos por usuario
+- [x] Expor consulta de usuarios sem plano ativo ha X dias
+- [ ] Evoluir planos para cobranca, ciclo financeiro, cancelamento estruturado e historico mais rico
+
+## Fase 5.2: Retention & Reengagement
+
+- [x] Expor consulta de usuarios com plano vigente sem check-in ha X dias
+- [ ] Integrar consultas de reengajamento com notificacoes futuras
+- [ ] Integrar consultas de reengajamento com campanhas comerciais futuras
+- [ ] Definir eventos de gamificacao relacionados a retorno de alunos
 
 ## Fase 6: Store & Stripe Commerce
 
-- [ ] Modelar `Product`
-- [ ] Modelar `ProductVariant`
+- [x] Modelar `Product`
+- [x] Modelar `ProductVariant`
 - [ ] Modelar `Order` e `OrderItem`
 - [ ] Modelar `PaymentTransaction`
-- [ ] Implementar CRUD administrativo de produtos
+- [x] Implementar CRUD administrativo de produtos
 - [ ] Implementar listagem publica por tenant com paginação infinita
-- [ ] Implementar detalhe de produto
+- [x] Implementar detalhe de produto
+- [x] Implementar CRUD administrativo de variantes
 - [ ] Implementar fluxo de compra
 - [ ] Integrar checkout com Stripe
 - [ ] Implementar webhook de confirmacao de pagamento
@@ -100,7 +115,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 - [ ] Modelar `EventPost`
 - [ ] Implementar CRUD administrativo do mural
-- [ ] Implementar feed publico do tenant com paginação infinita
+- [ ] Implementar feed publico do tenant com paginaÃ§Ã£o infinita
 - [ ] Permitir upload de imagens para eventos
 - [ ] Restringir escrita para `Admin` e roles equivalentes
 - [ ] Preparar visual e ordenacao pensados para o app mobile
@@ -147,8 +162,9 @@ Essa ordem foi escolhida para reduzir retrabalho:
 ## Dependencias importantes entre modulos
 
 - `Profile` antes de `Social`, para foto e username terem origem clara
+- `Plans` e `Retention` antes de `Gamification`, para reaproveitar sinais de retorno, cancelamento e reativacao
 - `Store` antes de `Gamification`, para permitir recompensas conectadas ao ecommerce
-- `Events` antes ou junto de `Social`, para reaproveitar feed, media e paginação
+- `Events` antes ou junto de `Social`, para reaproveitar feed, media e paginaÃ§Ã£o
 - `Gamification` depois dos modulos que vao gerar eventos de pontuacao
 
 ## Metas continuas
@@ -158,3 +174,4 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [ ] Aumentar cobertura de testes
 - [ ] Preparar configuracao por ambiente para deploy real
 - [ ] Manter comentarios didaticos nas novas features
+

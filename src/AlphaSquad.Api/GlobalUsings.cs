@@ -21,12 +21,14 @@ global using AlphaSquad.Shared.DTOs.Exercises;
 global using AlphaSquad.Shared.DTOs.Checkins;
 global using AlphaSquad.Shared.DTOs.Profile;
 global using AlphaSquad.Shared.DTOs.Plans;
+global using AlphaSquad.Shared.DTOs.Store;
 global using AlphaSquad.Api.Features.Classes;
 global using AlphaSquad.Api.Features.Exercises;
 global using AlphaSquad.Api.Features.Workouts;
 global using AlphaSquad.Api.Features.Checkins;
 global using AlphaSquad.Api.Features.Profile;
 global using AlphaSquad.Api.Features.Plans;
+global using AlphaSquad.Api.Features.Store;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;

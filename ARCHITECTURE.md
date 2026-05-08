@@ -30,6 +30,7 @@ Features identificadas hoje:
 - `Workouts`
 - `Profile`
 - `Plans`
+- `Store`
 
 Features estrategicas planejadas:
 
@@ -186,6 +187,18 @@ Visao resumida do estado atual:
 - `Classes`: leitura para autenticados; gestao restrita a `Admin` ou `Teacher`
 - `Checkins`: check-in e historico proprio para autenticados; visao consolidada do tenant restrita a `Admin` ou `Teacher`
 
+### Regra adicional de acesso por plano
+
+O acesso do aluno ao ecossistema tambem passou a depender de um vinculo comercial valido com a academia.
+
+- apenas usuarios com plano ativo podem fazer login
+- o refresh da sessao tambem revalida a existencia de plano ativo
+- plano ativo valido significa:
+- `user_memberships.is_active = true`
+- plano do catalogo tambem ativo
+- vigencia iniciada
+- vigencia nao encerrada
+
 ### Camada 4: Protecao por contexto do recurso
 
 Mesmo quando o usuario esta autenticado e possui role compativel, o backend ainda valida:
@@ -264,6 +277,8 @@ O backend usa dois tokens:
 - `UserProfile`
 - `MembershipPlan`
 - `UserMembership`
+- `Product`
+- `ProductVariant`
 
 ### Convencoes observadas
 
@@ -347,6 +362,7 @@ Hoje o seed inicial cria e vincula features como:
 - `SCHEDULE`
 - `MEDIA`
 - `USER_MGMT`
+- `STORE`
 
 Essa base pode evoluir para habilitar tambem:
 
@@ -363,16 +379,23 @@ Essa base pode evoluir para habilitar tambem:
 Objetivo:
 Permitir venda de produtos personalizados da academia dentro do app.
 
-Capacidades previstas:
+Capacidades atuais:
 
-- catalogo por tenant
+- catalogo de produtos por tenant
+- leitura paginada do catalogo para usuarios autenticados
+- detalhe do produto com variantes
+- gestao administrativa de produtos
+- gestao administrativa de variantes
+- imagem principal por produto com validacao de tenant
+
+Capacidades previstas nas proximas rodadas:
+
 - variacoes de produto como cor e tamanho
-- imagens
 - estoque e disponibilidade
 - carrinho e pedido
 - integracao com Stripe para pagamento
 
-Entidades provaveis:
+Entidades atuais e provaveis:
 
 - `Product`
 - `ProductVariant`
@@ -479,6 +502,10 @@ Capacidades atuais:
 - atribuicao de plano a usuario do tenant
 - controle de um unico plano ativo por usuario
 - integracao direta com `Profile` e `Auth`
+- historico de planos por usuario
+- registro de motivo de status
+- registro do usuario que realizou a troca
+- consultas administrativas de reativacao comercial
 
 Entidades atuais:
 
@@ -490,6 +517,15 @@ Consideracoes arquiteturais:
 - o vinculo de plano e multi-tenant desde a origem
 - a atribuicao encerra o plano ativo anterior do usuario
 - o nome do plano ativo e projetado no profile e na sessao autenticada
+- o historico de planos e preservado em `UserMembership`
+- o acesso ao sistema depende de um plano ativo valido
+- o dominio de planos agora tambem serve a campanhas de retencao e reengajamento
+
+Consultas operacionais atuais:
+
+- historico de planos por usuario
+- usuarios sem plano ativo ha X dias
+- usuarios com plano vigente ha X dias sem check-in
 
 ### Events
 
@@ -564,6 +600,7 @@ Na inicializacao da aplicacao:
 - usuarios
 - profile do usuario
 - planos e vinculos de plano
+- historico de planos e consultas de retencao
 - media
 - exercicios
 - check-in
