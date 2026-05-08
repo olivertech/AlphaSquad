@@ -26,6 +26,8 @@ public class AppDbContext : DbContext
     public DbSet<UserMembership> UserMemberships => Set<UserMembership>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<StoreOrder> StoreOrders => Set<StoreOrder>();
+    public DbSet<StoreOrderItem> StoreOrderItems => Set<StoreOrderItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -438,6 +440,84 @@ public class AppDbContext : DbContext
                 .WithMany(x => x.Variants)
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mapeia o pedido da loja com fluxo operacional presencial.
+        modelBuilder.Entity<StoreOrder>(entity =>
+        {
+            entity.ToTable("store_orders");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<int>().IsRequired();
+            entity.Property(x => x.TotalAmount).HasColumnName("total_amount").HasColumnType("numeric(10,2)");
+            entity.Property(x => x.CustomerNotes).HasColumnName("customer_notes").HasMaxLength(500);
+            entity.Property(x => x.AdminNotes).HasColumnName("admin_notes").HasMaxLength(500);
+            entity.Property(x => x.LastUpdatedByUserId).HasColumnName("last_updated_by_user_id");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.LastUpdatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.LastUpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Mapeia os itens do pedido com snapshot comercial.
+        modelBuilder.Entity<StoreOrderItem>(entity =>
+        {
+            entity.ToTable("store_order_items");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.StoreOrderId).HasColumnName("store_order_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.ProductVariantId).HasColumnName("product_variant_id");
+            entity.Property(x => x.ProductName).HasColumnName("product_name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.VariantName).HasColumnName("variant_name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.VariantColor).HasColumnName("variant_color").HasMaxLength(50);
+            entity.Property(x => x.VariantSize).HasColumnName("variant_size").HasMaxLength(50);
+            entity.Property(x => x.Quantity).HasColumnName("quantity");
+            entity.Property(x => x.UnitPrice).HasColumnName("unit_price").HasColumnType("numeric(10,2)");
+            entity.Property(x => x.LineTotal).HasColumnName("line_total").HasColumnType("numeric(10,2)");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.StoreOrderId);
+            entity.HasIndex(x => x.ProductId);
+            entity.HasIndex(x => x.ProductVariantId);
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.StoreOrder)
+                .WithMany(x => x.Items)
+                .HasForeignKey(x => x.StoreOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.ProductVariant)
+                .WithMany()
+                .HasForeignKey(x => x.ProductVariantId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

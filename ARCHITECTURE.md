@@ -279,6 +279,8 @@ O backend usa dois tokens:
 - `UserMembership`
 - `Product`
 - `ProductVariant`
+- `StoreOrder`
+- `StoreOrderItem`
 
 ### Convencoes observadas
 
@@ -387,18 +389,23 @@ Capacidades atuais:
 - gestao administrativa de produtos
 - gestao administrativa de variantes
 - imagem principal por produto com validacao de tenant
+- criacao de pedido pelo app
+- fluxo administrativo de reserva, retirada e pagamento local
 
 Capacidades previstas nas proximas rodadas:
 
 - variacoes de produto como cor e tamanho
 - estoque e disponibilidade
-- carrinho e pedido
-- integracao com Stripe para pagamento
+- pedido com retirada presencial na academia
+- pagamento local na administracao da academia
+- integracao com Stripe para pagamento em etapa posterior
 
 Entidades atuais e provaveis:
 
 - `Product`
 - `ProductVariant`
+- `StoreOrder`
+- `StoreOrderItem`
 - `Order`
 - `OrderItem`
 - `PaymentTransaction`
@@ -408,6 +415,8 @@ Consideracoes arquiteturais:
 - paginação cursor-based ou page-based para feed infinito
 - webhook de pagamento para confirmacao de pedidos
 - separacao entre preco exibido, pedido e transacao
+- a V1 da loja deve suportar pedido sem gateway externo
+- o pedido pode nascer com status como `PendingApproval`, `Reserved`, `ReadyForPickup`, `PaidLocally` e `Cancelled`
 
 ### Social
 
@@ -444,12 +453,15 @@ Capacidades previstas:
 - ledger de pontos
 - ranking mensal por tenant
 - premios e beneficios associados
+- dashboard de gamificacao do aluno
+- historico de vencedores mensais
 
 Entidades provaveis:
 
-- `GamificationEvent`
+- `GamificationEventRule`
+- `UserGamificationEvent`
 - `PointsLedger`
-- `MonthlyRanking`
+- `MonthlyStudentRanking`
 - `RewardPolicy`
 
 Consideracoes arquiteturais:
@@ -457,6 +469,9 @@ Consideracoes arquiteturais:
 - pontuacao desacoplada por eventos de dominio
 - regras configuraveis por tenant no futuro
 - possibilidade de reprocessamento de ranking
+- apenas usuarios com role `Student` participam da gamificacao
+- cada evento precisa guardar usuario, tipo do evento, origem, pontos aplicados e data da ocorrencia
+- o ranking mensal deve ser fechado por tenant e por competencia
 
 ### Profiles
 

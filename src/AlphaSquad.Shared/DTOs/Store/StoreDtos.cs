@@ -87,3 +87,77 @@ public record UpdateProductVariantRequest(
     int StockQuantity,
     bool IsActive
 );
+
+/// <summary>
+/// Item enviado pelo app para montar um novo pedido.
+/// </summary>
+public record CreateStoreOrderItemRequest(
+    Guid ProductId,
+    Guid ProductVariantId,
+    int Quantity
+);
+
+/// <summary>
+/// Payload para criacao de pedido pelo usuario autenticado.
+/// </summary>
+public record CreateStoreOrderRequest(
+    List<CreateStoreOrderItemRequest> Items,
+    string? CustomerNotes
+);
+
+/// <summary>
+/// Payload administrativo para alteracao de status do pedido.
+/// </summary>
+public record UpdateStoreOrderStatusRequest(
+    StoreOrderStatus Status,
+    string? AdminNotes
+);
+
+/// <summary>
+/// Resposta resumida usada nas listagens de pedidos.
+/// </summary>
+public record StoreOrderListItemResponse(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    StoreOrderStatus Status,
+    decimal TotalAmount,
+    int TotalItems,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);
+
+/// <summary>
+/// Resposta detalhada do pedido da loja.
+/// </summary>
+public record StoreOrderDetailResponse(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    string UserEmail,
+    StoreOrderStatus Status,
+    decimal TotalAmount,
+    string? CustomerNotes,
+    string? AdminNotes,
+    Guid? LastUpdatedByUserId,
+    string? LastUpdatedByUserName,
+    DateTime CreatedAt,
+    DateTime UpdatedAt,
+    List<StoreOrderItemResponse> Items
+);
+
+/// <summary>
+/// Resposta de item do pedido com snapshot comercial do momento da compra.
+/// </summary>
+public record StoreOrderItemResponse(
+    Guid Id,
+    Guid ProductId,
+    Guid ProductVariantId,
+    string ProductName,
+    string VariantName,
+    string? VariantColor,
+    string? VariantSize,
+    int Quantity,
+    decimal UnitPrice,
+    decimal LineTotal
+);

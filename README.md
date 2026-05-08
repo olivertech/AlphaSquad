@@ -38,7 +38,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Dominio inicial de planos com atribuicao de plano ativo por usuario
 - Historico de planos por usuario com motivo de status e auditoria de troca
 - Consultas de retencao para usuarios sem plano ativo e usuarios sem check-in recente
-- Base inicial da loja com catalogo de produtos e variantes
+- Store V1 com catalogo, variantes e pedidos para retirada presencial
 - Swagger com descricoes curtas nos endpoints principais
 
 ### Modulos em consolidacao
@@ -67,7 +67,15 @@ Capacidades previstas:
 - cards ou lista linear de produtos
 - fotos, descricao, variacoes de cor e tamanho
 - controle de estoque e disponibilidade
-- fluxo de compra com Stripe
+- fluxo de pedido pelo app com retirada e pagamento presencial na academia na V1
+- integracao com Stripe em etapa posterior, quando a operacao comercial estiver pronta
+
+Regra de negocio atual para a V1:
+
+- o aluno escolhe o produto e confirma o pedido no app
+- a academia separa o item para retirada
+- o pagamento acontece localmente na administracao da academia
+- a retirada presencial reforca o retorno do aluno ao ambiente fisico da academia
 
 ### 2. Rede social do tenant
 
@@ -91,6 +99,22 @@ Capacidades previstas:
 - ranking mensal por tenant
 - premiacao para top 3 do mes
 - integracao futura com beneficios da loja e mensalidade
+
+Regra de negocio central:
+
+- apenas alunos participam da gamificacao
+- professores e administradores nao entram no ranking
+- cada evento relevante gera pontos de acordo com uma tabela configuravel de regras
+
+Exemplos de eventos previstos:
+
+- check-in
+- postagem na rede da academia
+- participacao em auloes
+- participacao em eventos externos
+- compra de produtos na loja
+- pagamento em dia da mensalidade
+- renovacao do plano
 
 ### 4. Profile do usuario
 
@@ -330,6 +354,18 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `POST /api/store/products/{id}/variants`
 - `PUT /api/store/products/{productId}/variants/{variantId}`
 - `DELETE /api/store/products/{productId}/variants/{variantId}`
+- `POST /api/store/orders`
+- `GET /api/store/orders/me`
+- `GET /api/store/orders/me/{id}`
+- `GET /api/store/orders`
+- `PUT /api/store/orders/{id}/status`
+
+Proxima etapa prevista da loja:
+
+- `Order`
+- `OrderItem`
+- fluxo de pedido com retirada presencial
+- status administrativo de separacao, retirada e pagamento local
 
 ## Banco de dados
 
@@ -352,6 +388,13 @@ Entidades ja presentes no projeto:
 - `UserMembership`
 - `Product`
 - `ProductVariant`
+- `StoreOrder`
+- `StoreOrderItem`
+- `Order`
+- `OrderItem`
+- `GamificationEventRule`
+- `UserGamificationEvent`
+- `MonthlyStudentRanking`
 
 Entidades estrategicas previstas para as proximas fases:
 

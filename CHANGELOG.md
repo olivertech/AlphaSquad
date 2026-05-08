@@ -2,6 +2,26 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-08] - Store Orders V1
+
+### Added
+
+- Entidade `StoreOrder` para representar pedidos com retirada presencial.
+- Entidade `StoreOrderItem` com snapshot comercial dos itens comprados.
+- Endpoints para criacao e consulta de pedidos pelo proprio usuario.
+- Endpoints administrativos para listagem de pedidos e atualizacao de status operacional.
+
+### Changed
+
+- A loja agora suporta fluxo completo de pedido sem gateway externo na V1.
+- O estoque passa a ser reservado quando o pedido entra em status de separacao e restaurado em cancelamentos operacionais.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir a evolucao da loja V1.
+
+### Noted
+
+- O pagamento continua acontecendo presencialmente na academia.
+- Stripe permanece como etapa posterior, sem bloquear a operacao inicial da loja.
+
 ## [2026-05-08] - Store Module Base
 
 ### Added
@@ -20,6 +40,19 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 ### Noted
 
 - Esta primeira rodada prepara a base do catalogo e da gestao de produtos, deixando fluxo de compra, pedido e Stripe para a proxima etapa.
+
+## [2026-05-08] - Store V1 & Gamification Direction
+
+### Changed
+
+- Registrada a decisao de negocio para a V1 da loja: pedido pelo app com retirada e pagamento presencial na academia.
+- Registrado que Stripe permanece como etapa posterior, apos validacao operacional da loja.
+- Registrada a direcao da gamificacao baseada em eventos com pontuacao configuravel por tipo de acao.
+
+### Noted
+
+- A gamificacao deve considerar apenas usuarios com role `Student`.
+- Compras na loja, renovacao de plano, check-in, posts e outros eventos do ecossistema devem alimentar o ranking mensal.
 
 ## [2026-05-08] - Plans History & Retention Queries
 

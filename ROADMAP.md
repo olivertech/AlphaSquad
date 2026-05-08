@@ -100,16 +100,17 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 - [x] Modelar `Product`
 - [x] Modelar `ProductVariant`
-- [ ] Modelar `Order` e `OrderItem`
+- [x] Modelar `Order` e `OrderItem`
 - [ ] Modelar `PaymentTransaction`
 - [x] Implementar CRUD administrativo de produtos
 - [ ] Implementar listagem publica por tenant com paginação infinita
 - [x] Implementar detalhe de produto
 - [x] Implementar CRUD administrativo de variantes
-- [ ] Implementar fluxo de compra
-- [ ] Integrar checkout com Stripe
-- [ ] Implementar webhook de confirmacao de pagamento
-- [ ] Registrar status do pedido e auditoria minima
+- [x] Implementar fluxo de pedido com retirada presencial
+- [x] Implementar status administrativos do pedido para separacao, retirada e pagamento local
+- [ ] Integrar checkout com Stripe em etapa posterior
+- [ ] Implementar webhook de confirmacao de pagamento em etapa posterior
+- [x] Registrar status do pedido e auditoria minima
 
 ## Fase 7: Events Wall
 
@@ -134,12 +135,17 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 ## Fase 9: Gamification
 
-- [ ] Modelar eventos de pontuacao
+- [ ] Modelar `GamificationEventRule`
+- [ ] Modelar `UserGamificationEvent`
 - [ ] Criar ledger de pontos por usuario
 - [ ] Definir tabela de regras para pontuacao inicial
 - [ ] Pontuar acoes como check-in, booking, posts e interacoes
+- [ ] Pontuar compras na loja, pagamento em dia e renovacao de plano
 - [ ] Gerar ranking mensal por tenant
+- [ ] Garantir que apenas `Student` participe do ranking
 - [ ] Expor top 3 e ranking geral
+- [ ] Expor dashboard de gamificacao do aluno
+- [ ] Expor historico de vencedores dos meses anteriores
 - [ ] Preparar integracao futura com premios, descontos e recompensas da loja
 
 ## Fase 10: Product Experience & Mobile Readiness

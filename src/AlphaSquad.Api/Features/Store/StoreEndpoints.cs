@@ -8,25 +8,25 @@ public static class StoreEndpoints
 {
     public static IEndpointRouteBuilder MapStoreEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/store/products")
+        var productGroup = app.MapGroup("/api/store/products")
             .WithTags("Store")
             .RequireAuthorization();
 
-        group.MapGet("/", GetAllAsync)
+        productGroup.MapGet("/", GetAllAsync)
             .WithName("GetStoreProducts")
             .WithSummary("Lista os produtos da loja do tenant atual.")
             .WithDescription("Retorna um catalogo paginado de produtos da academia, com filtro por status e busca simples por nome.")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-        group.MapGet("/{id:guid}", GetByIdAsync)
+        productGroup.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetStoreProductById")
             .WithSummary("Retorna o detalhe de um produto da loja.")
             .WithDescription("Busca um produto especifico do tenant atual com suas variantes ativas ou administrativas, conforme o contexto do endpoint.")
             .Produces<ProductDetailResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPost("/", CreateAsync)
+        productGroup.MapPost("/", CreateAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("CreateStoreProduct")
             .WithSummary("Cria um novo produto na loja do tenant.")
@@ -35,7 +35,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status403Forbidden);
 
-        group.MapPut("/{id:guid}", UpdateAsync)
+        productGroup.MapPut("/{id:guid}", UpdateAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("UpdateStoreProduct")
             .WithSummary("Atualiza um produto da loja do tenant.")
@@ -45,7 +45,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status403Forbidden);
 
-        group.MapDelete("/{id:guid}", DeleteAsync)
+        productGroup.MapDelete("/{id:guid}", DeleteAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("DeleteStoreProduct")
             .WithSummary("Remove um produto da loja do tenant.")
@@ -54,7 +54,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status403Forbidden);
 
-        group.MapPost("/{id:guid}/variants", CreateVariantAsync)
+        productGroup.MapPost("/{id:guid}/variants", CreateVariantAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("CreateStoreProductVariant")
             .WithSummary("Cria uma variante para um produto da loja.")
@@ -64,7 +64,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status403Forbidden);
 
-        group.MapPut("/{productId:guid}/variants/{variantId:guid}", UpdateVariantAsync)
+        productGroup.MapPut("/{productId:guid}/variants/{variantId:guid}", UpdateVariantAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("UpdateStoreProductVariant")
             .WithSummary("Atualiza uma variante de produto da loja.")
@@ -74,12 +74,56 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status403Forbidden);
 
-        group.MapDelete("/{productId:guid}/variants/{variantId:guid}", DeleteVariantAsync)
+        productGroup.MapDelete("/{productId:guid}/variants/{variantId:guid}", DeleteVariantAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("DeleteStoreProductVariant")
             .WithSummary("Remove uma variante de produto da loja.")
             .WithDescription("Exclui fisicamente uma variante de um produto do tenant atual.")
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status403Forbidden);
+
+        var orderGroup = app.MapGroup("/api/store/orders")
+            .WithTags("Store")
+            .RequireAuthorization();
+
+        orderGroup.MapPost("/", CreateOrderAsync)
+            .WithName("CreateStoreOrder")
+            .WithSummary("Cria um novo pedido da loja para retirada presencial.")
+            .WithDescription("Permite que o usuario autenticado monte o pedido pelo app, deixando a separacao, retirada e pagamento para a administracao da academia.")
+            .Produces<StoreOrderDetailResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        orderGroup.MapGet("/me", GetMyOrdersAsync)
+            .WithName("GetMyStoreOrders")
+            .WithSummary("Lista os pedidos do usuario autenticado.")
+            .WithDescription("Retorna o historico paginado de pedidos realizados pelo proprio usuario na loja do tenant.")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        orderGroup.MapGet("/me/{id:guid}", GetMyOrderByIdAsync)
+            .WithName("GetMyStoreOrderById")
+            .WithSummary("Retorna o detalhe de um pedido do usuario autenticado.")
+            .WithDescription("Busca um pedido especifico do proprio usuario, incluindo itens, status e observacoes administrativas.")
+            .Produces<StoreOrderDetailResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        orderGroup.MapGet("/", GetTenantOrdersAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .WithName("GetTenantStoreOrders")
+            .WithSummary("Lista os pedidos da loja do tenant atual.")
+            .WithDescription("Retorna a visao administrativa dos pedidos da loja, com filtros por usuario e status.")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden);
+
+        orderGroup.MapPut("/{id:guid}/status", UpdateOrderStatusAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .WithName("UpdateStoreOrderStatus")
+            .WithSummary("Atualiza o status operacional de um pedido da loja.")
+            .WithDescription("Permite separar itens, liberar retirada, registrar pagamento local e cancelar pedidos, ajustando estoque quando necessario.")
+            .Produces<StoreOrderDetailResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status403Forbidden);
 
@@ -332,6 +376,299 @@ public static class StoreEndpoints
     }
 
     /// <summary>
+    /// Cria um pedido pelo app para pagamento presencial na academia.
+    /// O estoque nao e abatido neste momento; a reserva acontece quando a administracao confirma o pedido.
+    /// </summary>
+    private static async Task<IResult> CreateOrderAsync(CreateStoreOrderRequest request, AppDbContext db, HttpContext context)
+    {
+        if (request.Items is null || request.Items.Count == 0)
+            return Results.BadRequest("Order must contain at least one item.");
+
+        var tenantId = context.GetTenantId();
+        var userId = GetUserId(context.User);
+
+        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == userId && x.TenantId == tenantId && x.IsActive);
+        if (user is null)
+            return Results.Unauthorized();
+
+        var normalizedItems = request.Items
+            .GroupBy(x => new { x.ProductId, x.ProductVariantId })
+            .Select(group => new
+            {
+                group.Key.ProductId,
+                group.Key.ProductVariantId,
+                Quantity = group.Sum(x => x.Quantity)
+            })
+            .ToList();
+
+        if (normalizedItems.Any(x => x.Quantity <= 0))
+            return Results.BadRequest("Item quantity must be greater than zero.");
+
+        var variantIds = normalizedItems.Select(x => x.ProductVariantId).ToList();
+        var variants = await db.ProductVariants
+            .Include(x => x.Product)
+            .Where(x => variantIds.Contains(x.Id) && x.TenantId == tenantId)
+            .ToListAsync();
+
+        if (variants.Count != variantIds.Count)
+            return Results.BadRequest("One or more variants do not belong to this tenant.");
+
+        var order = new StoreOrder
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            UserId = userId,
+            Status = StoreOrderStatus.PendingApproval,
+            CustomerNotes = NormalizeOptional(request.CustomerNotes),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        foreach (var requestedItem in normalizedItems)
+        {
+            var variant = variants.First(x => x.Id == requestedItem.ProductVariantId);
+
+            if (variant.ProductId != requestedItem.ProductId)
+                return Results.BadRequest("Variant does not match the informed product.");
+
+            if (!variant.Product.IsActive || !variant.IsActive)
+                return Results.BadRequest("Product or variant is not available for ordering.");
+
+            if (variant.StockQuantity < requestedItem.Quantity)
+                return Results.BadRequest($"Insufficient stock for variant {variant.Name}.");
+
+            var lineTotal = decimal.Round(variant.Price * requestedItem.Quantity, 2);
+            order.TotalAmount += lineTotal;
+
+            order.Items.Add(new StoreOrderItem
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                StoreOrderId = order.Id,
+                ProductId = variant.ProductId,
+                ProductVariantId = variant.Id,
+                ProductName = variant.Product.Name,
+                VariantName = variant.Name,
+                VariantColor = variant.Color,
+                VariantSize = variant.Size,
+                Quantity = requestedItem.Quantity,
+                UnitPrice = variant.Price,
+                LineTotal = lineTotal
+            });
+        }
+
+        order.TotalAmount = decimal.Round(order.TotalAmount, 2);
+
+        db.StoreOrders.Add(order);
+        await db.SaveChangesAsync();
+
+        var response = await BuildOrderDetailAsync(order.Id, tenantId, db);
+        return Results.Created($"/api/store/orders/me/{order.Id}", response);
+    }
+
+    /// <summary>
+    /// Lista os pedidos do proprio usuario.
+    /// </summary>
+    private static async Task<IResult> GetMyOrdersAsync(AppDbContext db, HttpContext context, int page = 1, int pageSize = 20)
+    {
+        var tenantId = context.GetTenantId();
+        var userId = GetUserId(context.User);
+
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize is < 1 or > 100 ? 20 : pageSize;
+
+        var connection = db.Database.GetDbConnection();
+
+        const string countSql = @"SELECT COUNT(*)
+                                  FROM store_orders o
+                                  WHERE o.tenant_id = @TenantId
+                                    AND o.user_id = @UserId";
+
+        const string itemsSql = @"SELECT o.id,
+                                         o.user_id AS UserId,
+                                         u.name AS UserName,
+                                         o.status,
+                                         o.total_amount AS TotalAmount,
+                                         (
+                                             SELECT COALESCE(SUM(i.quantity), 0)
+                                             FROM store_order_items i
+                                             WHERE i.store_order_id = o.id
+                                         ) AS TotalItems,
+                                         o.created_at AS CreatedAt,
+                                         o.updated_at AS UpdatedAt
+                                  FROM store_orders o
+                                  JOIN users u ON u.id = o.user_id AND u.tenant_id = o.tenant_id
+                                  WHERE o.tenant_id = @TenantId
+                                    AND o.user_id = @UserId
+                                  ORDER BY o.created_at DESC
+                                  LIMIT @Limit OFFSET @Offset";
+
+        var parameters = new
+        {
+            TenantId = tenantId,
+            UserId = userId,
+            Limit = pageSize,
+            Offset = (page - 1) * pageSize
+        };
+
+        var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
+        var items = await connection.QueryAsync<StoreOrderListItemResponse>(itemsSql, parameters);
+
+        return Results.Ok(new
+        {
+            page,
+            pageSize,
+            total,
+            items
+        });
+    }
+
+    /// <summary>
+    /// Retorna o detalhe de um pedido do proprio usuario.
+    /// </summary>
+    private static async Task<IResult> GetMyOrderByIdAsync(Guid id, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+        var userId = GetUserId(context.User);
+
+        var order = await BuildOrderDetailAsync(id, tenantId, db);
+        if (order is null || order.UserId != userId)
+            return Results.NotFound();
+
+        return Results.Ok(order);
+    }
+
+    /// <summary>
+    /// Lista os pedidos da loja para visao administrativa do tenant.
+    /// </summary>
+    private static async Task<IResult> GetTenantOrdersAsync(AppDbContext db,
+                                                            HttpContext context,
+                                                            Guid? userId = null,
+                                                            StoreOrderStatus? status = null,
+                                                            int page = 1,
+                                                            int pageSize = 20)
+    {
+        var tenantId = context.GetTenantId();
+
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize is < 1 or > 100 ? 20 : pageSize;
+
+        if (userId.HasValue)
+        {
+            var userExists = await db.Users.AnyAsync(x => x.Id == userId.Value && x.TenantId == tenantId && x.IsActive);
+            if (!userExists)
+                return Results.BadRequest("User does not belong to this tenant.");
+        }
+
+        var connection = db.Database.GetDbConnection();
+
+        const string countSql = @"SELECT COUNT(*)
+                                  FROM store_orders o
+                                  WHERE o.tenant_id = @TenantId
+                                    AND (@UserId IS NULL OR o.user_id = @UserId)
+                                    AND (@Status IS NULL OR o.status = @Status)";
+
+        const string itemsSql = @"SELECT o.id,
+                                         o.user_id AS UserId,
+                                         u.name AS UserName,
+                                         o.status,
+                                         o.total_amount AS TotalAmount,
+                                         (
+                                             SELECT COALESCE(SUM(i.quantity), 0)
+                                             FROM store_order_items i
+                                             WHERE i.store_order_id = o.id
+                                         ) AS TotalItems,
+                                         o.created_at AS CreatedAt,
+                                         o.updated_at AS UpdatedAt
+                                  FROM store_orders o
+                                  JOIN users u ON u.id = o.user_id AND u.tenant_id = o.tenant_id
+                                  WHERE o.tenant_id = @TenantId
+                                    AND (@UserId IS NULL OR o.user_id = @UserId)
+                                    AND (@Status IS NULL OR o.status = @Status)
+                                  ORDER BY o.created_at DESC
+                                  LIMIT @Limit OFFSET @Offset";
+
+        var parameters = new
+        {
+            TenantId = tenantId,
+            UserId = userId,
+            Status = status,
+            Limit = pageSize,
+            Offset = (page - 1) * pageSize
+        };
+
+        var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
+        var items = await connection.QueryAsync<StoreOrderListItemResponse>(itemsSql, parameters);
+
+        return Results.Ok(new
+        {
+            page,
+            pageSize,
+            total,
+            items
+        });
+    }
+
+    /// <summary>
+    /// Atualiza o status operacional do pedido e ajusta o estoque quando a reserva e cancelada ou confirmada.
+    /// </summary>
+    private static async Task<IResult> UpdateOrderStatusAsync(Guid id, UpdateStoreOrderStatusRequest request, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+        var actorUserId = GetUserId(context.User);
+
+        var order = await db.StoreOrders
+            .Include(x => x.Items)
+            .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+
+        if (order is null)
+            return Results.NotFound();
+
+        if (!CanTransitionStatus(order.Status, request.Status))
+            return Results.BadRequest("Invalid status transition for this order.");
+
+        var variantIds = order.Items.Select(x => x.ProductVariantId).Distinct().ToList();
+        var variants = await db.ProductVariants
+            .Where(x => variantIds.Contains(x.Id) && x.TenantId == tenantId)
+            .ToDictionaryAsync(x => x.Id);
+
+        var currentReservesStock = DoesStatusReserveStock(order.Status);
+        var nextReservesStock = DoesStatusReserveStock(request.Status);
+
+        if (!currentReservesStock && nextReservesStock)
+        {
+            foreach (var item in order.Items)
+            {
+                var variant = variants[item.ProductVariantId];
+                if (variant.StockQuantity < item.Quantity)
+                    return Results.BadRequest($"Insufficient stock to reserve variant {item.VariantName}.");
+            }
+
+            foreach (var item in order.Items)
+            {
+                variants[item.ProductVariantId].StockQuantity -= item.Quantity;
+            }
+        }
+        else if (currentReservesStock && !nextReservesStock)
+        {
+            foreach (var item in order.Items)
+            {
+                variants[item.ProductVariantId].StockQuantity += item.Quantity;
+            }
+        }
+
+        order.Status = request.Status;
+        order.AdminNotes = NormalizeOptional(request.AdminNotes);
+        order.LastUpdatedByUserId = actorUserId;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+
+        var response = await BuildOrderDetailAsync(order.Id, tenantId, db);
+        return Results.Ok(response);
+    }
+
+    /// <summary>
     /// Reconstroi a resposta detalhada do produto usando consultas orientadas para leitura.
     /// </summary>
     private static async Task<ProductDetailResponse?> BuildProductDetailAsync(Guid id,
@@ -459,6 +796,109 @@ public static class StoreEndpoints
     }
 
     /// <summary>
+    /// Reconstroi a resposta detalhada do pedido com snapshots dos itens e dados do usuario.
+    /// </summary>
+    private static async Task<StoreOrderDetailResponse?> BuildOrderDetailAsync(Guid id, Guid tenantId, AppDbContext db)
+    {
+        var connection = db.Database.GetDbConnection();
+
+        const string orderSql = @"SELECT o.id,
+                                         o.user_id AS UserId,
+                                         u.name AS UserName,
+                                         u.email AS UserEmail,
+                                         o.status,
+                                         o.total_amount AS TotalAmount,
+                                         o.customer_notes AS CustomerNotes,
+                                         o.admin_notes AS AdminNotes,
+                                         o.last_updated_by_user_id AS LastUpdatedByUserId,
+                                         changed_by.name AS LastUpdatedByUserName,
+                                         o.created_at AS CreatedAt,
+                                         o.updated_at AS UpdatedAt
+                                  FROM store_orders o
+                                  JOIN users u ON u.id = o.user_id AND u.tenant_id = o.tenant_id
+                                  LEFT JOIN users changed_by
+                                    ON changed_by.id = o.last_updated_by_user_id
+                                   AND changed_by.tenant_id = o.tenant_id
+                                  WHERE o.id = @Id
+                                    AND o.tenant_id = @TenantId";
+
+        const string itemsSql = @"SELECT i.id,
+                                         i.product_id AS ProductId,
+                                         i.product_variant_id AS ProductVariantId,
+                                         i.product_name AS ProductName,
+                                         i.variant_name AS VariantName,
+                                         i.variant_color AS VariantColor,
+                                         i.variant_size AS VariantSize,
+                                         i.quantity,
+                                         i.unit_price AS UnitPrice,
+                                         i.line_total AS LineTotal
+                                  FROM store_order_items i
+                                  WHERE i.store_order_id = @StoreOrderId
+                                    AND i.tenant_id = @TenantId
+                                  ORDER BY i.product_name, i.variant_name";
+
+        var order = await connection.QueryFirstOrDefaultAsync<StoreOrderDetailProjection>(orderSql, new { Id = id, TenantId = tenantId });
+        if (order is null)
+            return null;
+
+        var items = await connection.QueryAsync<StoreOrderItemResponse>(itemsSql, new { StoreOrderId = id, TenantId = tenantId });
+
+        return new StoreOrderDetailResponse(
+            order.Id,
+            order.UserId,
+            order.UserName,
+            order.UserEmail,
+            order.Status,
+            order.TotalAmount,
+            order.CustomerNotes,
+            order.AdminNotes,
+            order.LastUpdatedByUserId,
+            order.LastUpdatedByUserName,
+            order.CreatedAt,
+            order.UpdatedAt,
+            items.ToList());
+    }
+
+    /// <summary>
+    /// Determina se um status representa itens fisicamente reservados no estoque.
+    /// </summary>
+    private static bool DoesStatusReserveStock(StoreOrderStatus status)
+    {
+        return status is StoreOrderStatus.Reserved or StoreOrderStatus.ReadyForPickup or StoreOrderStatus.PaidLocally;
+    }
+
+    /// <summary>
+    /// Valida transicoes permitidas do fluxo presencial da loja.
+    /// </summary>
+    private static bool CanTransitionStatus(StoreOrderStatus currentStatus, StoreOrderStatus nextStatus)
+    {
+        if (currentStatus == nextStatus)
+            return true;
+
+        return currentStatus switch
+        {
+            StoreOrderStatus.PendingApproval => nextStatus is StoreOrderStatus.Reserved or StoreOrderStatus.Cancelled,
+            StoreOrderStatus.Reserved => nextStatus is StoreOrderStatus.ReadyForPickup or StoreOrderStatus.PaidLocally or StoreOrderStatus.Cancelled,
+            StoreOrderStatus.ReadyForPickup => nextStatus is StoreOrderStatus.PaidLocally or StoreOrderStatus.Cancelled,
+            StoreOrderStatus.PaidLocally => false,
+            StoreOrderStatus.Cancelled => false,
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Extrai o identificador do usuario autenticado a partir das claims do JWT.
+    /// </summary>
+    private static Guid GetUserId(ClaimsPrincipal user)
+    {
+        var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userIdClaim))
+            throw new UnauthorizedAccessException("User not found in token.");
+
+        return Guid.Parse(userIdClaim);
+    }
+
+    /// <summary>
     /// Extrai a role do usuario autenticado para adaptar o comportamento de leitura.
     /// </summary>
     private static UserRole? GetUserRole(ClaimsPrincipal user)
@@ -487,5 +927,23 @@ public static class StoreEndpoints
         bool IsActive,
         int DisplayOrder,
         DateTime CreatedAt
+    );
+
+    /// <summary>
+    /// Projecao interna do pedido para montagem da resposta detalhada.
+    /// </summary>
+    private sealed record StoreOrderDetailProjection(
+        Guid Id,
+        Guid UserId,
+        string UserName,
+        string UserEmail,
+        StoreOrderStatus Status,
+        decimal TotalAmount,
+        string? CustomerNotes,
+        string? AdminNotes,
+        Guid? LastUpdatedByUserId,
+        string? LastUpdatedByUserName,
+        DateTime CreatedAt,
+        DateTime UpdatedAt
     );
 }
