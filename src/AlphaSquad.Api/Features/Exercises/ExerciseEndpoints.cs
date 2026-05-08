@@ -49,7 +49,7 @@ public static class ExerciseEndpoints
                                     m.url, 
                                     e.created_at 
                              FROM exercises e 
-                             LEFT JOIN tenant_medias m ON e.media_id = m.id 
+                             LEFT JOIN tenant_medias m ON e.media_id = m.id AND m.tenant_id = @TenantId
                              WHERE e.tenant_id = @TenantId 
                              ORDER BY e.name";
 
@@ -71,7 +71,7 @@ public static class ExerciseEndpoints
                                     m.url, 
                                     e.created_at 
                              FROM exercises e 
-                             LEFT JOIN tenant_medias m ON e.media_id = m.id 
+                             LEFT JOIN tenant_medias m ON e.media_id = m.id AND m.tenant_id = @TenantId
                              WHERE e.id = @Id AND e.tenant_id = @TenantId";
 
         var exercise = await connection.QueryFirstOrDefaultAsync<ExerciseResponse>(sql, new { Id = id, TenantId = tenantId });
@@ -91,6 +91,13 @@ public static class ExerciseEndpoints
             return Results.BadRequest("Muscle group is required.");
 
         var tenantId = context.GetTenantId();
+
+        if (request.MediaId.HasValue)
+        {
+            var mediaExists = await db.TenantMedias.AnyAsync(x => x.Id == request.MediaId.Value && x.TenantId == tenantId);
+            if (!mediaExists)
+                return Results.BadRequest("Media does not belong to this tenant.");
+        }
 
         var exercise = new Exercise
         {
@@ -133,6 +140,13 @@ public static class ExerciseEndpoints
 
         if (string.IsNullOrWhiteSpace(request.MuscleGroup))
             return Results.BadRequest("Muscle group is required.");
+
+        if (request.MediaId.HasValue)
+        {
+            var mediaExists = await db.TenantMedias.AnyAsync(x => x.Id == request.MediaId.Value && x.TenantId == tenantId);
+            if (!mediaExists)
+                return Results.BadRequest("Media does not belong to this tenant.");
+        }
 
         exercise.Name = request.Name.Trim();
         exercise.MuscleGroup = request.MuscleGroup.Trim();

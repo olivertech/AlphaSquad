@@ -153,13 +153,17 @@ public static class MediaEndpoints
             return Results.NotFound();
 
         // CORREÇÃO: Verificar se esta mídia é a logo de algum tenant para evitar violação de FK
-        var tenantWithLogo = await db.Tenants.FirstOrDefaultAsync(x => x.LogoMediaId == id);
+        var tenantWithLogo = await db.Tenants.FirstOrDefaultAsync(x => x.LogoMediaId == id && x.Id == tenantId);
         if (tenantWithLogo != null)
         {
             tenantWithLogo.LogoMediaId = null;
             tenantWithLogo.LogoUrl = null;
             await db.SaveChangesAsync();
         }
+
+        var mediaInUseByExercise = await db.Exercises.AnyAsync(x => x.MediaId == id && x.TenantId == tenantId);
+        if (mediaInUseByExercise)
+            return Results.BadRequest("Media is in use by an exercise and cannot be deleted.");
 
         await storage.DeleteAsync(media.StorageKey);
 

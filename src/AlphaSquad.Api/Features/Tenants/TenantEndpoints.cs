@@ -79,7 +79,7 @@ public static class TenantEndpoints
 
         if (tenant.LogoMediaId.HasValue)
         {
-            var oldLogo = await db.TenantMedias.FirstOrDefaultAsync(x => x.Id == tenant.LogoMediaId);
+            var oldLogo = await db.TenantMedias.FirstOrDefaultAsync(x => x.Id == tenant.LogoMediaId && x.TenantId == tenantId);
             if (oldLogo != null)
             {
                 await storage.DeleteAsync(oldLogo.StorageKey);
@@ -143,9 +143,10 @@ public static class TenantEndpoints
         return Results.Ok(new TenantFeaturesResponse(features.ToList()));
     }
 
-    private static async Task<IResult> UpdateAsync(Guid id, UpdateTenantRequest request, AppDbContext db, IRedisCacheService cache)
+    private static async Task<IResult> UpdateAsync(Guid id, UpdateTenantRequest request, AppDbContext db, IRedisCacheService cache, HttpContext context)
     {
-        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == id);
+        var tenantId = context.GetTenantId();
+        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == id && x.Id == tenantId);
 
         if (tenant is null)
             return Results.NotFound();

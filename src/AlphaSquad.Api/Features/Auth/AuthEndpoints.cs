@@ -123,15 +123,19 @@ public static class AuthEndpoints
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
             return Results.BadRequest("Refresh token is required.");
 
-        var refreshToken = await db.RefreshTokens.FirstOrDefaultAsync(x => x.Token == request.RefreshToken && !x.IsUsed && !x.IsRevoked);
+        var refreshToken = await db.RefreshTokens.FirstOrDefaultAsync(x =>
+            x.Token == request.RefreshToken &&
+            !x.IsUsed &&
+            !x.IsRevoked &&
+            x.ExpiryDate > DateTime.UtcNow);
         if (refreshToken is null)
             return Results.Unauthorized();
 
-        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == refreshToken.UserId);
+        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == refreshToken.UserId && x.IsActive);
         if (user is null)
             return Results.Unauthorized();
 
-        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == user.TenantId);
+        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == user.TenantId && x.IsActive);
         if (tenant is null)
             return Results.Unauthorized();
 
