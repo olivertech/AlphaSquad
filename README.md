@@ -24,6 +24,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Endpoint de sessao atual (`/api/auth/me`)
 - Change password com revogacao de sessoes
 - Logout com revogacao de refresh tokens
+- Policies base de acesso por role (`AdminOnly` e `AdminOrTeacher`)
 - CRUD de usuarios com isolamento por tenant
 - Tenant config por slug com cache Redis
 - Tenant atual e features habilitadas
@@ -39,7 +40,6 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 
 - Workouts/treinos
 - Associacao treino-exercicio
-- Permissoes por role
 - Padronizacao de paginacao e filtros
 
 ### Proximas frentes core do produto
@@ -145,6 +145,67 @@ O isolamento e baseado em `TenantId` e aparece em tres camadas principais:
 - Storage: paths segregados por tenant
 
 Toda nova feature deve preservar esse isolamento em leituras, gravacoes, integracoes e arquivos.
+
+## Seguranca em camadas
+
+O AlphaSquad foi estruturado para oferecer uma base segura para academias que desejam operar seu proprio aplicativo com segregacao forte de dados e controles de acesso coerentes com ambientes multi-tenant.
+
+### 1. Isolamento por tenant
+
+Cada academia opera em seu proprio contexto logico de dados.
+
+- queries filtradas por `TenantId`
+- claims de tenant no JWT
+- arquivos segregados por tenant no storage
+- validacoes adicionais em relacionamentos entre entidades
+
+### 2. Autenticacao e sessao
+
+O acesso a areas protegidas depende de autenticacao por JWT, com sessao reforcada por refresh token persistido e rotacionado.
+
+- login com `tenant slug + email + password`
+- access token com claims de usuario, role e tenant
+- refresh token rotation
+- logout com revogacao de tokens
+- troca de senha com encerramento das sessoes ativas
+
+### 3. Autorizacao por role
+
+O backend ja possui uma camada base de autorizacao por perfil para separar operacoes de aluno, professor e gestao.
+
+Perfis atuais:
+
+- `Admin`
+- `Teacher`
+- `Student`
+
+Policies atuais:
+
+- `AdminOnly`: operacoes exclusivas de administracao do tenant
+- `AdminOrTeacher`: operacoes de gestao academica compartilhadas entre administradores e professores
+
+### 4. Protecao de endpoints por contexto
+
+Os endpoints nao sao protegidos apenas por login. Eles tambem seguem regras de acesso por natureza da operacao.
+
+- leitura administrativa de usuarios restrita a gestao
+- gestao de tenant restrita a `Admin`
+- upload e administracao de midias restritos a gestao
+- criacao e manutencao de exercicios restritas a `Admin` e `Teacher`
+- criacao e manutencao de treinos restritas a `Admin` e `Teacher`
+- gestao de aulas restrita a `Admin` e `Teacher`
+- visao consolidada de check-ins restrita a `Admin` e `Teacher`
+
+### 5. Defesa em profundidade
+
+Mesmo com autenticacao e roles, o sistema tambem aplica protecoes adicionais no proprio fluxo de dados.
+
+- validacao de pertencimento ao tenant antes de gravar relacionamentos
+- restricao de leitura de recursos por tenant
+- remocao de metadados internos sensiveis dos contratos publicos
+- validacoes de integridade para impedir cruzamento indevido entre tenants
+
+Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto de protecao. A seguranca foi pensada em autenticacao, autorizacao, isolamento de dados e integridade das relacoes.
 
 ## Endpoints principais
 

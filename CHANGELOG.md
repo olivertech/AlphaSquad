@@ -16,6 +16,18 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 - Loja interna, rede social, gamificacao, profile do usuario e mural de eventos passam a ser tratados como pilares core do produto.
 - A implementacao deve seguir ordem que reduza retrabalho entre profile, loja, feeds sociais e gamificacao.
 
+## [2026-05-08] - Security Documentation Reinforcement
+
+### Changed
+
+- Atualizado o `README.md` com uma secao dedicada a seguranca em camadas.
+- Atualizado o `ARCHITECTURE.md` para detalhar autenticacao, isolamento multi-tenant, autorizacao por role e protecao por contexto do recurso.
+- Documentadas as policies base `AdminOnly` e `AdminOrTeacher` como parte da arquitetura atual.
+
+### Noted
+
+- A documentacao agora deixa explicito que o AlphaSquad combina varias camadas de seguranca para ambientes de academia com operacao white-label e multi-tenant.
+
 ## [2026-05-07] - Documentation Alignment & Codebase Overview
 
 ### Changed

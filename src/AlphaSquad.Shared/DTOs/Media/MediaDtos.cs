@@ -13,7 +13,6 @@ public record TenantMediaResponse(
     string FileName, 
     string ContentType, 
     long Size, 
-    string StorageKey, 
     string Url, 
     DateTime CreatedAt
 );

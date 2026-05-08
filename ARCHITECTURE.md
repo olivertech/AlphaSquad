@@ -132,6 +132,86 @@ Toda feature nova deve aplicar isolamento por tenant em:
 
 O isolamento hoje depende principalmente da disciplina nos endpoints e queries. Ainda nao existe um middleware central de tenant ou uma camada mais automatica de enforcement.
 
+## Seguranca e controle de acesso
+
+O AlphaSquad foi desenhado para ser um produto white-label com varias camadas de seguranca, adequadas a um ambiente onde cada academia precisa confiar que seus dados, usuarios e operacoes ficam isolados de outras academias.
+
+### Camada 1: Autenticacao
+
+A autenticacao protege os recursos privados por meio de:
+
+- JWT para acesso a endpoints protegidos
+- claims de usuario, role e tenant no access token
+- refresh token persistido no banco
+- rotacao de refresh token
+- revogacao de sessao em logout e troca de senha
+
+### Camada 2: Isolamento multi-tenant
+
+O isolamento de tenant atua como barreira principal entre academias diferentes.
+
+- `TenantId` nas entidades de dominio
+- filtros por tenant nas queries EF Core e Dapper
+- claims `tenant_id` e `tenant_slug`
+- separacao de paths no storage
+- validacoes adicionais em relacoes entre entidades
+
+### Camada 3: Autorizacao por role
+
+O sistema possui tres perfis base:
+
+- `Admin`
+- `Teacher`
+- `Student`
+
+Policies base atualmente registradas:
+
+- `AdminOnly`
+- `AdminOrTeacher`
+
+### Matriz atual de acesso
+
+Visao resumida do estado atual:
+
+- `Auth`: acesso anonimo apenas para login e refresh; endpoints de sessao exigem autenticacao
+- `Tenants`: consulta publica por slug anonima; alteracoes de tenant e logo restritas a `Admin`
+- `Users`: leitura administrativa e escrita restritas a `Admin` ou `Teacher`, com operacoes sensiveis de escrita restritas a `Admin`
+- `Media`: listagem, upload, troca e exclusao restritos a `Admin` ou `Teacher`
+- `Exercises`: leitura para autenticados; escrita restrita a `Admin` ou `Teacher`
+- `Workouts`: leitura para autenticados; escrita restrita a `Admin` ou `Teacher`
+- `Classes`: leitura para autenticados; gestao restrita a `Admin` ou `Teacher`
+- `Checkins`: check-in e historico proprio para autenticados; visao consolidada do tenant restrita a `Admin` ou `Teacher`
+
+### Camada 4: Protecao por contexto do recurso
+
+Mesmo quando o usuario esta autenticado e possui role compativel, o backend ainda valida:
+
+- se o recurso pertence ao tenant atual
+- se entidades relacionadas pertencem ao mesmo tenant
+- se o usuario alvo ou instrutor informado pertence ao tenant correto
+- se o recurso ainda esta ativo quando isso afeta a regra de negocio
+
+### Camada 5: Reducao de exposicao
+
+A API tambem reduz a exposicao de informacoes desnecessarias nos contratos retornados.
+
+- remocao de metadados internos sensiveis, como `StorageKey`, dos DTOs publicos
+- restricao de listagens administrativas para evitar exposicao ampla a usuarios sem papel de gestao
+
+### Valor comercial dessa arquitetura
+
+Para academias contratantes, isso significa que o produto nao depende apenas de um login para se considerar seguro.
+
+O modelo atual combina:
+
+- autenticacao
+- isolamento multi-tenant
+- autorizacao por perfil
+- validacoes de integridade
+- reducao de exposicao de dados
+
+Esse desenho fortalece confianca operacional e reduz risco de acesso indevido entre usuarios e entre academias.
+
 ## Autenticacao e sessao
 
 ### Estrategia de token
@@ -437,6 +517,7 @@ Na inicializacao da aplicacao:
 
 - base multi-tenant
 - auth com refresh token
+- policies base por role
 - cache Redis
 - storage R2
 - tenant config e features
@@ -450,7 +531,7 @@ Na inicializacao da aplicacao:
 ### Em progresso
 
 - workouts e composicao treino-exercicio
-- autorizacao mais fina por role
+- autorizacao mais fina por role e permissao
 - endurecimento de isolamento multi-tenant
 
 ### Planejado como core de produto

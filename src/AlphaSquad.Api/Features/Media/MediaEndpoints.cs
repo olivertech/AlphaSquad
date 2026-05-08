@@ -8,47 +8,52 @@ public static class MediaEndpoints
             .WithTags("Media");
 
         group.MapPost("/upload", UploadAsync)
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .DisableAntiforgery()
             .WithName("UploadMedia")
             .WithSummary("Faz upload de uma mídia para o tenant atual.")
             .WithDescription("Armazena o arquivo no storage configurado e cria o registro da mídia vinculado ao tenant da sessão.")
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<UploadMediaResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status400BadRequest);
 
         group.MapPut("/{id:guid}/file", ReplaceFileAsync)
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .DisableAntiforgery()
             .WithName("ReplaceMediaFile")
             .WithSummary("Substitui o arquivo de uma mídia existente.")
             .WithDescription("Envia um novo arquivo para o storage, atualiza os metadados da mídia e remove o binário anterior.")
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<TenantMediaResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("DeleteMedia")
             .WithSummary("Remove uma mídia do tenant atual.")
             .WithDescription("Exclui o arquivo no storage e remove o registro da mídia, respeitando vínculos ativos com o tenant.")
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/", GetAllAsync)
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("GetTenantMedias")
             .WithSummary("Lista as mídias do tenant atual.")
             .WithDescription("Retorna uma lista paginada das mídias cadastradas para o tenant autenticado.")
-            .Produces<List<TenantMediaResponse>>(StatusCodes.Status200OK);
+            .Produces<List<TenantMediaResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("GetMediaById")
             .WithSummary("Busca uma mídia específica do tenant atual.")
             .WithDescription("Retorna os dados de uma mídia pelo identificador, desde que ela pertença ao tenant da sessão.")
             .Produces<MediaResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         return app;
@@ -146,7 +151,6 @@ public static class MediaEndpoints
             media.FileName.ToLower(),
             media.ContentType,
             media.Size,
-            media.StorageKey,
             media.Url,
             media.CreatedAt
         ));
