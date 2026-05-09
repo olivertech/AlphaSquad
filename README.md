@@ -28,6 +28,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - CRUD de usuarios com isolamento por tenant
 - Tenant config por slug com cache Redis
 - Tenant atual e features habilitadas
+- Textos legais do tenant para Termos de Uso e Politica de Privacidade
 - Upload e gestao de logo do tenant
 - CRUD de midias com Cloudflare R2
 - CRUD de exercicios
@@ -314,6 +315,11 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `PUT /api/tenants/current/logo`
 - `GET /api/tenants/current/features`
 
+### Legal
+
+- `GET /api/legal/current`
+- `PUT /api/legal/current`
+
 ### Media
 
 - `POST /api/media/upload`
@@ -453,6 +459,7 @@ Entidades ja presentes no projeto:
 - `TenantMedia`
 - `Feature`
 - `TenantFeature`
+- `TenantLegalContent`
 - `Exercise`
 - `Workout`
 - `WorkoutExercise`

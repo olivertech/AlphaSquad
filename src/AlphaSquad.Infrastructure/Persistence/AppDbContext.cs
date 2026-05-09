@@ -38,6 +38,7 @@ public class AppDbContext : DbContext
     public DbSet<UserGamificationEvent> UserGamificationEvents => Set<UserGamificationEvent>();
     public DbSet<PointsLedger> PointsLedgers => Set<PointsLedger>();
     public DbSet<MonthlyStudentRanking> MonthlyStudentRankings => Set<MonthlyStudentRanking>();
+    public DbSet<TenantLegalContent> TenantLegalContents => Set<TenantLegalContent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -146,6 +147,32 @@ public class AppDbContext : DbContext
                 .WithMany(x => x.TenantFeatures)
                 .HasForeignKey(x => x.FeatureId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mapeia os textos legais exibidos no app, centralizando Termos de Uso e Politica de Privacidade por tenant.
+        modelBuilder.Entity<TenantLegalContent>(entity =>
+        {
+            entity.ToTable("tenant_legal_contents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.TermsOfUse).HasColumnName("terms_of_use").IsRequired();
+            entity.Property(x => x.PrivacyPolicy).HasColumnName("privacy_policy").IsRequired();
+            entity.Property(x => x.UpdatedByUserId).HasColumnName("updated_by_user_id");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.TenantId).IsUnique();
+            entity.HasIndex(x => x.UpdatedByUserId);
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Exercise>(entity =>

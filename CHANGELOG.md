@@ -2,6 +2,22 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-09] - Tenant Legal Content
+
+### Added
+
+- Entidade `TenantLegalContent` para centralizar `Termos de Uso` e `Politica de Privacidade` por tenant.
+- Endpoint `GET /api/legal/current` para o app baixar os textos legais do tenant autenticado.
+- Endpoint `PUT /api/legal/current` para manutencao administrativa dos textos legais.
+
+### Changed
+
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir o novo modulo de textos legais.
+
+### Noted
+
+- A manutencao dos textos legais ficou restrita a `Admin`, enquanto a leitura e liberada para qualquer usuario autenticado.
+
 ## [2026-05-09] - Admin-Only Hardening For Administrative Endpoints
 
 ### Changed

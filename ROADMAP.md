@@ -41,6 +41,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 ## Fase 2: Tenant, Media & Feature Access
 
 - [x] Modelar `Feature` e `TenantFeature`
+- [x] Implementar textos legais do tenant para `Termos de Uso` e `Politica de Privacidade`
 - [x] Seed de features base para o tenant demo
 - [x] Implementar `GET /api/tenants/current`
 - [x] Implementar `PUT /api/tenants/current/logo`

@@ -24,6 +24,7 @@ Features identificadas hoje:
 - `Tenants`
 - `Media`
 - `Users`
+- `Legal`
 - `Exercises`
 - `Checkins`
 - `Classes`
@@ -308,6 +309,7 @@ O backend usa dois tokens:
 - `UserGamificationEvent`
 - `PointsLedger`
 - `MonthlyStudentRanking`
+- `TenantLegalContent`
 
 ### Convencoes observadas
 

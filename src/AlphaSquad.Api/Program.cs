@@ -153,5 +153,6 @@ app.MapStoreEndpoints();
 app.MapSocialEndpoints();
 app.MapEventEndpoints();
 app.MapGamificationEndpoints();
+app.MapLegalEndpoints();
 
 app.Run();
