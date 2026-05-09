@@ -29,6 +29,8 @@ public class AppDbContext : DbContext
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<StoreOrder> StoreOrders => Set<StoreOrder>();
     public DbSet<StoreOrderItem> StoreOrderItems => Set<StoreOrderItem>();
+    public DbSet<AcademyEvent> AcademyEvents => Set<AcademyEvent>();
+    public DbSet<AcademyEventParticipation> AcademyEventParticipations => Set<AcademyEventParticipation>();
     public DbSet<GamificationEventRule> GamificationEventRules => Set<GamificationEventRule>();
     public DbSet<UserGamificationEvent> UserGamificationEvents => Set<UserGamificationEvent>();
     public DbSet<PointsLedger> PointsLedgers => Set<PointsLedger>();
@@ -573,6 +575,78 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.ProductVariantId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Mapeia o mural institucional e outdoor da academia.
+        modelBuilder.Entity<AcademyEvent>(entity =>
+        {
+            entity.ToTable("academy_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.MediaId).HasColumnName("media_id");
+            entity.Property(x => x.Location).HasColumnName("location").HasMaxLength(150);
+            entity.Property(x => x.StartsAt).HasColumnName("starts_at");
+            entity.Property(x => x.EndsAt).HasColumnName("ends_at");
+            entity.Property(x => x.IsOutdoorEvent).HasColumnName("is_outdoor_event");
+            entity.Property(x => x.AllowParticipation).HasColumnName("allow_participation");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.MediaId);
+            entity.HasIndex(x => x.CreatedByUserId);
+            entity.HasIndex(x => new { x.TenantId, x.IsActive, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.IsOutdoorEvent, x.IsActive });
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Media)
+                .WithMany()
+                .HasForeignKey(x => x.MediaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Mapeia a confirmacao de participacao de alunos em eventos outdoor.
+        modelBuilder.Entity<AcademyEventParticipation>(entity =>
+        {
+            entity.ToTable("academy_event_participations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.AcademyEventId).HasColumnName("academy_event_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.ParticipatedAt).HasColumnName("participated_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.AcademyEventId);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => new { x.TenantId, x.AcademyEventId, x.UserId }).IsUnique();
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.AcademyEvent)
+                .WithMany(x => x.Participations)
+                .HasForeignKey(x => x.AcademyEventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Mapeia a tabela de regras de pontuacao do tenant.

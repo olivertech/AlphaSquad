@@ -31,6 +31,7 @@ Features identificadas hoje:
 - `Profile`
 - `Plans`
 - `Store`
+- `Events`
 - `Gamification`
 
 Features estrategicas planejadas:
@@ -188,6 +189,7 @@ Visao resumida do estado atual:
 - `Classes`: leitura para autenticados; gestao restrita a `Admin` ou `Teacher`
 - `Checkins`: check-in e historico proprio para autenticados; visao consolidada do tenant restrita a `Admin` ou `Teacher`
 - `Classes`: aulas especiais podem gerar pontuacao de gamificacao no booking do aluno
+- `Events`: leitura para autenticados quando a feature `EVENTS` estiver habilitada; escrita restrita a `Admin` ou `Teacher`
 - `Gamification`: dashboard pessoal para alunos autenticados; regras e fechamento mensal restritos a perfis de gestao
 
 ### Regra adicional de acesso por plano
@@ -374,14 +376,14 @@ Hoje o seed inicial cria e vincula features como:
 - `USER_MGMT`
 - `STORE`
 - `GAMIFICATION`
+- `EVENTS`
 
 Essa base pode evoluir para habilitar tambem:
 
-- `STORE`
 - `SOCIAL`
-- `GAMIFICATION`
 - `PROFILE`
-- `EVENTS`
+
+O modulo de `Events` ja usa essa base em runtime. Se a academia nao tiver a feature `EVENTS`, os endpoints do mural retornam bloqueio de acesso e o feed nao fica disponivel.
 
 ## Dominios estrategicos planejados
 
@@ -432,14 +434,14 @@ Consideracoes arquiteturais:
 Objetivo:
 Criar um feed interno da academia para fortalecer comunidade e interacao.
 
-Capacidades previstas:
+Capacidades atuais:
 
 - post com imagem e descricao curta
 - feed global por tenant
 - likes
 - comentarios simples em nivel unico
 
-Entidades provaveis:
+Entidades atuais:
 
 - `SocialPost`
 - `PostLike`
@@ -567,20 +569,25 @@ Criar um mural institucional da academia para eventos, acoes sociais e comunicac
 
 Capacidades previstas:
 
-- posts exclusivos da gestao
-- feed visual vertical
-- imagens e textos
-- ordenacao cronologica
+- feed paginado por tenant
+- CRUD administrativo restrito a perfis de gestao
+- suporte a imagem via `TenantMedia`
+- eventos outdoor com participacao do aluno
+- integracao da participacao outdoor com gamificacao
+- feature opcional `EVENTS` por tenant
 
 Entidades provaveis:
 
-- `EventPost`
-- `EventMedia` ou reuso controlado de `TenantMedia`
+- `AcademyEvent`
+- `AcademyEventParticipation`
 
 Consideracoes arquiteturais:
 
 - permissao de escrita restrita a gestao
 - leitura ampla para usuarios do tenant
+- reaproveitamento do padrao de feed e paginacao
+- participacao outdoor dispara `OutdoorEventParticipation` apenas para usuarios `Student`
+- a ausencia da feature `EVENTS` bloqueia o modulo para o tenant atual
 - reaproveitamento do padrao de feed e paginação
 
 ## Multi-idioma em V2
@@ -639,6 +646,7 @@ Na inicializacao da aplicacao:
 - check-in
 - classes/agendas
 - reservas de aulas
+- mural de eventos
 
 ### Em progresso
 

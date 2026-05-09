@@ -114,12 +114,16 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 ## Fase 7: Events Wall
 
-- [ ] Modelar `EventPost`
-- [ ] Implementar CRUD administrativo do mural
-- [ ] Implementar feed publico do tenant com paginaÃ§Ã£o infinita
-- [ ] Permitir upload de imagens para eventos
-- [ ] Restringir escrita para `Admin` e roles equivalentes
-- [ ] Preparar visual e ordenacao pensados para o app mobile
+- [x] Modelar `AcademyEvent`
+- [x] Modelar `AcademyEventParticipation`
+- [x] Implementar CRUD administrativo do mural
+- [x] Implementar feed publico do tenant com paginacao
+- [x] Permitir vinculo de imagens ja existentes via `Media`
+- [x] Restringir escrita para `Admin` e `Teacher`
+- [x] Tratar `Events` como modulo opcional por tenant
+- [x] Integrar participacao outdoor com `OutdoorEventParticipation`
+- [ ] Evoluir o contrato para infinite scroll padronizado
+- [ ] Preparar confirmacao administrativa de presenca se a operacao exigir validacao manual
 
 ## Fase 8: Social Network
 

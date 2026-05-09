@@ -39,6 +39,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Historico de planos por usuario com motivo de status e auditoria de troca
 - Consultas de retencao para usuarios sem plano ativo e usuarios sem check-in recente
 - Store V1 com catalogo, variantes e pedidos para retirada presencial
+- Mural de eventos com feed do tenant e participacao outdoor
 - Base inicial da gamificacao com regras, eventos, saldo e ranking mensal
 - Swagger com descricoes curtas nos endpoints principais
 
@@ -53,7 +54,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Loja de produtos personalizados da academia com Stripe
 - Rede social interna da academia
 - Gamificacao com pontuacao, ranking mensal e recompensas
-- Mural de eventos e acoes outdoor promovidas pela academia
+- Rede social interna da academia
 - Multi-idioma com traducao dinamica de conteudo no backend em uma V2
 
 ## Diferenciais estrategicos planejados
@@ -166,12 +167,14 @@ Capacidades atuais:
 
 Canal institucional usado pela gestao da academia para divulgar eventos, acoes sociais, apoiadores, registros de atividades e iniciativas outdoor.
 
-Capacidades previstas:
+Capacidades atuais:
 
-- feed visual leve e atrativo
+- feed paginado por tenant
 - publicacoes exclusivas da gestao
-- imagens e descricao
-- navegacao vertical com carregamento incremental
+- suporte a imagem, descricao, local e periodo do evento
+- eventos outdoor com confirmacao de participacao pelo aluno
+- integracao com gamificacao via `OutdoorEventParticipation`
+- bloqueio do modulo por feature opcional `EVENTS`
 
 ## Arquitetura em resumo
 
@@ -207,6 +210,15 @@ O isolamento e baseado em `TenantId` e aparece em tres camadas principais:
 - Storage: paths segregados por tenant
 
 Toda nova feature deve preservar esse isolamento em leituras, gravacoes, integracoes e arquivos.
+
+## Modulos opcionais por tenant
+
+O AlphaSquad foi desenhado para que partes do produto possam ou nao fazer parte do pacote contratado pela academia.
+
+- o tenant recebe apenas as features contratadas
+- o backend consulta `Feature` + `TenantFeature` para validar modulos opcionais
+- o modulo de `Events` ja nasce seguindo esse modelo com a feature `EVENTS`
+- a mesma base pode ser reutilizada por modulos futuros como `Social`, `Store` e novas camadas premium
 
 ## Seguranca em camadas
 
@@ -256,6 +268,7 @@ Os endpoints nao sao protegidos apenas por login. Eles tambem seguem regras de a
 - criacao e manutencao de exercicios restritas a `Admin` e `Teacher`
 - criacao e manutencao de treinos restritas a `Admin` e `Teacher`
 - gestao de aulas restrita a `Admin` e `Teacher`
+- gestao de eventos restrita a `Admin` e `Teacher`
 - visao consolidada de check-ins restrita a `Admin` e `Teacher`
 
 ### 5. Defesa em profundidade
@@ -384,12 +397,21 @@ Observacao:
 - `PUT /api/gamification/rules/{id}`
 - `POST /api/gamification/ranking/monthly/close`
 
+### Events
+
+- `GET /api/events`
+- `GET /api/events/{id}`
+- `POST /api/events`
+- `PUT /api/events/{id}`
+- `DELETE /api/events/{id}`
+- `POST /api/events/{id}/participate`
+
 Proxima etapa prevista da loja:
 
-- `Order`
-- `OrderItem`
-- fluxo de pedido com retirada presencial
-- status administrativo de separacao, retirada e pagamento local
+- `PaymentTransaction`
+- integracao com Stripe
+- webhook de confirmacao de pagamento
+- beneficios comerciais conectados a gamificacao
 
 ## Banco de dados
 
@@ -415,29 +437,22 @@ Entidades ja presentes no projeto:
 - `ProductVariant`
 - `StoreOrder`
 - `StoreOrderItem`
+- `AcademyEvent`
+- `AcademyEventParticipation`
 - `GamificationEventRule`
 - `UserGamificationEvent`
 - `PointsLedger`
 - `MonthlyStudentRanking`
-- `Order`
-- `OrderItem`
 
 Entidades estrategicas previstas para as proximas fases:
 
 - `Product`
 - `ProductVariant`
-- `Order`
-- `OrderItem`
 - `PaymentTransaction`
 - `SocialPost`
 - `PostLike`
 - `PostComment`
-- `GamificationEvent`
-- `PointsLedger`
-- `MonthlyRanking`
-- `UserProfile`
 - `MembershipPlanSnapshot`
-- `EventPost`
 
 ## Foco didatico
 

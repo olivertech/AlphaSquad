@@ -1,5 +1,6 @@
 ﻿using AlphaSquad.Infrastructure.Auth;
 using AlphaSquad.Shared.Enums;
+using AlphaSquad.Shared.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlphaSquad.Infrastructure.Persistence;
@@ -79,13 +80,14 @@ public class DatabaseSeeder
     {
         var featuresToSeed = new List<(string Name, string Description)>
         {
-            ("WORKOUTS", "Gestão de treinos e exercícios."),
-            ("CHECKIN", "Controle de entrada e frequência de alunos."),
-            ("SCHEDULE", "Agendamento de aulas e horários."),
-            ("MEDIA", "Gestão de mídias e arquivos do tenant."),
-            ("USER_MGMT", "Gestão avançada de usuários e permissões."),
-            ("STORE", "Loja interna com produtos personalizados da academia."),
-            ("GAMIFICATION", "Pontuacao, ranking mensal e campanhas de reengajamento.")
+            (FeatureCodes.Workouts, "Gestao de treinos e exercicios."),
+            (FeatureCodes.CheckIn, "Controle de entrada e frequencia de alunos."),
+            (FeatureCodes.Schedule, "Agendamento de aulas e horarios."),
+            (FeatureCodes.Media, "Gestao de midias e arquivos do tenant."),
+            (FeatureCodes.UserManagement, "Gestao avancada de usuarios e permissoes."),
+            (FeatureCodes.Store, "Loja interna com produtos personalizados da academia."),
+            (FeatureCodes.Gamification, "Pontuacao, ranking mensal e campanhas de reengajamento."),
+            (FeatureCodes.Events, "Mural de eventos institucionais e outdoor da academia.")
         };
 
         foreach (var featureData in featuresToSeed)

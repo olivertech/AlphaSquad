@@ -13,6 +13,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IRedisCacheService, RedisCacheService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IBCryptPasswordHasher, BCryptPasswordHasher>();
+        services.AddScoped<IFeatureAccessService, FeatureAccessService>();
         services.AddScoped<IGamificationService, GamificationService>();
         services.AddScoped<DatabaseSeeder>();
 

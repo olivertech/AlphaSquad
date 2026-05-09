@@ -2,6 +2,26 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-08] - Events Module & Outdoor Participation
+
+### Added
+
+- Entidade `AcademyEvent` para representar o mural institucional e outdoor da academia.
+- Entidade `AcademyEventParticipation` para registrar participacao de alunos em eventos outdoor.
+- Endpoints de leitura do mural, CRUD administrativo e confirmacao de participacao.
+- Feature opcional `EVENTS` no seed base do tenant demo.
+- Servico `FeatureAccessService` para validar features opcionais por tenant.
+
+### Changed
+
+- Participacoes em eventos outdoor agora geram `OutdoorEventParticipation` na gamificacao.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir o novo modulo opcional de eventos.
+
+### Noted
+
+- O modulo de eventos pode ou nao fazer parte do pacote contratado pela academia.
+- A escrita do mural fica restrita a `Admin` e `Teacher`, enquanto a leitura depende da feature `EVENTS` estar habilitada.
+
 ## [2026-05-08] - Gamification Base
 
 ### Added
