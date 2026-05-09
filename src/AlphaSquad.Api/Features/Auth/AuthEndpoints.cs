@@ -90,7 +90,7 @@ public static class AuthEndpoints
 
     /// <summary>
     /// Executa o login principal da plataforma.
-    /// O fluxo valida tenant, credenciais e a regra comercial de plano ativo antes de emitir a sessao.
+    /// O fluxo valida tenant, credenciais e aplica a regra comercial de plano ativo apenas para alunos.
     /// </summary>
     private static async Task<IResult> LoginAsync([FromBody] LoginRequest request,
                                                   AppDbContext db,
@@ -110,8 +110,8 @@ public static class AuthEndpoints
         if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
             return Results.Unauthorized();
 
-        var hasActiveMembership = await HasActiveMembershipAsync(user.Id, tenant.Id, db);
-        if (!hasActiveMembership)
+        var canAccessPlatform = await CanUserAccessPlatformAsync(user, tenant.Id, db);
+        if (!canAccessPlatform)
             return Results.Json(new { message = "Only users with an active membership plan can access the platform." }, statusCode: StatusCodes.Status401Unauthorized);
 
         // O access token leva o contexto do tenant e da role; o refresh token fica persistido para rotacao futura.
@@ -148,7 +148,7 @@ public static class AuthEndpoints
 
     /// <summary>
     /// Renova a sessao a partir de um refresh token ainda valido.
-    /// O token anterior e marcado como usado para impedir reutilizacao indevida.
+    /// O token anterior e marcado como usado para impedir reutilizacao indevida, reaplicando a regra comercial apenas para alunos.
     /// </summary>
     private static async Task<IResult> RefreshAsync([FromBody] RefreshRequest request,
                                                     AppDbContext db,
@@ -173,8 +173,8 @@ public static class AuthEndpoints
         if (tenant is null)
             return Results.Unauthorized();
 
-        var hasActiveMembership = await HasActiveMembershipAsync(user.Id, tenant.Id, db);
-        if (!hasActiveMembership)
+        var canAccessPlatform = await CanUserAccessPlatformAsync(user, tenant.Id, db);
+        if (!canAccessPlatform)
             return Results.Json(new { message = "Only users with an active membership plan can access the platform." }, statusCode: StatusCodes.Status401Unauthorized);
 
         var accessToken = jwtService.GenerateAccessToken(user, tenant, out var expiresAt);
@@ -319,11 +319,14 @@ public static class AuthEndpoints
     }
 
     /// <summary>
-    /// Verifica se o usuario possui um unico vinculo de plano atualmente valido para acessar a plataforma.
-    /// O plano precisa estar ativo, dentro da vigencia e no mesmo tenant do usuario.
+    /// Determina se o usuario pode acessar a plataforma no contexto atual.
+    /// Apenas alunos precisam de plano ativo; perfis administrativos e professores podem autenticar sem membership.
     /// </summary>
-    private static async Task<bool> HasActiveMembershipAsync(Guid userId, Guid tenantId, AppDbContext db)
+    private static async Task<bool> CanUserAccessPlatformAsync(AppUser user, Guid tenantId, AppDbContext db)
     {
+        if (user.Role is UserRole.Admin or UserRole.Teacher)
+            return true;
+
         var now = DateTime.UtcNow;
 
         return await db.UserMemberships
@@ -332,7 +335,7 @@ public static class AuthEndpoints
                 plan => new { MembershipPlanId = plan.Id, plan.TenantId },
                 (membership, plan) => new { membership, plan })
             .AnyAsync(x =>
-                x.membership.UserId == userId &&
+                x.membership.UserId == user.Id &&
                 x.membership.TenantId == tenantId &&
                 x.membership.IsActive &&
                 x.plan.IsActive &&

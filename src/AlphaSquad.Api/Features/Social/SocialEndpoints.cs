@@ -18,7 +18,7 @@ public static class SocialEndpoints
             .WithName("GetSocialPosts")
             .WithSummary("Lista as publicacoes da rede interna.")
             .WithDescription("Retorna a listagem paginada das publicacoes do tenant atual, adequada para dashboards e consultas tradicionais.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<SocialPostResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
 
@@ -163,13 +163,7 @@ public static class SocialEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<SocialPostResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<SocialPostResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>

@@ -13,7 +13,7 @@ public static class UserEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", GetAllAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetUsers")
             .WithSummary("Lista os usuários ativos do tenant atual.")
             .WithDescription("Retorna os usuários ativos vinculados ao tenant da sessão, ordenados por nome.")
@@ -21,7 +21,7 @@ public static class UserEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetUserById")
             .WithSummary("Busca um usuário específico do tenant atual.")
             .WithDescription("Retorna os dados de um usuário pelo identificador, respeitando o isolamento multi-tenant.")

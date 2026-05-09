@@ -16,7 +16,7 @@ public static class StoreEndpoints
             .WithName("GetStoreProducts")
             .WithSummary("Lista os produtos da loja do tenant atual.")
             .WithDescription("Retorna um catalogo paginado de produtos da academia, com filtro por status e busca simples por nome.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<ProductListItemResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         productGroup.MapGet("/feed", GetFeedAsync)
@@ -34,7 +34,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         productGroup.MapPost("/", CreateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateStoreProduct")
             .WithSummary("Cria um novo produto na loja do tenant.")
             .WithDescription("Cadastra um produto da academia com nome, descricao, imagem principal opcional e ordenacao de exibicao.")
@@ -43,7 +43,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         productGroup.MapPut("/{id:guid}", UpdateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateStoreProduct")
             .WithSummary("Atualiza um produto da loja do tenant.")
             .WithDescription("Permite alterar os dados basicos, a imagem principal e o status ativo do produto.")
@@ -53,7 +53,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         productGroup.MapDelete("/{id:guid}", DeleteAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("DeleteStoreProduct")
             .WithSummary("Remove um produto da loja do tenant.")
             .WithDescription("Exclui fisicamente um produto e suas variantes, restrito a perfis administrativos e de gestao.")
@@ -62,7 +62,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         productGroup.MapPost("/{id:guid}/variants", CreateVariantAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateStoreProductVariant")
             .WithSummary("Cria uma variante para um produto da loja.")
             .WithDescription("Adiciona uma nova variante de tamanho, cor, preco e estoque para um produto existente do tenant.")
@@ -72,7 +72,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         productGroup.MapPut("/{productId:guid}/variants/{variantId:guid}", UpdateVariantAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateStoreProductVariant")
             .WithSummary("Atualiza uma variante de produto da loja.")
             .WithDescription("Permite alterar os dados comerciais e o status de uma variante de produto existente.")
@@ -82,7 +82,7 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         productGroup.MapDelete("/{productId:guid}/variants/{variantId:guid}", DeleteVariantAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("DeleteStoreProductVariant")
             .WithSummary("Remove uma variante de produto da loja.")
             .WithDescription("Exclui fisicamente uma variante de um produto do tenant atual.")
@@ -106,7 +106,7 @@ public static class StoreEndpoints
             .WithName("GetMyStoreOrders")
             .WithSummary("Lista os pedidos do usuario autenticado.")
             .WithDescription("Retorna o historico paginado de pedidos realizados pelo proprio usuario na loja do tenant.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<StoreOrderListItemResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         orderGroup.MapGet("/me/{id:guid}", GetMyOrderByIdAsync)
@@ -117,15 +117,15 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         orderGroup.MapGet("/", GetTenantOrdersAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetTenantStoreOrders")
             .WithSummary("Lista os pedidos da loja do tenant atual.")
             .WithDescription("Retorna a visao administrativa dos pedidos da loja, com filtros por usuario e status.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<StoreOrderListItemResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status403Forbidden);
 
         orderGroup.MapPut("/{id:guid}/status", UpdateOrderStatusAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateStoreOrderStatus")
             .WithSummary("Atualiza o status operacional de um pedido da loja.")
             .WithDescription("Permite separar itens, liberar retirada, registrar pagamento local e cancelar pedidos, ajustando estoque quando necessario.")
@@ -201,13 +201,7 @@ public static class StoreEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<ProductListItemResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<ProductListItemResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>
@@ -369,6 +363,11 @@ public static class StoreEndpoints
         if (product is null)
             return Results.NotFound();
 
+        // Evita erro de integridade no banco e preserva o historico operacional da loja.
+        var hasOrderItems = await db.StoreOrderItems.AnyAsync(x => x.ProductId == id && x.TenantId == tenantId);
+        if (hasOrderItems)
+            return Results.BadRequest("Product already belongs to store orders and cannot be deleted.");
+
         db.ProductVariants.RemoveRange(product.Variants);
         db.Products.Remove(product);
         await db.SaveChangesAsync();
@@ -454,6 +453,11 @@ public static class StoreEndpoints
         if (variant is null)
             return Results.NotFound();
 
+        // Uma variante usada em pedido precisa continuar existindo para manter o vinculo historico do item.
+        var hasOrderItems = await db.StoreOrderItems.AnyAsync(x => x.ProductVariantId == variantId && x.TenantId == tenantId);
+        if (hasOrderItems)
+            return Results.BadRequest("Variant already belongs to store orders and cannot be deleted.");
+
         db.ProductVariants.Remove(variant);
         await db.SaveChangesAsync();
 
@@ -489,11 +493,11 @@ public static class StoreEndpoints
         if (normalizedItems.Any(x => x.Quantity <= 0))
             return Results.BadRequest("Item quantity must be greater than zero.");
 
-        var variantIds = normalizedItems.Select(x => x.ProductVariantId).ToList();
+        var variantIds = normalizedItems.Select(x => x.ProductVariantId).Distinct().ToList();
         var variants = await db.ProductVariants
             .Include(x => x.Product)
             .Where(x => variantIds.Contains(x.Id) && x.TenantId == tenantId)
-            .ToListAsync();
+            .ToDictionaryAsync(x => x.Id);
 
         if (variants.Count != variantIds.Count)
             return Results.BadRequest("One or more variants do not belong to this tenant.");
@@ -511,7 +515,7 @@ public static class StoreEndpoints
 
         foreach (var requestedItem in normalizedItems)
         {
-            var variant = variants.First(x => x.Id == requestedItem.ProductVariantId);
+            var variant = variants[requestedItem.ProductVariantId];
 
             if (variant.ProductId != requestedItem.ProductId)
                 return Results.BadRequest("Variant does not match the informed product.");
@@ -599,13 +603,7 @@ public static class StoreEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<StoreOrderListItemResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<StoreOrderListItemResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>
@@ -685,13 +683,7 @@ public static class StoreEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<StoreOrderListItemResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<StoreOrderListItemResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>
@@ -718,8 +710,12 @@ public static class StoreEndpoints
 
         var variantIds = order.Items.Select(x => x.ProductVariantId).Distinct().ToList();
         var variants = await db.ProductVariants
+            .Include(x => x.Product)
             .Where(x => variantIds.Contains(x.Id) && x.TenantId == tenantId)
             .ToDictionaryAsync(x => x.Id);
+
+        if (variants.Count != variantIds.Count)
+            return Results.BadRequest("This order contains variants that are no longer available in the catalog.");
 
         var previousStatus = order.Status;
         var currentReservesStock = DoesStatusReserveStock(order.Status);
@@ -730,6 +726,9 @@ public static class StoreEndpoints
             foreach (var item in order.Items)
             {
                 var variant = variants[item.ProductVariantId];
+                if (!variant.Product.IsActive || !variant.IsActive)
+                    return Results.BadRequest($"Variant {item.VariantName} is no longer active for reservation.");
+
                 if (variant.StockQuantity < item.Quantity)
                     return Results.BadRequest($"Insufficient stock to reserve variant {item.VariantName}.");
             }
@@ -974,6 +973,8 @@ public static class StoreEndpoints
     /// </summary>
     private static bool CanTransitionStatus(StoreOrderStatus currentStatus, StoreOrderStatus nextStatus)
     {
+        // O mesmo status pode ser reenviado para atualizar observacoes administrativas
+        // sem alterar estoque ou pontuacao da loja.
         if (currentStatus == nextStatus)
             return true;
 

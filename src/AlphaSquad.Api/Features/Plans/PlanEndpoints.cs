@@ -10,7 +10,7 @@ public static class PlanEndpoints
     {
         var group = app.MapGroup("/api/plans")
             .WithTags("Plans")
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher);
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
 
         group.MapGet("/", GetAllAsync)
             .WithName("GetPlans")
@@ -170,7 +170,7 @@ public static class PlanEndpoints
             return Results.BadRequest("User does not belong to this tenant.");
 
         if (user.Role != UserRole.Student)
-            return Results.BadRequest("Only students can have membership payments recorded for gamification.");
+            return Results.BadRequest("Only students can have membership plans assigned.");
 
         var actorUser = await db.Users.FirstOrDefaultAsync(x => x.Id == actorUserId && x.TenantId == tenantId && x.IsActive);
         if (actorUser is null)

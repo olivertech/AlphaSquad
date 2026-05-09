@@ -162,12 +162,12 @@ public class DatabaseSeeder
         var rulesToSeed = new List<(GamificationEventType EventType, string Name, string Description, decimal Points)>
         {
             (GamificationEventType.CheckIn, "Check-in", "Pontos por registrar presenca na academia.", 1.00m),
-            (GamificationEventType.SocialPost, "Social post", "Pontos por publicar conteudo na rede interna da academia.", 1.50m),
-            (GamificationEventType.ClassSpecialParticipation, "Class special participation", "Pontos por participar de auloes e aulas especiais.", 3.50m),
-            (GamificationEventType.OutdoorEventParticipation, "Outdoor event participation", "Pontos por participar de eventos externos promovidos pela academia.", 4.50m),
-            (GamificationEventType.StorePurchase, "Store purchase", "Pontos por concluir compras na loja interna da academia.", 3.00m),
-            (GamificationEventType.MembershipPaymentOnTime, "Membership payment on time", "Pontos por pagar a mensalidade em dia.", 5.00m),
-            (GamificationEventType.PlanRenewal, "Plan renewal", "Pontos por renovar o plano da academia.", 6.00m)
+            (GamificationEventType.SocialPost, "Social post", "Pontos por publicar conteudo na rede interna da academia.", 2.00m),
+            (GamificationEventType.ClassSpecialParticipation, "Class special participation", "Pontos por participar de auloes e aulas especiais.", 3.00m),
+            (GamificationEventType.OutdoorEventParticipation, "Outdoor event participation", "Pontos por participar de eventos externos promovidos pela academia.", 4.00m),
+            (GamificationEventType.StorePurchase, "Store purchase", "Pontos por concluir compras na loja interna da academia.", 3.50m),
+            (GamificationEventType.MembershipPaymentOnTime, "Membership payment on time", "Pontos por pagar a mensalidade em dia.", 2.00m),
+            (GamificationEventType.PlanRenewal, "Plan renewal", "Pontos por renovar o plano da academia.", 5.00m)
         };
 
         foreach (var ruleData in rulesToSeed)

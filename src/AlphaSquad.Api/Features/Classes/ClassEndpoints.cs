@@ -18,7 +18,7 @@ public static class ClassEndpoints
             .WithName("GetClasses")
             .WithSummary("Lista as aulas do tenant atual.")
             .WithDescription("Retorna uma lista paginada de aulas com filtros por perÃ­odo e status ativo.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<GymClassResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
@@ -29,7 +29,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateClass")
             .WithSummary("Cria uma nova aula no tenant atual.")
             .WithDescription("Cadastra uma aula com horÃ¡rio, capacidade, local e instrutor opcional, restrito a perfis de gestÃ£o.")
@@ -38,7 +38,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateClass")
             .WithSummary("Atualiza uma aula do tenant atual.")
             .WithDescription("Permite alterar os dados principais da aula, incluindo status ativo e instrutor.")
@@ -48,7 +48,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("DeleteClass")
             .WithSummary("Remove uma aula do tenant atual.")
             .WithDescription("Exclui fisicamente uma aula pelo identificador, restrito a perfis com permissÃ£o de gestÃ£o.")
@@ -75,7 +75,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/{id:guid}/bookings", GetBookingsByClassAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetClassBookingsByClass")
             .WithSummary("Lista as reservas de uma aula para a equipe da academia.")
             .WithDescription("Retorna as reservas da aula informada, com dados do aluno e ordenacao por data de reserva.")
@@ -86,7 +86,7 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/bookings/by-user/{userId:guid}", GetBookingsByUserAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetClassBookingsByUser")
             .WithSummary("Lista as reservas de aula de um aluno para a equipe da academia.")
             .WithDescription("Retorna as reservas vinculadas ao aluno informado dentro do tenant atual, com filtros opcionais por status e periodo.")
@@ -158,13 +158,7 @@ public static class ClassEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<GymClassResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<GymClassResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>

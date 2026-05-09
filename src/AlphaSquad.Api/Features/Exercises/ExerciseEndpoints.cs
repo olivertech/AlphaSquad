@@ -26,7 +26,7 @@ public static class ExerciseEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateExercise")
             .WithSummary("Cria um novo exercício no tenant atual.")
             .WithDescription("Cadastra um exercício com grupo muscular, descrição e mídia opcional pertencente ao mesmo tenant.")
@@ -35,7 +35,7 @@ public static class ExerciseEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateExercise")
             .WithSummary("Atualiza um exercício do tenant atual.")
             .WithDescription("Permite alterar os dados de um exercício já existente, incluindo a mídia opcional associada.")
@@ -45,7 +45,7 @@ public static class ExerciseEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("DeleteExercise")
             .WithSummary("Remove um exercício do tenant atual.")
             .WithDescription("Exclui um exercício pelo identificador, desde que ele pertença ao tenant da sessão.")

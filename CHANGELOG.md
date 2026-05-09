@@ -2,6 +2,38 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-09] - Admin-Only Hardening For Administrative Endpoints
+
+### Changed
+
+- Endpoints administrativos de `Users`, `Plans`, `Media`, `Store`, `Classes`, `Events`, `Exercises`, `Workouts` e consultas administrativas de `Checkins` passaram por endurecimento de autorizacao.
+- Operacoes administrativas de leitura e escrita nesses modulos agora exigem `AdminOnly` quando representam cadastro, manutencao ou visao de dashboard administrativo.
+- `README.md` e `ARCHITECTURE.md` atualizados para refletir a nova regra de acesso.
+
+### Noted
+
+- `Teacher` deixa de acessar endpoints estritamente administrativos e permanece apenas nos fluxos que nao sao de administracao quando a regra de negocio permitir.
+
+## [2026-05-09] - V1 Closure: Transversal Hardening
+
+### Added
+
+- Contrato compartilhado `PagedResponse<T>` para padronizar respostas page-based nos principais endpoints de listagem.
+- `UserSecretsId` no projeto da API para facilitar configuracao local segura.
+
+### Changed
+
+- `Checkins`, `Classes`, `Media`, `Events`, `Social` e `Store` agora expõem respostas paginadas tipadas e consistentes no Swagger.
+- `appsettings.json` passou a guardar apenas placeholders seguros em vez de credenciais reais.
+- `appsettings.Development.json` passou a concentrar defaults locais de desenvolvimento.
+- `Program.cs` foi limpo para remover duplicidade de `AddEndpointsApiExplorer` e documentar melhor a estrategia de configuracao por ambiente.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir o padrao dual de listagem e a estrategia de configuracao segura.
+
+### Noted
+
+- A base fica mais pronta para publicacao inicial porque o app mobile e os dashboards administrativos agora consomem contratos mais previsiveis.
+- Os segredos reais devem ser mantidos em `user-secrets` ou variaveis de ambiente.
+
 ## [2026-05-08] - Store Feed & Social Module
 
 ### Added

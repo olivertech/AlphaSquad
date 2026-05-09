@@ -5,7 +5,7 @@ public static class WorkoutEndpoints
     /// <summary>
     /// Registra os endpoints do modulo de treinos.
     /// As consultas ficam disponiveis para qualquer usuario autenticado do tenant,
-    /// enquanto as operacoes de escrita exigem perfil de gestao.
+    /// enquanto as operacoes de escrita ficam restritas a administradores.
     /// </summary>
     public static IEndpointRouteBuilder MapWorkoutEndpoints(this IEndpointRouteBuilder app)
     {
@@ -27,7 +27,7 @@ public static class WorkoutEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateWorkout")
             .WithSummary("Cria um novo treino no tenant atual.")
             .WithDescription("Cadastra um treino com nome, descrição e objetivo para uso dentro do tenant da sessão.")
@@ -36,7 +36,7 @@ public static class WorkoutEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateWorkout")
             .WithSummary("Atualiza um treino do tenant atual.")
             .WithDescription("Permite alterar nome, objetivo, descrição e status ativo de um treino existente.")
@@ -46,7 +46,7 @@ public static class WorkoutEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("DeleteWorkout")
             .WithSummary("Remove um treino do tenant atual.")
             .WithDescription("Exclui um treino pelo identificador, respeitando o isolamento do tenant autenticado.")
@@ -55,7 +55,7 @@ public static class WorkoutEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/exercises", AssignExercisesAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("AssignWorkoutExercises")
             .WithSummary("Define os exercícios de um treino.")
             .WithDescription("Substitui a composição atual do treino por uma nova lista ordenada de exercícios do mesmo tenant.")

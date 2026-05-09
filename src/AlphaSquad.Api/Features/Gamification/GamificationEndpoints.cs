@@ -18,24 +18,24 @@ public static class GamificationEndpoints
             .WithDescription("Consolida pontuacao do mes atual, posicao no ranking, saldo acumulado e eventos recentes do proprio aluno.")
             .Produces<MyGamificationDashboardResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden);
+            .Produces<GamificationAccessMessageResponse>(StatusCodes.Status403Forbidden);
 
         group.MapGet("/ranking/monthly", GetMonthlyRankingAsync)
             .WithName("GetMonthlyRanking")
             .WithSummary("Retorna o ranking mensal de alunos do tenant.")
             .WithDescription("Lista a classificacao do mes por pontuacao, considerando apenas alunos e eventos de gamificacao do tenant.")
-            .Produces<List<MonthlyRankingEntryResponse>>(StatusCodes.Status200OK)
+            .Produces<MonthlyRankingResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/winners/history", GetWinnersHistoryAsync)
             .WithName("GetGamificationWinnersHistory")
             .WithSummary("Retorna o historico de vencedores mensais da gamificacao.")
             .WithDescription("Lista os snapshots fechados de ranking para consulta dos vencedores e premios de meses anteriores.")
-            .Produces<List<object>>(StatusCodes.Status200OK)
+            .Produces<List<MonthlyWinnerHistoryEntryResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/rules", GetRulesAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetGamificationRules")
             .WithSummary("Lista as regras de pontuacao do tenant.")
             .WithDescription("Retorna as regras administrativas que definem quantos pontos cada evento vale no tenant atual.")
@@ -75,7 +75,7 @@ public static class GamificationEndpoints
 
     /// <summary>
     /// Retorna o dashboard de gamificacao do proprio aluno.
-    /// Apenas estudantes participam desta experiencia.
+    /// Quando o usuario autenticado nao e aluno, a API responde com uma mensagem clara informando que ele nao participa da gamificacao.
     /// </summary>
     private static async Task<IResult> GetMyDashboardAsync(AppDbContext db, HttpContext context)
     {
@@ -87,7 +87,11 @@ public static class GamificationEndpoints
             return Results.Unauthorized();
 
         if (user.Role != UserRole.Student)
-            return Results.Forbid();
+        {
+            return Results.Json(
+                new GamificationAccessMessageResponse("This user does not participate in gamification. Only students can access student gamification data."),
+                statusCode: StatusCodes.Status403Forbidden);
+        }
 
         var now = DateTime.UtcNow;
         var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -107,7 +111,7 @@ public static class GamificationEndpoints
                                      FROM (
                                          SELECT e.user_id,
                                                 SUM(e.points_applied) AS total_points,
-                                                ROW_NUMBER() OVER (ORDER BY SUM(e.points_applied) DESC, MIN(e.occurred_at) ASC) AS position
+                                                ROW_NUMBER() OVER (ORDER BY SUM(e.points_applied) DESC, MIN(e.occurred_at) ASC, e.user_id ASC) AS position
                                          FROM user_gamification_events e
                                          JOIN users u
                                            ON u.id = e.user_id
@@ -120,10 +124,14 @@ public static class GamificationEndpoints
                                      ) ranking
                                      WHERE ranking.user_id = @UserId";
 
-        const string totalBalanceSql = @"SELECT COALESCE(MAX(balance_after), 0)
-                                         FROM points_ledger
-                                         WHERE tenant_id = @TenantId
-                                           AND user_id = @UserId";
+        const string totalBalanceSql = @"SELECT COALESCE((
+                                             SELECT balance_after
+                                             FROM points_ledger
+                                             WHERE tenant_id = @TenantId
+                                               AND user_id = @UserId
+                                             ORDER BY created_at DESC, id DESC
+                                             LIMIT 1
+                                         ), 0)";
 
         const string recentEventsSql = @"SELECT e.id,
                                                 e.event_type AS EventType,
@@ -174,6 +182,8 @@ public static class GamificationEndpoints
         return Results.Ok(new MyGamificationDashboardResponse(
             user.Id,
             user.Name,
+            monthStart.Year,
+            monthStart.Month,
             summary.CurrentMonthPoints,
             currentMonthPosition,
             totalAccumulatedPoints,
@@ -224,7 +234,7 @@ public static class GamificationEndpoints
         })).ToList();
 
         if (snapshotItems.Count > 0)
-            return Results.Ok(snapshotItems);
+            return Results.Ok(new MonthlyRankingResponse(effectiveYear, effectiveMonth, true, snapshotItems));
 
         var monthStart = new DateTime(effectiveYear, effectiveMonth, 1, 0, 0, 0, DateTimeKind.Utc);
         var nextMonthStart = monthStart.AddMonths(1);
@@ -238,7 +248,7 @@ public static class GamificationEndpoints
                                      SELECT e.user_id,
                                             u.name AS user_name,
                                             SUM(e.points_applied) AS total_points,
-                                            ROW_NUMBER() OVER (ORDER BY SUM(e.points_applied) DESC, MIN(e.occurred_at) ASC) AS position
+                                            ROW_NUMBER() OVER (ORDER BY SUM(e.points_applied) DESC, MIN(e.occurred_at) ASC, e.user_id ASC) AS position
                                      FROM user_gamification_events e
                                      JOIN users u
                                        ON u.id = e.user_id
@@ -252,16 +262,16 @@ public static class GamificationEndpoints
                                  ORDER BY ranking.position ASC
                                  LIMIT @Top";
 
-        var liveItems = await connection.QueryAsync<MonthlyRankingEntryResponse>(liveSql, new
+        var liveItems = (await connection.QueryAsync<MonthlyRankingEntryResponse>(liveSql, new
         {
             TenantId = tenantId,
             MonthStart = monthStart,
             NextMonthStart = nextMonthStart,
             StudentRole = UserRole.Student,
             Top = top
-        });
+        })).ToList();
 
-        return Results.Ok(liveItems.ToList());
+        return Results.Ok(new MonthlyRankingResponse(effectiveYear, effectiveMonth, false, liveItems));
     }
 
     /// <summary>
@@ -291,7 +301,7 @@ public static class GamificationEndpoints
                              ORDER BY r.year DESC, r.month DESC, r.position ASC
                              LIMIT @Limit";
 
-        var items = await connection.QueryAsync(sql, new
+        var items = await connection.QueryAsync<MonthlyWinnerHistoryEntryResponse>(sql, new
         {
             TenantId = tenantId,
             Limit = limitMonths * 3
@@ -391,12 +401,17 @@ public static class GamificationEndpoints
 
         var tenantId = context.GetTenantId();
         var monthStart = new DateTime(request.Year, request.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var currentMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var nextMonthStart = monthStart.AddMonths(1);
         var connection = db.Database.GetDbConnection();
 
+        // O fechamento e permitido apenas para meses ja iniciados, evitando snapshots vazios de periodos futuros.
+        if (monthStart > currentMonthStart)
+            return Results.BadRequest("Cannot close ranking for a future month.");
+
         const string sql = @"SELECT e.user_id AS UserId,
                                     SUM(e.points_applied) AS TotalPoints,
-                                    ROW_NUMBER() OVER (ORDER BY SUM(e.points_applied) DESC, MIN(e.occurred_at) ASC) AS Position
+                                    ROW_NUMBER() OVER (ORDER BY SUM(e.points_applied) DESC, MIN(e.occurred_at) ASC, e.user_id ASC) AS Position
                              FROM user_gamification_events e
                              JOIN users u
                                ON u.id = e.user_id

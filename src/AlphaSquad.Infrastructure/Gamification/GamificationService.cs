@@ -44,6 +44,7 @@ public class GamificationService : IGamificationService
         var lastBalance = await _db.PointsLedgers
             .Where(x => x.TenantId == tenantId && x.UserId == userId)
             .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
             .Select(x => (decimal?)x.BalanceAfter)
             .FirstOrDefaultAsync() ?? 0m;
 

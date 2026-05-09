@@ -27,20 +27,20 @@ public static class CheckInEndpoints
             .WithName("GetMyCheckIns")
             .WithSummary("Lista os check-ins do usuÃ¡rio autenticado.")
             .WithDescription("Retorna o histÃ³rico paginado de check-ins do prÃ³prio usuÃ¡rio, com filtro opcional por perÃ­odo.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<CheckInResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/tenant", GetTenantCheckInsAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetTenantCheckIns")
             .WithSummary("Lista os check-ins do tenant atual.")
             .WithDescription("Retorna os check-ins do tenant para visao administrativa, com filtro opcional por usuario e periodo.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<CheckInResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapGet("/inactive-users", GetUsersWithoutRecentCheckInAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetUsersWithoutRecentCheckIn")
             .WithSummary("Lista usuarios ativos ha X dias sem check-in.")
             .WithDescription("Ajuda a academia a identificar alunos ativos com plano vigente que nao registram presenca ha um periodo minimo, apoiando campanhas de retorno e reengajamento.")
@@ -170,13 +170,7 @@ public static class CheckInEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<CheckInResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<CheckInResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>
@@ -307,13 +301,7 @@ public static class CheckInEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<CheckInResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<CheckInResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>

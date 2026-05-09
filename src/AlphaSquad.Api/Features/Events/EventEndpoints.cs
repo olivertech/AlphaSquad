@@ -18,7 +18,7 @@ public static class EventEndpoints
             .WithName("GetEvents")
             .WithSummary("Lista os eventos do mural da academia.")
             .WithDescription("Retorna o feed paginado do modulo de eventos para o tenant atual, respeitando o pacote habilitado para a academia.")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<PagedResponse<AcademyEventResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
 
@@ -40,7 +40,7 @@ public static class EventEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateEvent")
             .WithSummary("Cria um novo evento no mural da academia.")
             .WithDescription("Permite que perfis de gestao publiquem acoes institucionais e eventos outdoor no tenant atual.")
@@ -50,7 +50,7 @@ public static class EventEndpoints
             .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}", UpdateAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateEvent")
             .WithSummary("Atualiza um evento do mural da academia.")
             .WithDescription("Permite ajustar conteudo, status, data e configuracao de participacao de um evento existente.")
@@ -61,7 +61,7 @@ public static class EventEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
-            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("DeleteEvent")
             .WithSummary("Remove um evento do mural da academia.")
             .WithDescription("Exclui um evento do tenant atual, incluindo seus registros de participacao associados.")
@@ -173,13 +173,7 @@ public static class EventEndpoints
         var total = await connection.ExecuteScalarAsync<int>(countSql, parameters);
         var items = await connection.QueryAsync<AcademyEventResponse>(itemsSql, parameters);
 
-        return Results.Ok(new
-        {
-            page,
-            pageSize,
-            total,
-            items
-        });
+        return Results.Ok(new PagedResponse<AcademyEventResponse>(page, pageSize, total, items.ToList()));
     }
 
     /// <summary>

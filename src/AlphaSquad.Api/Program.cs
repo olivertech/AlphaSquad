@@ -3,7 +3,6 @@
 builder.Services.AddControllers();
 builder.Services.AddDependencies();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddEndpointsApiExplorer();
 
 // Configura o Swagger para gerar a documentaÃ§Ã£o da API, incluindo a definiÃ§Ã£o de seguranÃ§a para autenticaÃ§Ã£o JWT.
 builder.Services.AddSwaggerGen(options =>
@@ -46,7 +45,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// Configura as opÃ§Ãµes de JWT a partir da seÃ§Ã£o "Jwt" do appsettings.json, permitindo que sejam injetadas em outros serviÃ§os.
+// Configura as opÃ§Ãµes de JWT a partir da configuracao central da aplicacao.
+// Na V1, os valores podem vir de appsettings, user-secrets ou variaveis de ambiente.
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
 //var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
@@ -74,7 +74,7 @@ builder.Services
         };
     });
 
-// Configura as opÃ§Ãµes de Redis a partir da seÃ§Ã£o "Redis" do appsettings.json, permitindo que sejam injetadas em outros serviÃ§os.
+// Configura as opcoes de Redis a partir da configuracao central da aplicacao.
 builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection("Redis"));
 
 //var redisOptions = builder.Configuration.GetSection("Redis").Get<RedisOptions>()!;
@@ -84,8 +84,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     return ConnectionMultiplexer.Connect(redisOptions.ConnectionString);
 });
 
-// Configura as opÃ§Ãµes de armazenamento a partir da seÃ§Ã£o "Storage" do appsettings.json, permitindo que sejam injetadas em outros
-// serviÃ§os relacionados ao armazenamento de arquivos, como o Cloudflare R2.
+// Configura as opcoes de armazenamento a partir da configuracao central.
+// O recomendado e manter segredos fora do appsettings versionado, usando user-secrets ou variaveis de ambiente.
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
 
 builder.Services.AddSingleton<IAmazonS3>(sp =>

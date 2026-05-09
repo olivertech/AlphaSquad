@@ -67,10 +67,14 @@ O projeto passa a conviver com dois contratos de listagem, cada um pensado para 
 - `page-based`: voltado a dashboards, visoes administrativas e consultas com navegacao tradicional por pagina
 - `cursor-based`: voltado a feeds grandes com scroll infinito no app
 
+O contrato `page-based` agora foi padronizado com `PagedResponse<T>`, enquanto os feeds infinitos usam `CursorFeedResponse<T>`.
+
 O modulo de `Events` e o primeiro a explicitar esse padrao duplo:
 
 - `GET /api/events` para visao paginada tradicional
 - `GET /api/events/feed` para consumo cursor-based no app
+
+Esse mesmo padrao ja foi replicado em `Store` e `Social`.
 
 ### Foco didatico e documentacao em codigo
 
@@ -193,16 +197,16 @@ Visao resumida do estado atual:
 
 - `Auth`: acesso anonimo apenas para login e refresh; endpoints de sessao exigem autenticacao
 - `Tenants`: consulta publica por slug anonima; alteracoes de tenant e logo restritas a `Admin`
-- `Users`: leitura administrativa e escrita restritas a `Admin` ou `Teacher`, com operacoes sensiveis de escrita restritas a `Admin`
+- `Users`: leitura e escrita administrativas restritas a `Admin`
 - `Profile`: acesso ao proprio profile para usuarios autenticados, com escrita restrita ao contexto do proprio usuario
-- `Plans`: leitura e gestao administrativa restritas a `Admin` ou `Teacher`
-- `Media`: listagem, upload, troca e exclusao restritos a `Admin` ou `Teacher`
-- `Exercises`: leitura para autenticados; escrita restrita a `Admin` ou `Teacher`
-- `Workouts`: leitura para autenticados; escrita restrita a `Admin` ou `Teacher`
-- `Classes`: leitura para autenticados; gestao restrita a `Admin` ou `Teacher`
-- `Checkins`: check-in e historico proprio para autenticados; visao consolidada do tenant restrita a `Admin` ou `Teacher`
+- `Plans`: leitura e gestao administrativa restritas a `Admin`
+- `Media`: listagem, upload, troca e exclusao restritos a `Admin`
+- `Exercises`: leitura para autenticados; escrita restrita a `Admin`
+- `Workouts`: leitura para autenticados; escrita restrita a `Admin`
+- `Classes`: leitura para autenticados; gestao e consultas operacionais administrativas restritas a `Admin`
+- `Checkins`: check-in e historico proprio para autenticados; visao consolidada do tenant restrita a `Admin`
 - `Classes`: aulas especiais podem gerar pontuacao de gamificacao no booking do aluno
-- `Events`: leitura para autenticados quando a feature `EVENTS` estiver habilitada; escrita restrita a `Admin` ou `Teacher`
+- `Events`: leitura para autenticados quando a feature `EVENTS` estiver habilitada; escrita restrita a `Admin`
 - `Gamification`: dashboard pessoal para alunos autenticados; regras e fechamento mensal restritos a perfis de gestao
 
 ### Regra adicional de acesso por plano
@@ -333,6 +337,16 @@ O backend usa dois tokens:
 - cache de catalogo publico da loja
 - cache de ranking mensal
 - cache de mural institucional
+
+## Configuracao por ambiente
+
+O projeto passou a adotar uma separacao mais segura entre configuracao versionada e segredos reais.
+
+- `appsettings.json`: apenas placeholders seguros e nomes de secoes
+- `appsettings.Development.json`: defaults locais para desenvolvimento
+- `user-secrets` e variaveis de ambiente: destino recomendado para chaves reais de JWT, storage e demais integracoes
+
+Essa separacao ajuda a publicar o repositorio sem expor credenciais e aproxima a base do que sera esperado em deploy real.
 
 ### Padrao de chave
 

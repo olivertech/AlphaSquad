@@ -46,7 +46,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 
 ### Modulos em consolidacao
 
-- Padronizacao de paginacao e filtros
+- nenhuma frente estrutural critica pendente para a V1
 
 ### Proximas frentes core do produto
 
@@ -190,6 +190,18 @@ Capacidades atuais:
 - Cloudflare R2 para storage de arquivos
 - Stripe planejado para pagamentos
 
+## Padroes de listagem
+
+O projeto agora convive oficialmente com dois contratos de listagem:
+
+- `PagedResponse<T>` para dashboards administrativos, consultas tradicionais e navegacao por pagina
+- `CursorFeedResponse<T>` para feeds grandes com scroll infinito no app
+
+Uso atual:
+
+- `page-based`: `Store`, `Events`, `Social`, `Classes`, `Checkins` e `Media`
+- `cursor-based`: `Store`, `Events` e `Social`
+
 ## Estrutura da solution
 
 ```text
@@ -258,7 +270,7 @@ Perfis atuais:
 Policies atuais:
 
 - `AdminOnly`: operacoes exclusivas de administracao do tenant
-- `AdminOrTeacher`: operacoes de gestao academica compartilhadas entre administradores e professores
+- `AdminOrTeacher`: policy base ainda disponivel para operacoes gerenciais compartilhadas, quando a regra de negocio permitir
 
 ### 4. Protecao de endpoints por contexto
 
@@ -267,11 +279,11 @@ Os endpoints nao sao protegidos apenas por login. Eles tambem seguem regras de a
 - leitura administrativa de usuarios restrita a gestao
 - gestao de tenant restrita a `Admin`
 - upload e administracao de midias restritos a gestao
-- criacao e manutencao de exercicios restritas a `Admin` e `Teacher`
-- criacao e manutencao de treinos restritas a `Admin` e `Teacher`
-- gestao de aulas restrita a `Admin` e `Teacher`
-- gestao de eventos restrita a `Admin` e `Teacher`
-- visao consolidada de check-ins restrita a `Admin` e `Teacher`
+- criacao e manutencao de exercicios restritas a `Admin`
+- criacao e manutencao de treinos restritas a `Admin`
+- gestao de aulas restrita a `Admin`
+- gestao de eventos restrita a `Admin`
+- visao consolidada de check-ins restrita a `Admin`
 
 ### 5. Defesa em profundidade
 
@@ -503,7 +515,23 @@ O repositorio possui `docker-compose.yml` para subir o Redis localmente:
 docker compose up -d
 ```
 
-O PostgreSQL atualmente deve estar disponivel separadamente, conforme a connection string configurada em `src/AlphaSquad.Api/appsettings.json`.
+O PostgreSQL atualmente deve estar disponivel separadamente, conforme a configuracao do ambiente local.
+
+## Configuracao por ambiente
+
+O projeto agora segue esta diretriz:
+
+- `src/AlphaSquad.Api/appsettings.json` guarda apenas placeholders seguros
+- `src/AlphaSquad.Api/appsettings.Development.json` traz defaults locais de desenvolvimento
+- segredos reais devem ficar em `user-secrets` ou variaveis de ambiente
+
+Como o projeto possui `UserSecretsId`, voce pode configurar localmente com:
+
+```bash
+dotnet user-secrets --project src/AlphaSquad.Api set "Jwt:SecretKey" "sua-chave-local"
+dotnet user-secrets --project src/AlphaSquad.Api set "Storage:AccessKey" "seu-access-key"
+dotnet user-secrets --project src/AlphaSquad.Api set "Storage:SecretKey" "seu-secret-key"
+```
 
 ## Como rodar
 

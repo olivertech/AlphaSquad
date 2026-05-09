@@ -59,11 +59,38 @@ public record MonthlyRankingEntryResponse(
 );
 
 /// <summary>
+/// Envelope do ranking mensal com informacoes explicitas do periodo consultado.
+/// Isso ajuda o app e dashboards a saberem se o retorno vem de um snapshot fechado ou do ranking vivo.
+/// </summary>
+public record MonthlyRankingResponse(
+    int Year,
+    int Month,
+    bool IsClosedSnapshot,
+    List<MonthlyRankingEntryResponse> Items
+);
+
+/// <summary>
+/// Item do historico de vencedores mensais da gamificacao.
+/// </summary>
+public record MonthlyWinnerHistoryEntryResponse(
+    int Year,
+    int Month,
+    int Position,
+    Guid UserId,
+    string UserName,
+    decimal TotalPoints,
+    string? PrizeDescription,
+    DateTime GeneratedAt
+);
+
+/// <summary>
 /// Resposta do dashboard de gamificacao do proprio aluno.
 /// </summary>
 public record MyGamificationDashboardResponse(
     Guid UserId,
     string UserName,
+    int CurrentYear,
+    int CurrentMonth,
     decimal CurrentMonthPoints,
     int? CurrentMonthPosition,
     decimal TotalAccumulatedPoints,
@@ -80,4 +107,12 @@ public record CloseMonthlyRankingRequest(
     string? FirstPlacePrize,
     string? SecondPlacePrize,
     string? ThirdPlacePrize
+);
+
+/// <summary>
+/// Resposta amigavel usada quando o usuario autenticado nao participa da gamificacao.
+/// Esse contrato evita respostas vazias e deixa a regra de negocio clara para o consumidor da API.
+/// </summary>
+public record GamificationAccessMessageResponse(
+    string Message
 );

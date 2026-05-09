@@ -159,7 +159,8 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 ## Fase 10: Product Experience & Mobile Readiness
 
-- [ ] Padronizar contratos de feed infinito para `Store`, `Events` e `Social`
+- [x] Padronizar contratos de feed infinito para `Store`, `Events` e `Social`
+- [x] Padronizar contratos `page-based` com `PagedResponse<T>` nos principais endpoints de listagem
 - [ ] Padronizar metadados de cards para app mobile
 - [ ] Estruturar notificacoes futuras
 - [ ] Definir padrao de imagens, thumbnails e tamanhos
@@ -185,8 +186,8 @@ Essa ordem foi escolhida para reduzir retrabalho:
 ## Metas continuas
 
 - [ ] Garantir isolamento multi-tenant em todos os modulos
-- [ ] Padronizar paginacao e filtros
+- [x] Padronizar paginacao nos principais modulos com contratos compartilhados
 - [ ] Aumentar cobertura de testes
-- [ ] Preparar configuracao por ambiente para deploy real
+- [x] Preparar configuracao base por ambiente para deploy real
 - [ ] Manter comentarios didaticos nas novas features
 
