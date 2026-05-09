@@ -31,6 +31,7 @@ Features identificadas hoje:
 - `Profile`
 - `Plans`
 - `Store`
+- `Gamification`
 
 Features estrategicas planejadas:
 
@@ -186,6 +187,8 @@ Visao resumida do estado atual:
 - `Workouts`: leitura para autenticados; escrita restrita a `Admin` ou `Teacher`
 - `Classes`: leitura para autenticados; gestao restrita a `Admin` ou `Teacher`
 - `Checkins`: check-in e historico proprio para autenticados; visao consolidada do tenant restrita a `Admin` ou `Teacher`
+- `Classes`: aulas especiais podem gerar pontuacao de gamificacao no booking do aluno
+- `Gamification`: dashboard pessoal para alunos autenticados; regras e fechamento mensal restritos a perfis de gestao
 
 ### Regra adicional de acesso por plano
 
@@ -277,10 +280,15 @@ O backend usa dois tokens:
 - `UserProfile`
 - `MembershipPlan`
 - `UserMembership`
+- `MembershipPayment`
 - `Product`
 - `ProductVariant`
 - `StoreOrder`
 - `StoreOrderItem`
+- `GamificationEventRule`
+- `UserGamificationEvent`
+- `PointsLedger`
+- `MonthlyStudentRanking`
 
 ### Convencoes observadas
 
@@ -365,6 +373,7 @@ Hoje o seed inicial cria e vincula features como:
 - `MEDIA`
 - `USER_MGMT`
 - `STORE`
+- `GAMIFICATION`
 
 Essa base pode evoluir para habilitar tambem:
 
@@ -446,6 +455,15 @@ Consideracoes arquiteturais:
 
 Objetivo:
 Pontuar acoes do usuario no ecossistema e gerar ranking mensal.
+
+Capacidades atuais:
+
+- regras de pontuacao por tenant
+- registro de eventos de gamificacao por aluno
+- razao de pontos acumulados
+- ranking mensal ao vivo por tenant
+- fechamento mensal com snapshot de vencedores e premios
+- integracao inicial com `CheckIn`, `StoreOrder` pago localmente, renovacao de plano e `GymClass` especial
 
 Capacidades previstas:
 

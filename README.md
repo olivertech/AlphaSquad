@@ -39,6 +39,7 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Historico de planos por usuario com motivo de status e auditoria de troca
 - Consultas de retencao para usuarios sem plano ativo e usuarios sem check-in recente
 - Store V1 com catalogo, variantes e pedidos para retirada presencial
+- Base inicial da gamificacao com regras, eventos, saldo e ranking mensal
 - Swagger com descricoes curtas nos endpoints principais
 
 ### Modulos em consolidacao
@@ -115,6 +116,15 @@ Exemplos de eventos previstos:
 - compra de produtos na loja
 - pagamento em dia da mensalidade
 - renovacao do plano
+
+Status atual:
+
+- regras de pontuacao por tenant
+- eventos pontuados por aluno
+- razao de pontos acumulados
+- ranking mensal por tenant
+- fechamento mensal com historico de vencedores
+- integracao inicial com `check-in`, compra paga localmente na loja, renovacao de plano e auloes
 
 ### 4. Profile do usuario
 
@@ -327,6 +337,9 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `POST /api/classes/{id}/book`
 - `DELETE /api/classes/{id}/book`
 
+Observacao:
+- aulas podem ser marcadas como `aulão` para gerar pontuacao especial no booking do aluno
+
 ### Profile
 
 - `GET /api/profile/me`
@@ -341,6 +354,7 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `POST /api/plans`
 - `PUT /api/plans/{id}`
 - `POST /api/plans/{id}/assign`
+- `POST /api/plans/payments`
 - `GET /api/plans/users/{userId}/history`
 - `GET /api/plans/inactive-users`
 
@@ -359,6 +373,16 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `GET /api/store/orders/me/{id}`
 - `GET /api/store/orders`
 - `PUT /api/store/orders/{id}/status`
+
+### Gamification
+
+- `GET /api/gamification/me`
+- `GET /api/gamification/ranking/monthly`
+- `GET /api/gamification/winners/history`
+- `GET /api/gamification/rules`
+- `POST /api/gamification/rules`
+- `PUT /api/gamification/rules/{id}`
+- `POST /api/gamification/ranking/monthly/close`
 
 Proxima etapa prevista da loja:
 
@@ -386,15 +410,17 @@ Entidades ja presentes no projeto:
 - `UserProfile`
 - `MembershipPlan`
 - `UserMembership`
+- `MembershipPayment`
 - `Product`
 - `ProductVariant`
 - `StoreOrder`
 - `StoreOrderItem`
-- `Order`
-- `OrderItem`
 - `GamificationEventRule`
 - `UserGamificationEvent`
+- `PointsLedger`
 - `MonthlyStudentRanking`
+- `Order`
+- `OrderItem`
 
 Entidades estrategicas previstas para as proximas fases:
 
@@ -431,6 +457,7 @@ Ao subir a aplicacao, o projeto aplica migrations e garante a existencia de:
 - usuario admin `admin@alphasquad.app`
 - features base vinculadas ao tenant demo
 - planos base `Basic`, `Advanced` e `Premium` para o tenant demo
+- regras base de gamificacao para o tenant demo
 
 ## Infra local
 

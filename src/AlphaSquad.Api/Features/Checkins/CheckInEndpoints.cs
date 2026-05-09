@@ -56,7 +56,10 @@ public static class CheckInEndpoints
     /// Registra um novo check-in para o usuÃ¡rio autenticado.
     /// A regra atual permite apenas um check-in por dia para cada usuÃ¡rio.
     /// </summary>
-    private static async Task<IResult> CreateAsync(CreateCheckInRequest? request, AppDbContext db, HttpContext context)
+    private static async Task<IResult> CreateAsync(CreateCheckInRequest? request,
+                                                   AppDbContext db,
+                                                   IGamificationService gamificationService,
+                                                   HttpContext context)
     {
         var tenantId = context.GetTenantId();
         var userId = GetUserId(context.User);
@@ -90,6 +93,15 @@ public static class CheckInEndpoints
 
         db.CheckIns.Add(checkIn);
         await db.SaveChangesAsync();
+
+        await gamificationService.AwardEventAsync(
+            tenantId,
+            userId,
+            GamificationEventType.CheckIn,
+            "checkin",
+            checkIn.Id,
+            checkIn.CheckedInAt,
+            "Check-in processed successfully.");
 
         return Results.Created($"/api/checkins/{checkIn.Id}", new CheckInResponse(
             checkIn.Id,

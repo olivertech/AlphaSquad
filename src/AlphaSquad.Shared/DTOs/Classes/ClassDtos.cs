@@ -10,7 +10,8 @@ public record CreateGymClassRequest(
     DateTime StartsAt,
     DateTime EndsAt,
     string? Location,
-    int Capacity
+    int Capacity,
+    bool IsSpecialClass
 );
 
 /// <summary>
@@ -24,7 +25,8 @@ public record UpdateGymClassRequest(
     DateTime EndsAt,
     string? Location,
     int Capacity,
-    bool IsActive
+    bool IsActive,
+    bool IsSpecialClass
 );
 
 /// <summary>
@@ -41,6 +43,7 @@ public record GymClassResponse(
     string? Location,
     int Capacity,
     bool IsActive,
+    bool IsSpecialClass,
     DateTime CreatedAt
 );
 

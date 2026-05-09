@@ -70,6 +70,9 @@ public class DatabaseSeeder
 
         // Seed de planos base para o tenant demo
         await SeedMembershipPlansAsync(tenant);
+
+        // Seed de regras base da gamificacao para o tenant demo
+        await SeedGamificationRulesAsync(tenant);
     }
 
     private async Task SeedFeaturesAsync(Tenant tenant)
@@ -81,7 +84,8 @@ public class DatabaseSeeder
             ("SCHEDULE", "Agendamento de aulas e horários."),
             ("MEDIA", "Gestão de mídias e arquivos do tenant."),
             ("USER_MGMT", "Gestão avançada de usuários e permissões."),
-            ("STORE", "Loja interna com produtos personalizados da academia.")
+            ("STORE", "Loja interna com produtos personalizados da academia."),
+            ("GAMIFICATION", "Pontuacao, ranking mensal e campanhas de reengajamento.")
         };
 
         foreach (var featureData in featuresToSeed)
@@ -142,6 +146,45 @@ public class DatabaseSeeder
                 Description = planData.Description,
                 Price = planData.Price,
                 DurationDays = planData.DurationDays,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _db.SaveChangesAsync();
+    }
+
+    private async Task SeedGamificationRulesAsync(Tenant tenant)
+    {
+        var rulesToSeed = new List<(GamificationEventType EventType, string Name, string Description, decimal Points)>
+        {
+            (GamificationEventType.CheckIn, "Check-in", "Pontos por registrar presenca na academia.", 1.00m),
+            (GamificationEventType.SocialPost, "Social post", "Pontos por publicar conteudo na rede interna da academia.", 1.50m),
+            (GamificationEventType.ClassSpecialParticipation, "Class special participation", "Pontos por participar de auloes e aulas especiais.", 3.50m),
+            (GamificationEventType.OutdoorEventParticipation, "Outdoor event participation", "Pontos por participar de eventos externos promovidos pela academia.", 4.50m),
+            (GamificationEventType.StorePurchase, "Store purchase", "Pontos por concluir compras na loja interna da academia.", 3.00m),
+            (GamificationEventType.MembershipPaymentOnTime, "Membership payment on time", "Pontos por pagar a mensalidade em dia.", 5.00m),
+            (GamificationEventType.PlanRenewal, "Plan renewal", "Pontos por renovar o plano da academia.", 6.00m)
+        };
+
+        foreach (var ruleData in rulesToSeed)
+        {
+            var existingRule = await _db.GamificationEventRules
+                .FirstOrDefaultAsync(x => x.TenantId == tenant.Id && x.EventType == ruleData.EventType);
+
+            if (existingRule is not null)
+            {
+                continue;
+            }
+
+            _db.GamificationEventRules.Add(new GamificationEventRule
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenant.Id,
+                EventType = ruleData.EventType,
+                Name = ruleData.Name,
+                Description = ruleData.Description,
+                Points = ruleData.Points,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             });

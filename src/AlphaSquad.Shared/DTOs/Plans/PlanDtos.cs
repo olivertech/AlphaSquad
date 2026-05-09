@@ -77,3 +77,33 @@ public record UserWithoutActivePlanResponse(
     DateTime? LastPlanEndedAt,
     int DaysWithoutActivePlan
 );
+
+/// <summary>
+/// Payload para registrar administrativamente o pagamento de uma mensalidade.
+/// </summary>
+public record RecordMembershipPaymentRequest(
+    Guid UserId,
+    DateTime DueDate,
+    DateTime PaidAt,
+    decimal AmountPaid,
+    string? Notes
+);
+
+/// <summary>
+/// Resposta administrativa de pagamento de mensalidade registrado.
+/// </summary>
+public record MembershipPaymentResponse(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    Guid MembershipPlanId,
+    string MembershipPlanName,
+    decimal AmountPaid,
+    DateTime DueDate,
+    DateTime PaidAt,
+    bool IsPaidOnTime,
+    Guid RecordedByUserId,
+    string RecordedByUserName,
+    string? Notes,
+    DateTime CreatedAt
+);

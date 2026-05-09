@@ -612,7 +612,11 @@ public static class StoreEndpoints
     /// <summary>
     /// Atualiza o status operacional do pedido e ajusta o estoque quando a reserva e cancelada ou confirmada.
     /// </summary>
-    private static async Task<IResult> UpdateOrderStatusAsync(Guid id, UpdateStoreOrderStatusRequest request, AppDbContext db, HttpContext context)
+    private static async Task<IResult> UpdateOrderStatusAsync(Guid id,
+                                                              UpdateStoreOrderStatusRequest request,
+                                                              AppDbContext db,
+                                                              IGamificationService gamificationService,
+                                                              HttpContext context)
     {
         var tenantId = context.GetTenantId();
         var actorUserId = GetUserId(context.User);
@@ -632,6 +636,7 @@ public static class StoreEndpoints
             .Where(x => variantIds.Contains(x.Id) && x.TenantId == tenantId)
             .ToDictionaryAsync(x => x.Id);
 
+        var previousStatus = order.Status;
         var currentReservesStock = DoesStatusReserveStock(order.Status);
         var nextReservesStock = DoesStatusReserveStock(request.Status);
 
@@ -663,6 +668,18 @@ public static class StoreEndpoints
         order.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
+
+        if (previousStatus != StoreOrderStatus.PaidLocally && request.Status == StoreOrderStatus.PaidLocally)
+        {
+            await gamificationService.AwardEventAsync(
+                tenantId,
+                order.UserId,
+                GamificationEventType.StorePurchase,
+                "store_order",
+                order.Id,
+                order.UpdatedAt,
+                "Store order paid locally at the gym administration.");
+        }
 
         var response = await BuildOrderDetailAsync(order.Id, tenantId, db);
         return Results.Ok(response);

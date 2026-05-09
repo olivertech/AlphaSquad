@@ -57,6 +57,11 @@ public class GymClass
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Indica se a aula deve ser tratada como aulão, aula especial ou evento coletivo com pontuacao diferenciada.
+    /// </summary>
+    public bool IsSpecialClass { get; set; }
+
+    /// <summary>
     /// Data de criação do registro.
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

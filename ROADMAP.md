@@ -135,17 +135,21 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 ## Fase 9: Gamification
 
-- [ ] Modelar `GamificationEventRule`
-- [ ] Modelar `UserGamificationEvent`
-- [ ] Criar ledger de pontos por usuario
-- [ ] Definir tabela de regras para pontuacao inicial
-- [ ] Pontuar acoes como check-in, booking, posts e interacoes
-- [ ] Pontuar compras na loja, pagamento em dia e renovacao de plano
-- [ ] Gerar ranking mensal por tenant
-- [ ] Garantir que apenas `Student` participe do ranking
-- [ ] Expor top 3 e ranking geral
-- [ ] Expor dashboard de gamificacao do aluno
-- [ ] Expor historico de vencedores dos meses anteriores
+- [x] Modelar `GamificationEventRule`
+- [x] Modelar `UserGamificationEvent`
+- [x] Criar ledger de pontos por usuario
+- [x] Definir tabela de regras para pontuacao inicial
+- [ ] Pontuar acoes como booking, posts e interacoes
+- [x] Pontuar check-in
+- [x] Pontuar compras pagas localmente na loja
+- [x] Pontuar pagamento em dia
+- [x] Pontuar renovacao de plano
+- [x] Pontuar booking de aulas especiais
+- [x] Gerar ranking mensal por tenant
+- [x] Garantir que apenas `Student` participe do ranking
+- [x] Expor top 3 e ranking geral
+- [x] Expor dashboard de gamificacao do aluno
+- [x] Expor historico de vencedores dos meses anteriores
 - [ ] Preparar integracao futura com premios, descontos e recompensas da loja
 
 ## Fase 10: Product Experience & Mobile Readiness

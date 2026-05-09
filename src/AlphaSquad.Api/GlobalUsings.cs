@@ -22,6 +22,7 @@ global using AlphaSquad.Shared.DTOs.Checkins;
 global using AlphaSquad.Shared.DTOs.Profile;
 global using AlphaSquad.Shared.DTOs.Plans;
 global using AlphaSquad.Shared.DTOs.Store;
+global using AlphaSquad.Shared.DTOs.Gamification;
 global using AlphaSquad.Api.Features.Classes;
 global using AlphaSquad.Api.Features.Exercises;
 global using AlphaSquad.Api.Features.Workouts;
@@ -29,6 +30,8 @@ global using AlphaSquad.Api.Features.Checkins;
 global using AlphaSquad.Api.Features.Profile;
 global using AlphaSquad.Api.Features.Plans;
 global using AlphaSquad.Api.Features.Store;
+global using AlphaSquad.Api.Features.Gamification;
+global using AlphaSquad.Infrastructure.Gamification;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;

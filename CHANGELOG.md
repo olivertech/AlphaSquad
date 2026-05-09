@@ -2,6 +2,43 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-08] - Gamification Base
+
+### Added
+
+- Entidade `GamificationEventRule` para regras de pontuacao por tenant.
+- Entidade `UserGamificationEvent` para registrar eventos pontuados por aluno.
+- Entidade `PointsLedger` para manter saldo acumulado auditavel.
+- Entidade `MonthlyStudentRanking` para snapshots mensais de vencedores e premios.
+- Endpoints de dashboard pessoal, ranking mensal, historico de vencedores e gestao de regras.
+- Seed inicial das regras padrao de gamificacao para o tenant demo.
+
+### Changed
+
+- `CheckIn` agora gera pontuacao para alunos quando o check-in e concluido.
+- `StoreOrder` agora gera pontuacao quando o pedido e marcado como `PaidLocally`.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir a base inicial de gamificacao.
+
+### Noted
+
+- Apenas usuarios com role `Student` participam da gamificacao.
+- O ranking mensal pode ser consultado ao vivo ou fechado em snapshot administrativo.
+
+## [2026-05-08] - Gamification Integrations: Plans, Payments & Special Classes
+
+### Added
+
+- Entidade `MembershipPayment` para registrar pagamentos de mensalidade com auditoria administrativa.
+- Endpoint `POST /api/plans/payments` para registrar pagamentos e identificar quando foram feitos em dia.
+- Campo `IsSpecialClass` em `GymClass` para marcar auloes e aulas especiais.
+
+### Changed
+
+- A atribuicao de novo plano agora pode pontuar renovacao para alunos com historico anterior.
+- Pagamentos registrados em dia agora geram pontuacao de gamificacao.
+- Booking de aula especial agora gera pontuacao de participacao.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir essas novas integracoes.
+
 ## [2026-05-08] - Store Orders V1
 
 ### Added

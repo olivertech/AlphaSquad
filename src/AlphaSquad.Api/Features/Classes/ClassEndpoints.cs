@@ -1,12 +1,12 @@
-using AlphaSquad.Shared.Enums;
+﻿using AlphaSquad.Shared.Enums;
 
 namespace AlphaSquad.Api.Features.Classes;
 
 public static class ClassEndpoints
 {
     /// <summary>
-    /// Registra os endpoints do módulo de aulas e agendas.
-    /// Este grupo concentra o CRUD básico das aulas do tenant.
+    /// Registra os endpoints do mÃ³dulo de aulas e agendas.
+    /// Este grupo concentra o CRUD bÃ¡sico das aulas do tenant.
     /// </summary>
     public static IEndpointRouteBuilder MapClassEndpoints(this IEndpointRouteBuilder app)
     {
@@ -17,13 +17,13 @@ public static class ClassEndpoints
         group.MapGet("/", GetAllAsync)
             .WithName("GetClasses")
             .WithSummary("Lista as aulas do tenant atual.")
-            .WithDescription("Retorna uma lista paginada de aulas com filtros por período e status ativo.")
+            .WithDescription("Retorna uma lista paginada de aulas com filtros por perÃ­odo e status ativo.")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetClassById")
-            .WithSummary("Busca uma aula específica do tenant atual.")
+            .WithSummary("Busca uma aula especÃ­fica do tenant atual.")
             .WithDescription("Retorna o detalhamento de uma aula pelo identificador, incluindo dados do instrutor quando existir.")
             .Produces<GymClassResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
@@ -32,7 +32,7 @@ public static class ClassEndpoints
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("CreateClass")
             .WithSummary("Cria uma nova aula no tenant atual.")
-            .WithDescription("Cadastra uma aula com horário, capacidade, local e instrutor opcional, restrito a perfis de gestão.")
+            .WithDescription("Cadastra uma aula com horÃ¡rio, capacidade, local e instrutor opcional, restrito a perfis de gestÃ£o.")
             .Produces<GymClassResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status403Forbidden);
@@ -51,7 +51,7 @@ public static class ClassEndpoints
             .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
             .WithName("DeleteClass")
             .WithSummary("Remove uma aula do tenant atual.")
-            .WithDescription("Exclui fisicamente uma aula pelo identificador, restrito a perfis com permissão de gestão.")
+            .WithDescription("Exclui fisicamente uma aula pelo identificador, restrito a perfis com permissÃ£o de gestÃ£o.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
@@ -59,7 +59,7 @@ public static class ClassEndpoints
         group.MapPost("/{id:guid}/book", BookAsync)
             .WithName("BookClass")
             .WithSummary("Reserva uma vaga em uma aula.")
-            .WithDescription("Cria a reserva da aula para o usuário autenticado, respeitando capacidade, duplicidade e horário da aula.")
+            .WithDescription("Cria a reserva da aula para o usuÃ¡rio autenticado, respeitando capacidade, duplicidade e horÃ¡rio da aula.")
             .Produces<ClassBookingResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
@@ -68,8 +68,8 @@ public static class ClassEndpoints
 
         group.MapDelete("/{id:guid}/book", UnbookAsync)
             .WithName("UnbookClass")
-            .WithSummary("Cancela a reserva da aula para o usuário autenticado.")
-            .WithDescription("Remove a reserva existente do usuário para a aula informada dentro do tenant atual.")
+            .WithSummary("Cancela a reserva da aula para o usuÃ¡rio autenticado.")
+            .WithDescription("Remove a reserva existente do usuÃ¡rio para a aula informada dentro do tenant atual.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);
@@ -78,7 +78,7 @@ public static class ClassEndpoints
     }
 
     /// <summary>
-    /// Retorna a listagem de aulas do tenant atual com paginação e filtro por período.
+    /// Retorna a listagem de aulas do tenant atual com paginaÃ§Ã£o e filtro por perÃ­odo.
     /// </summary>
     private static async Task<IResult> GetAllAsync(AppDbContext db,
                                                    HttpContext context,
@@ -112,6 +112,7 @@ public static class ClassEndpoints
                                          gc.location,
                                          gc.capacity,
                                          gc.is_active AS IsActive,
+                                         gc.is_special_class AS IsSpecialClass,
                                          gc.created_at AS CreatedAt
                                   FROM gym_classes gc
                                   LEFT JOIN users u ON u.id = gc.instructor_user_id AND u.tenant_id = @TenantId
@@ -145,7 +146,7 @@ public static class ClassEndpoints
     }
 
     /// <summary>
-    /// Retorna o detalhamento de uma aula específica do tenant atual.
+    /// Retorna o detalhamento de uma aula especÃ­fica do tenant atual.
     /// </summary>
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
@@ -162,6 +163,7 @@ public static class ClassEndpoints
                                     gc.location,
                                     gc.capacity,
                                     gc.is_active AS IsActive,
+                                    gc.is_special_class AS IsSpecialClass,
                                     gc.created_at AS CreatedAt
                              FROM gym_classes gc
                              LEFT JOIN users u ON u.id = gc.instructor_user_id AND u.tenant_id = @TenantId
@@ -198,6 +200,7 @@ public static class ClassEndpoints
             Location = NormalizeOptional(request.Location),
             Capacity = request.Capacity,
             IsActive = true,
+            IsSpecialClass = request.IsSpecialClass,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -231,6 +234,7 @@ public static class ClassEndpoints
         gymClass.Location = NormalizeOptional(request.Location);
         gymClass.Capacity = request.Capacity;
         gymClass.IsActive = request.IsActive;
+        gymClass.IsSpecialClass = request.IsSpecialClass;
 
         await db.SaveChangesAsync();
 
@@ -240,7 +244,7 @@ public static class ClassEndpoints
 
     /// <summary>
     /// Remove uma aula do tenant atual.
-    /// Neste primeiro recorte, a exclusão é física.
+    /// Neste primeiro recorte, a exclusÃ£o Ã© fÃ­sica.
     /// </summary>
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, HttpContext context)
     {
@@ -257,9 +261,12 @@ public static class ClassEndpoints
     }
 
     /// <summary>
-    /// Cria uma reserva para o usuário autenticado em uma aula do tenant atual.
+    /// Cria uma reserva para o usuÃ¡rio autenticado em uma aula do tenant atual.
     /// </summary>
-    private static async Task<IResult> BookAsync(Guid id, AppDbContext db, HttpContext context)
+    private static async Task<IResult> BookAsync(Guid id,
+                                                 AppDbContext db,
+                                                 IGamificationService gamificationService,
+                                                 HttpContext context)
     {
         var tenantId = context.GetTenantId();
         var userId = GetUserId(context.User);
@@ -295,6 +302,18 @@ public static class ClassEndpoints
         db.ClassBookings.Add(booking);
         await db.SaveChangesAsync();
 
+        if (gymClass.IsSpecialClass)
+        {
+            await gamificationService.AwardEventAsync(
+                tenantId,
+                userId,
+                GamificationEventType.ClassSpecialParticipation,
+                "class_booking",
+                booking.Id,
+                booking.BookedAt,
+                "Special class booking processed successfully.");
+        }
+
         return Results.Created($"/api/classes/{id}/book", new ClassBookingResponse(
             booking.Id,
             gymClass.Id,
@@ -306,7 +325,7 @@ public static class ClassEndpoints
     }
 
     /// <summary>
-    /// Remove a reserva do usuário autenticado para uma aula do tenant atual.
+    /// Remove a reserva do usuÃ¡rio autenticado para uma aula do tenant atual.
     /// </summary>
     private static async Task<IResult> UnbookAsync(Guid id, AppDbContext db, HttpContext context)
     {
@@ -357,7 +376,7 @@ public static class ClassEndpoints
     }
 
     /// <summary>
-    /// Recarrega a aula após escrita para devolver a mesma projeção usada nas consultas.
+    /// Recarrega a aula apÃ³s escrita para devolver a mesma projeÃ§Ã£o usada nas consultas.
     /// </summary>
     private static async Task<GymClassResponse> BuildResponseAsync(Guid id, Guid tenantId, AppDbContext db)
     {
@@ -373,6 +392,7 @@ public static class ClassEndpoints
                                     gc.location,
                                     gc.capacity,
                                     gc.is_active AS IsActive,
+                                    gc.is_special_class AS IsSpecialClass,
                                     gc.created_at AS CreatedAt
                              FROM gym_classes gc
                              LEFT JOIN users u ON u.id = gc.instructor_user_id AND u.tenant_id = @TenantId
@@ -382,7 +402,7 @@ public static class ClassEndpoints
     }
 
     /// <summary>
-    /// Extrai o identificador do usuário autenticado a partir das claims do JWT.
+    /// Extrai o identificador do usuÃ¡rio autenticado a partir das claims do JWT.
     /// </summary>
     private static Guid GetUserId(ClaimsPrincipal user)
     {
@@ -394,10 +414,11 @@ public static class ClassEndpoints
     }
 
     /// <summary>
-    /// Normaliza campos opcionais para evitar persistência de espaços em branco.
+    /// Normaliza campos opcionais para evitar persistÃªncia de espaÃ§os em branco.
     /// </summary>
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }
+

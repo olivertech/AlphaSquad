@@ -61,6 +61,14 @@ public static class PlanEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status403Forbidden);
 
+        group.MapPost("/payments", RecordPaymentAsync)
+            .WithName("RecordMembershipPayment")
+            .WithSummary("Registra administrativamente um pagamento de mensalidade.")
+            .WithDescription("Permite registrar o pagamento de um aluno, identificar se ele foi realizado em dia e alimentar a gamificacao quando aplicavel.")
+            .Produces<MembershipPaymentResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden);
+
         return app;
     }
 
@@ -144,7 +152,11 @@ public static class PlanEndpoints
     /// <summary>
     /// Atribui um plano a um usuario do tenant atual e garante um unico plano ativo por usuario.
     /// </summary>
-    private static async Task<IResult> AssignAsync(Guid id, AssignMembershipPlanRequest request, AppDbContext db, HttpContext context)
+    private static async Task<IResult> AssignAsync(Guid id,
+                                                   AssignMembershipPlanRequest request,
+                                                   AppDbContext db,
+                                                   IGamificationService gamificationService,
+                                                   HttpContext context)
     {
         var tenantId = context.GetTenantId();
         var actorUserId = GetUserId(context.User);
@@ -157,6 +169,13 @@ public static class PlanEndpoints
         if (user is null)
             return Results.BadRequest("User does not belong to this tenant.");
 
+        if (user.Role != UserRole.Student)
+            return Results.BadRequest("Only students can have membership payments recorded for gamification.");
+
+        var actorUser = await db.Users.FirstOrDefaultAsync(x => x.Id == actorUserId && x.TenantId == tenantId && x.IsActive);
+        if (actorUser is null)
+            return Results.Unauthorized();
+
         if (request.EndsAt.HasValue && request.EndsAt.Value <= request.StartsAt)
             return Results.BadRequest("End date must be greater than start date.");
 
@@ -165,6 +184,9 @@ public static class PlanEndpoints
         var currentMemberships = await db.UserMemberships
             .Where(x => x.UserId == request.UserId && x.TenantId == tenantId && x.IsActive)
             .ToListAsync();
+
+        var hadHistoricalMembership = currentMemberships.Count > 0 || await db.UserMemberships
+            .AnyAsync(x => x.UserId == request.UserId && x.TenantId == tenantId);
 
         if (currentMemberships.Any(x => x.MembershipPlanId == id))
             return Results.BadRequest("User already has this plan as the active membership.");
@@ -178,7 +200,7 @@ public static class PlanEndpoints
             membership.ChangedByUserId = actorUserId;
         }
 
-        db.UserMemberships.Add(new UserMembership
+        var newMembership = new UserMembership
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -190,9 +212,24 @@ public static class PlanEndpoints
             StatusReason = normalizedReason,
             ChangedByUserId = actorUserId,
             CreatedAt = DateTime.UtcNow
-        });
+        };
+
+        db.UserMemberships.Add(newMembership);
 
         await db.SaveChangesAsync();
+
+        if (hadHistoricalMembership)
+        {
+            await gamificationService.AwardEventAsync(
+                tenantId,
+                request.UserId,
+                GamificationEventType.PlanRenewal,
+                "user_membership",
+                newMembership.Id,
+                request.StartsAt,
+                normalizedReason ?? $"Plan renewed with {plan.Name}.");
+        }
+
         return Results.NoContent();
     }
 
@@ -308,6 +345,97 @@ public static class PlanEndpoints
         });
 
         return Results.Ok(users.ToList());
+    }
+
+    /// <summary>
+    /// Registra o pagamento de uma mensalidade e pontua quando o pagamento ocorre em dia.
+    /// </summary>
+    private static async Task<IResult> RecordPaymentAsync(RecordMembershipPaymentRequest request,
+                                                          AppDbContext db,
+                                                          IGamificationService gamificationService,
+                                                          HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+        var actorUserId = GetUserId(context.User);
+
+        if (request.AmountPaid <= 0)
+            return Results.BadRequest("AmountPaid must be greater than zero.");
+
+        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId && x.TenantId == tenantId && x.IsActive);
+        if (user is null)
+            return Results.BadRequest("User does not belong to this tenant.");
+
+        if (user.Role != UserRole.Student)
+            return Results.BadRequest("Only students can have membership payments recorded for gamification.");
+
+        var actorUser = await db.Users.FirstOrDefaultAsync(x => x.Id == actorUserId && x.TenantId == tenantId && x.IsActive);
+        if (actorUser is null)
+            return Results.Unauthorized();
+
+        var membership = await db.UserMemberships
+            .Where(x =>
+                x.UserId == request.UserId &&
+                x.TenantId == tenantId &&
+                x.StartsAt <= request.PaidAt &&
+                (!x.EndsAt.HasValue || x.EndsAt > request.PaidAt))
+            .OrderByDescending(x => x.StartsAt)
+            .FirstOrDefaultAsync();
+
+        if (membership is null)
+            return Results.BadRequest("User does not have a membership covering the informed payment date.");
+
+        var plan = await db.MembershipPlans.FirstOrDefaultAsync(x => x.Id == membership.MembershipPlanId && x.TenantId == tenantId);
+        if (plan is null)
+            return Results.BadRequest("Membership plan not found for the informed payment.");
+
+        var isPaidOnTime = request.PaidAt.Date <= request.DueDate.Date;
+
+        var payment = new MembershipPayment
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            UserId = request.UserId,
+            MembershipPlanId = plan.Id,
+            UserMembershipId = membership.Id,
+            AmountPaid = decimal.Round(request.AmountPaid, 2),
+            DueDate = request.DueDate,
+            PaidAt = request.PaidAt,
+            IsPaidOnTime = isPaidOnTime,
+            RecordedByUserId = actorUserId,
+            Notes = NormalizeOptional(request.Notes),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.MembershipPayments.Add(payment);
+        await db.SaveChangesAsync();
+
+        if (isPaidOnTime)
+        {
+            await gamificationService.AwardEventAsync(
+                tenantId,
+                request.UserId,
+                GamificationEventType.MembershipPaymentOnTime,
+                "membership_payment",
+                payment.Id,
+                request.PaidAt,
+                "Membership payment registered as paid on time.");
+        }
+
+        return Results.Created($"/api/plans/payments/{payment.Id}", new MembershipPaymentResponse(
+            payment.Id,
+            user.Id,
+            user.Name,
+            plan.Id,
+            plan.Name,
+            payment.AmountPaid,
+            payment.DueDate,
+            payment.PaidAt,
+            payment.IsPaidOnTime,
+            actorUserId,
+            actorUser.Name,
+            payment.Notes,
+            payment.CreatedAt
+        ));
     }
 
     /// <summary>
