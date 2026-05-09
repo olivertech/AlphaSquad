@@ -19,6 +19,13 @@ public static class StoreEndpoints
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
+        productGroup.MapGet("/feed", GetFeedAsync)
+            .WithName("GetStoreProductsFeed")
+            .WithSummary("Lista os produtos da loja em formato cursor-based.")
+            .WithDescription("Retorna o catalogo da loja em formato cursor-based para scroll infinito no app.")
+            .Produces<CursorFeedResponse<ProductListItemResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
         productGroup.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetStoreProductById")
             .WithSummary("Retorna o detalhe de um produto da loja.")
@@ -201,6 +208,84 @@ public static class StoreEndpoints
             total,
             items
         });
+    }
+
+    /// <summary>
+    /// Retorna o catalogo da loja em formato cursor-based para scroll infinito no app.
+    /// O contrato foi alinhado ao mesmo padrao usado por `Events` e `Social`.
+    /// </summary>
+    private static async Task<IResult> GetFeedAsync(AppDbContext db,
+                                                    HttpContext context,
+                                                    string? search = null,
+                                                    string? cursor = null,
+                                                    int limit = 20)
+    {
+        var tenantId = context.GetTenantId();
+        var userRole = GetUserRole(context.User);
+        var canManageStore = userRole is UserRole.Admin or UserRole.Teacher;
+        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : $"%{search.Trim()}%";
+
+        limit = limit is < 1 or > 50 ? 20 : limit;
+        var cursorData = DecodeProductFeedCursor(cursor);
+        var connection = db.Database.GetDbConnection();
+
+        const string sql = @"SELECT p.id,
+                                    p.name,
+                                    p.description,
+                                    m.url AS MainMediaUrl,
+                                    (
+                                        SELECT MIN(v.price)
+                                        FROM product_variants v
+                                        WHERE v.product_id = p.id
+                                          AND v.tenant_id = p.tenant_id
+                                          AND v.is_active = true
+                                    ) AS StartingPrice,
+                                    p.is_active AS IsActive,
+                                    p.display_order AS DisplayOrder,
+                                    p.created_at AS CreatedAt
+                             FROM products p
+                             LEFT JOIN tenant_medias m
+                               ON m.id = p.main_media_id
+                              AND m.tenant_id = p.tenant_id
+                             WHERE p.tenant_id = @TenantId
+                               AND (@CanManageStore = true OR p.is_active = true)
+                               AND (@Search IS NULL OR p.name ILIKE @Search)
+                               AND (
+                                   @CursorDisplayOrder IS NULL
+                                   OR p.display_order > @CursorDisplayOrder
+                                   OR (
+                                       p.display_order = @CursorDisplayOrder
+                                       AND (
+                                           p.created_at < @CursorCreatedAt
+                                           OR (p.created_at = @CursorCreatedAt AND p.id < @CursorId)
+                                       )
+                                   )
+                               )
+                             ORDER BY p.display_order ASC, p.created_at DESC, p.id DESC
+                             LIMIT @LimitPlusOne";
+
+        var rows = (await connection.QueryAsync<ProductListItemResponse>(sql, new
+        {
+            TenantId = tenantId,
+            CanManageStore = canManageStore,
+            Search = normalizedSearch,
+            CursorDisplayOrder = cursorData?.DisplayOrder,
+            CursorCreatedAt = cursorData?.CreatedAt,
+            CursorId = cursorData?.Id,
+            LimitPlusOne = limit + 1
+        })).ToList();
+
+        var hasMore = rows.Count > limit;
+        var items = hasMore ? rows.Take(limit).ToList() : rows;
+        string? nextCursor = null;
+
+        if (hasMore && items.Count > 0)
+        {
+            var lastItem = items[^1];
+            nextCursor = EncodeProductFeedCursor(lastItem.DisplayOrder, lastItem.CreatedAt, lastItem.Id);
+        }
+
+        return Results.Ok(new CursorFeedResponse<ProductListItemResponse>(items, nextCursor, hasMore));
     }
 
     /// <summary>
@@ -933,6 +1018,48 @@ public static class StoreEndpoints
     }
 
     /// <summary>
+    /// Gera um cursor opaco para o feed de produtos.
+    /// Ele replica exatamente a ordenacao do catalogo para garantir continuidade estavel.
+    /// </summary>
+    private static string EncodeProductFeedCursor(int displayOrder, DateTime createdAt, Guid id)
+    {
+        var rawCursor = $"{displayOrder}|{createdAt.Ticks}|{id:N}";
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(rawCursor));
+    }
+
+    /// <summary>
+    /// Decodifica o cursor do feed da loja.
+    /// Cursors invalidos sao ignorados para evitar quebra da navegacao no app.
+    /// </summary>
+    private static ProductFeedCursor? DecodeProductFeedCursor(string? cursor)
+    {
+        if (string.IsNullOrWhiteSpace(cursor))
+            return null;
+
+        try
+        {
+            var rawCursor = Encoding.UTF8.GetString(Convert.FromBase64String(cursor.Trim()));
+            var parts = rawCursor.Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length != 3)
+                return null;
+
+            if (!int.TryParse(parts[0], out var displayOrder) ||
+                !long.TryParse(parts[1], out var createdAtTicks) ||
+                !Guid.TryParseExact(parts[2], "N", out var id))
+            {
+                return null;
+            }
+
+            return new ProductFeedCursor(displayOrder, new DateTime(createdAtTicks, DateTimeKind.Utc), id);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Projecao interna para reconstruir o detalhe do produto com Dapper.
     /// </summary>
     private sealed record ProductDetailProjection(
@@ -962,5 +1089,15 @@ public static class StoreEndpoints
         string? LastUpdatedByUserName,
         DateTime CreatedAt,
         DateTime UpdatedAt
+    );
+
+    /// <summary>
+    /// Estrutura interna do cursor do catalogo da loja.
+    /// Ela espelha a ordenacao por `DisplayOrder`, `CreatedAt` e `Id`.
+    /// </summary>
+    private sealed record ProductFeedCursor(
+        int DisplayOrder,
+        DateTime CreatedAt,
+        Guid Id
     );
 }

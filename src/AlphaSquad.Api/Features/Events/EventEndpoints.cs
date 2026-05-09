@@ -22,6 +22,14 @@ public static class EventEndpoints
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
 
+        group.MapGet("/feed", GetFeedAsync)
+            .WithName("GetEventsFeed")
+            .WithSummary("Lista os eventos do mural em formato cursor-based.")
+            .WithDescription("Retorna o feed cursor-based para scroll infinito no app, mantendo ordenacao estavel e sinalizando se ainda existe mais conteudo.")
+            .Produces<CursorFeedResponse<AcademyEventResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
+
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetEventById")
             .WithSummary("Busca um evento especifico do mural.")
@@ -172,6 +180,114 @@ public static class EventEndpoints
             total,
             items
         });
+    }
+
+    /// <summary>
+    /// Retorna o mural em formato cursor-based para consumo de feed no app.
+    /// O contrato foi pensado para scroll infinito e podera ser reaproveitado por loja e rede social.
+    /// </summary>
+    private static async Task<IResult> GetFeedAsync(AppDbContext db,
+                                                    IFeatureAccessService featureAccessService,
+                                                    HttpContext context,
+                                                    string? cursor = null,
+                                                    bool? onlyOutdoor = null,
+                                                    int limit = 20)
+    {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
+        var tenantId = context.GetTenantId();
+        var currentUserId = GetUserId(context.User);
+        var canManageEvents = CanManageEvents(context.User);
+        var connection = db.Database.GetDbConnection();
+
+        limit = limit is < 1 or > 50 ? 20 : limit;
+
+        var cursorData = DecodeFeedCursor(cursor);
+
+        const string sql = @"SELECT e.id,
+                                    e.title,
+                                    e.description,
+                                    e.media_id AS MediaId,
+                                    m.url AS MediaUrl,
+                                    e.location,
+                                    e.starts_at AS StartsAt,
+                                    e.ends_at AS EndsAt,
+                                    e.is_outdoor_event AS IsOutdoorEvent,
+                                    e.allow_participation AS AllowParticipation,
+                                    e.is_active AS IsActive,
+                                    e.created_by_user_id AS CreatedByUserId,
+                                    creator.name AS CreatedByUserName,
+                                    COALESCE(participants.participant_count, 0) AS ParticipantCount,
+                                    CASE WHEN current_participation.id IS NULL THEN false ELSE true END AS IsUserParticipating,
+                                    e.created_at AS CreatedAt,
+                                    e.updated_at AS UpdatedAt,
+                                    COALESCE(e.starts_at, e.created_at) AS FeedOrderAt
+                             FROM academy_events e
+                             LEFT JOIN tenant_medias m
+                               ON m.id = e.media_id
+                              AND m.tenant_id = @TenantId
+                             JOIN users creator
+                               ON creator.id = e.created_by_user_id
+                              AND creator.tenant_id = @TenantId
+                             LEFT JOIN LATERAL (
+                                 SELECT COUNT(*)::INTEGER AS participant_count
+                                 FROM academy_event_participations ep
+                                 WHERE ep.academy_event_id = e.id
+                                   AND ep.tenant_id = @TenantId
+                             ) participants ON true
+                             LEFT JOIN LATERAL (
+                                 SELECT ep.id
+                                 FROM academy_event_participations ep
+                                 WHERE ep.academy_event_id = e.id
+                                   AND ep.tenant_id = @TenantId
+                                   AND ep.user_id = @CurrentUserId
+                                 LIMIT 1
+                             ) current_participation ON true
+                             WHERE e.tenant_id = @TenantId
+                               AND (@CanManage = true OR e.is_active = true)
+                               AND (@OnlyOutdoor IS NULL OR e.is_outdoor_event = @OnlyOutdoor)
+                               AND (
+                                   @CursorFeedOrderAt IS NULL
+                                   OR COALESCE(e.starts_at, e.created_at) < @CursorFeedOrderAt
+                                   OR (
+                                       COALESCE(e.starts_at, e.created_at) = @CursorFeedOrderAt
+                                       AND (
+                                           e.created_at < @CursorCreatedAt
+                                           OR (e.created_at = @CursorCreatedAt AND e.id < @CursorId)
+                                       )
+                                   )
+                               )
+                             ORDER BY COALESCE(e.starts_at, e.created_at) DESC, e.created_at DESC, e.id DESC
+                             LIMIT @LimitPlusOne";
+
+        var rows = (await connection.QueryAsync<AcademyEventFeedRow>(sql, new
+        {
+            TenantId = tenantId,
+            CurrentUserId = currentUserId,
+            CanManage = canManageEvents,
+            OnlyOutdoor = onlyOutdoor,
+            CursorFeedOrderAt = cursorData?.FeedOrderAt,
+            CursorCreatedAt = cursorData?.CreatedAt,
+            CursorId = cursorData?.Id,
+            LimitPlusOne = limit + 1
+        })).ToList();
+
+        var hasMore = rows.Count > limit;
+        var pageRows = hasMore ? rows.Take(limit).ToList() : rows;
+
+        string? nextCursor = null;
+        if (hasMore && pageRows.Count > 0)
+        {
+            var lastItem = pageRows[^1];
+            nextCursor = EncodeFeedCursor(lastItem.FeedOrderAt, lastItem.CreatedAt, lastItem.Id);
+        }
+
+        return Results.Ok(new CursorFeedResponse<AcademyEventResponse>(
+            pageRows.Select(MapFeedRow).ToList(),
+            nextCursor,
+            hasMore));
     }
 
     /// <summary>
@@ -588,4 +704,112 @@ public static class EventEndpoints
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
+
+    /// <summary>
+    /// Converte a linha interna do feed no contrato publico usado pelo app.
+    /// O campo auxiliar de ordenacao nao faz parte da resposta final.
+    /// </summary>
+    private static AcademyEventResponse MapFeedRow(AcademyEventFeedRow row)
+    {
+        return new AcademyEventResponse(
+            row.Id,
+            row.Title,
+            row.Description,
+            row.MediaId,
+            row.MediaUrl,
+            row.Location,
+            row.StartsAt,
+            row.EndsAt,
+            row.IsOutdoorEvent,
+            row.AllowParticipation,
+            row.IsActive,
+            row.CreatedByUserId,
+            row.CreatedByUserName,
+            row.ParticipantCount,
+            row.IsUserParticipating,
+            row.CreatedAt,
+            row.UpdatedAt
+        );
+    }
+
+    /// <summary>
+    /// Gera um cursor opaco a partir das colunas que compoem a ordenacao do feed.
+    /// O cliente trata o cursor como string sem precisar conhecer sua estrutura interna.
+    /// </summary>
+    private static string EncodeFeedCursor(DateTime feedOrderAt, DateTime createdAt, Guid id)
+    {
+        var rawCursor = $"{feedOrderAt.Ticks}|{createdAt.Ticks}|{id:N}";
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(rawCursor));
+    }
+
+    /// <summary>
+    /// Decodifica o cursor recebido do app para continuar a busca a partir do ultimo item exibido.
+    /// Cursors invalidos sao ignorados para evitar quebra de experiencia no cliente.
+    /// </summary>
+    private static AcademyEventFeedCursor? DecodeFeedCursor(string? cursor)
+    {
+        if (string.IsNullOrWhiteSpace(cursor))
+            return null;
+
+        try
+        {
+            var rawCursor = Encoding.UTF8.GetString(Convert.FromBase64String(cursor.Trim()));
+            var parts = rawCursor.Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length != 3)
+                return null;
+
+            if (!long.TryParse(parts[0], out var feedOrderTicks) ||
+                !long.TryParse(parts[1], out var createdAtTicks) ||
+                !Guid.TryParseExact(parts[2], "N", out var id))
+            {
+                return null;
+            }
+
+            return new AcademyEventFeedCursor(
+                new DateTime(feedOrderTicks, DateTimeKind.Utc),
+                new DateTime(createdAtTicks, DateTimeKind.Utc),
+                id
+            );
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Projecao interna usada apenas para montar o feed cursor-based.
+    /// Ela inclui o campo auxiliar de ordenacao, que nao deve vazar para o contrato externo.
+    /// </summary>
+    private sealed record AcademyEventFeedRow(
+        Guid Id,
+        string Title,
+        string? Description,
+        Guid? MediaId,
+        string? MediaUrl,
+        string? Location,
+        DateTime? StartsAt,
+        DateTime? EndsAt,
+        bool IsOutdoorEvent,
+        bool AllowParticipation,
+        bool IsActive,
+        Guid CreatedByUserId,
+        string CreatedByUserName,
+        int ParticipantCount,
+        bool IsUserParticipating,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt,
+        DateTime FeedOrderAt
+    );
+
+    /// <summary>
+    /// Estrutura interna do cursor do feed.
+    /// Ela replica exatamente as colunas usadas na ordenacao para garantir continuidade estavel.
+    /// </summary>
+    private sealed record AcademyEventFeedCursor(
+        DateTime FeedOrderAt,
+        DateTime CreatedAt,
+        Guid Id
+    );
 }

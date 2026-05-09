@@ -2,6 +2,45 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-08] - Store Feed & Social Module
+
+### Added
+
+- Endpoint `GET /api/store/products/feed` com contrato cursor-based para o catalogo da loja.
+- Entidades `SocialPost`, `SocialPostLike` e `SocialPostComment` para a rede interna da academia.
+- Endpoints de post, feed, like e comentario simples no modulo `Social`.
+- Feature opcional `SOCIAL` no seed base do tenant demo.
+
+### Changed
+
+- O modulo de `Store` agora convive com dois formatos de listagem:
+- `GET /api/store/products` para paginacao tradicional
+- `GET /api/store/products/feed` para scroll infinito no app
+- Criacao de post social agora gera `SocialPost` na gamificacao para alunos.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para refletir a base inicial da rede social e do feed da loja.
+
+### Noted
+
+- A rede social nasce com o mesmo padrao dual de listagem usado em `Events`, preparando reuso consistente no app.
+
+## [2026-05-08] - Events Feed Standardization
+
+### Added
+
+- DTO compartilhado `CursorFeedResponse<T>` para padronizar feeds cursor-based do app.
+- Endpoint `GET /api/events/feed` com contrato cursor-based para scroll infinito.
+
+### Changed
+
+- O modulo de `Events` agora convive com dois formatos de listagem:
+- `GET /api/events` para paginacao tradicional
+- `GET /api/events/feed` para feed infinito no app
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para registrar esse padrao duplo.
+
+### Noted
+
+- Esse contrato cursor-based foi pensado para ser reaproveitado futuramente em `Store` e `Social`.
+
 ## [2026-05-08] - V1 Closure: Workouts, Profile & Class Operations
 
 ### Added

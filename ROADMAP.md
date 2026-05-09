@@ -103,7 +103,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Modelar `Order` e `OrderItem`
 - [ ] Modelar `PaymentTransaction`
 - [x] Implementar CRUD administrativo de produtos
-- [ ] Implementar listagem publica por tenant com paginação infinita
+- [x] Implementar listagem publica por tenant com paginação infinita
 - [x] Implementar detalhe de produto
 - [x] Implementar CRUD administrativo de variantes
 - [x] Implementar fluxo de pedido com retirada presencial
@@ -118,23 +118,24 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Modelar `AcademyEventParticipation`
 - [x] Implementar CRUD administrativo do mural
 - [x] Implementar feed publico do tenant com paginacao
+- [x] Implementar feed cursor-based para scroll infinito no app
 - [x] Permitir vinculo de imagens ja existentes via `Media`
 - [x] Restringir escrita para `Admin` e `Teacher`
 - [x] Tratar `Events` como modulo opcional por tenant
 - [x] Integrar participacao outdoor com `OutdoorEventParticipation`
-- [ ] Evoluir o contrato para infinite scroll padronizado
+- [x] Evoluir o contrato para infinite scroll padronizado
 - [ ] Preparar confirmacao administrativa de presenca se a operacao exigir validacao manual
 
 ## Fase 8: Social Network
 
-- [ ] Modelar `SocialPost`
-- [ ] Modelar `PostLike`
-- [ ] Modelar `PostComment`
-- [ ] Implementar criacao de post com imagem e descricao curta
-- [ ] Implementar feed global do tenant com scroll infinito
-- [ ] Implementar like e unlike
-- [ ] Implementar comentarios simples sem thread
-- [ ] Expor contadores agregados de interacao
+- [x] Modelar `SocialPost`
+- [x] Modelar `SocialPostLike`
+- [x] Modelar `SocialPostComment`
+- [x] Implementar criacao de post com imagem e descricao curta
+- [x] Implementar feed global do tenant com scroll infinito
+- [x] Implementar like e unlike
+- [x] Implementar comentarios simples sem thread
+- [x] Expor contadores agregados de interacao
 - [ ] Avaliar moderacao basica e denuncias em etapa posterior
 
 ## Fase 9: Gamification
@@ -143,7 +144,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Modelar `UserGamificationEvent`
 - [x] Criar ledger de pontos por usuario
 - [x] Definir tabela de regras para pontuacao inicial
-- [ ] Pontuar acoes como booking, posts e interacoes
+- [x] Pontuar acoes como booking, posts e interacoes
 - [x] Pontuar check-in
 - [x] Pontuar compras pagas localmente na loja
 - [x] Pontuar pagamento em dia

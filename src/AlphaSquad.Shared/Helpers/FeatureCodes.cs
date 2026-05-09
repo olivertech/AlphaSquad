@@ -12,6 +12,7 @@ public static class FeatureCodes
     public const string Media = "MEDIA";
     public const string UserManagement = "USER_MGMT";
     public const string Store = "STORE";
+    public const string Social = "SOCIAL";
     public const string Gamification = "GAMIFICATION";
     public const string Events = "EVENTS";
 }

@@ -86,6 +86,7 @@ public class DatabaseSeeder
             (FeatureCodes.Media, "Gestao de midias e arquivos do tenant."),
             (FeatureCodes.UserManagement, "Gestao avancada de usuarios e permissoes."),
             (FeatureCodes.Store, "Loja interna com produtos personalizados da academia."),
+            (FeatureCodes.Social, "Rede social interna da academia com posts, likes e comentarios simples."),
             (FeatureCodes.Gamification, "Pontuacao, ranking mensal e campanhas de reengajamento."),
             (FeatureCodes.Events, "Mural de eventos institucionais e outdoor da academia.")
         };

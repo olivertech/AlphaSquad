@@ -31,6 +31,7 @@ Features identificadas hoje:
 - `Profile`
 - `Plans`
 - `Store`
+- `Social`
 - `Events`
 - `Gamification`
 
@@ -58,6 +59,18 @@ Sem framework formal de CQRS, mas com divisao pragmatica:
 - `Dapper` para consultas, respostas enxutas e listagens paginadas
 
 Esse padrao deve continuar nas novas features, principalmente em fluxos de feed, loja, ranking e mural de eventos.
+
+### Padroes de listagem
+
+O projeto passa a conviver com dois contratos de listagem, cada um pensado para um tipo de consumo diferente.
+
+- `page-based`: voltado a dashboards, visoes administrativas e consultas com navegacao tradicional por pagina
+- `cursor-based`: voltado a feeds grandes com scroll infinito no app
+
+O modulo de `Events` e o primeiro a explicitar esse padrao duplo:
+
+- `GET /api/events` para visao paginada tradicional
+- `GET /api/events/feed` para consumo cursor-based no app
 
 ### Foco didatico e documentacao em codigo
 
@@ -375,6 +388,7 @@ Hoje o seed inicial cria e vincula features como:
 - `MEDIA`
 - `USER_MGMT`
 - `STORE`
+- `SOCIAL`
 - `GAMIFICATION`
 - `EVENTS`
 
@@ -396,6 +410,7 @@ Capacidades atuais:
 
 - catalogo de produtos por tenant
 - leitura paginada do catalogo para usuarios autenticados
+- leitura cursor-based do catalogo para scroll infinito no app
 - detalhe do produto com variantes
 - gestao administrativa de produtos
 - gestao administrativa de variantes
@@ -417,8 +432,6 @@ Entidades atuais e provaveis:
 - `ProductVariant`
 - `StoreOrder`
 - `StoreOrderItem`
-- `Order`
-- `OrderItem`
 - `PaymentTransaction`
 
 Consideracoes arquiteturais:
@@ -438,18 +451,20 @@ Capacidades atuais:
 
 - post com imagem e descricao curta
 - feed global por tenant
+- feed cursor-based para scroll infinito no app
 - likes
 - comentarios simples em nivel unico
 
 Entidades atuais:
 
 - `SocialPost`
-- `PostLike`
-- `PostComment`
+- `SocialPostLike`
+- `SocialPostComment`
 
 Consideracoes arquiteturais:
 
 - listagem paginada por data
+- feed cursor-based com ordenacao estavel por data e id
 - contadores agregados de likes e comentarios
 - moderacao simples no futuro
 
@@ -567,16 +582,17 @@ Consultas operacionais atuais:
 Objetivo:
 Criar um mural institucional da academia para eventos, acoes sociais e comunicacao visual.
 
-Capacidades previstas:
+Capacidades atuais:
 
 - feed paginado por tenant
+- feed cursor-based para scroll infinito no app
 - CRUD administrativo restrito a perfis de gestao
 - suporte a imagem via `TenantMedia`
 - eventos outdoor com participacao do aluno
 - integracao da participacao outdoor com gamificacao
 - feature opcional `EVENTS` por tenant
 
-Entidades provaveis:
+Entidades atuais:
 
 - `AcademyEvent`
 - `AcademyEventParticipation`
@@ -646,6 +662,7 @@ Na inicializacao da aplicacao:
 - check-in
 - classes/agendas
 - reservas de aulas
+- rede social interna
 - mural de eventos
 
 ### Em progresso

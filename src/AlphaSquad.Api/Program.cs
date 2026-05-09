@@ -150,6 +150,7 @@ app.MapCheckInEndpoints();
 app.MapProfileEndpoints();
 app.MapPlanEndpoints();
 app.MapStoreEndpoints();
+app.MapSocialEndpoints();
 app.MapEventEndpoints();
 app.MapGamificationEndpoints();
 

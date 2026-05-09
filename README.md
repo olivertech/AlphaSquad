@@ -38,7 +38,8 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Dominio inicial de planos com atribuicao de plano ativo por usuario
 - Historico de planos por usuario com motivo de status e auditoria de troca
 - Consultas de retencao para usuarios sem plano ativo e usuarios sem check-in recente
-- Store V1 com catalogo, variantes e pedidos para retirada presencial
+- Store V1 com catalogo, variantes, feed cursor-based e pedidos para retirada presencial
+- Rede social interna com post, feed, likes e comentarios simples
 - Mural de eventos com feed do tenant e participacao outdoor
 - Base inicial da gamificacao com regras, eventos, saldo e ranking mensal
 - Swagger com descricoes curtas nos endpoints principais
@@ -50,7 +51,6 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 ### Proximas frentes core do produto
 
 - Loja de produtos personalizados da academia com Stripe
-- Rede social interna da academia
 - Gamificacao com pontuacao, ranking mensal e recompensas
 - Rede social interna da academia
 - Multi-idioma com traducao dinamica de conteudo no backend em uma V2
@@ -61,9 +61,10 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 
 Modulo para anuncio e venda de produtos personalizados do tenant, com foco em experiencia mobile e navegacao por feed infinito.
 
-Capacidades previstas:
+Capacidades atuais na V1:
 
-- listagem paginada com scroll infinito
+- listagem paginada para dashboards
+- feed cursor-based para scroll infinito no app
 - cards ou lista linear de produtos
 - fotos, descricao, variacoes de cor e tamanho
 - controle de estoque e disponibilidade
@@ -81,10 +82,11 @@ Regra de negocio atual para a V1:
 
 Feed social interno onde todos os usuarios da mesma academia visualizam as publicacoes de alunos e professores.
 
-Capacidades previstas:
+Capacidades atuais:
 
 - posts com imagem e descricao curta
 - feed global por tenant
+- feed cursor-based para scroll infinito no app
 - likes
 - comentarios simples em nivel unico
 - sem threads ou respostas encadeadas nesta fase
@@ -169,6 +171,7 @@ Canal institucional usado pela gestao da academia para divulgar eventos, acoes s
 Capacidades atuais:
 
 - feed paginado por tenant
+- feed cursor-based para scroll infinito no app
 - publicacoes exclusivas da gestao
 - suporte a imagem, descricao, local e periodo do evento
 - eventos outdoor com confirmacao de participacao pelo aluno
@@ -376,6 +379,7 @@ Observacao:
 ### Store
 
 - `GET /api/store/products`
+- `GET /api/store/products/feed`
 - `GET /api/store/products/{id}`
 - `POST /api/store/products`
 - `PUT /api/store/products/{id}`
@@ -388,6 +392,17 @@ Observacao:
 - `GET /api/store/orders/me/{id}`
 - `GET /api/store/orders`
 - `PUT /api/store/orders/{id}/status`
+
+### Social
+
+- `GET /api/social/posts`
+- `GET /api/social/posts/feed`
+- `GET /api/social/posts/{id}`
+- `POST /api/social/posts`
+- `POST /api/social/posts/{id}/like`
+- `DELETE /api/social/posts/{id}/like`
+- `GET /api/social/posts/{id}/comments`
+- `POST /api/social/posts/{id}/comments`
 
 ### Gamification
 
@@ -402,6 +417,7 @@ Observacao:
 ### Events
 
 - `GET /api/events`
+- `GET /api/events/feed`
 - `GET /api/events/{id}`
 - `POST /api/events`
 - `PUT /api/events/{id}`
@@ -439,6 +455,9 @@ Entidades ja presentes no projeto:
 - `ProductVariant`
 - `StoreOrder`
 - `StoreOrderItem`
+- `SocialPost`
+- `SocialPostLike`
+- `SocialPostComment`
 - `AcademyEvent`
 - `AcademyEventParticipation`
 - `GamificationEventRule`
