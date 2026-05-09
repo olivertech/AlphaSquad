@@ -54,8 +54,8 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Implementar Exercise CRUD
 - [x] Consolidar Workout CRUD
 - [x] Consolidar associacao treino-exercicio
-- [ ] Validar fluxos completos de treinos no workspace
-- [ ] Revisar regras de exclusao e integridade entre treinos, exercicios e midias
+- [x] Validar fluxos completos de treinos no workspace
+- [x] Revisar regras de exclusao e integridade entre treinos, exercicios e midias
 
 ## Fase 4: Check-in & Scheduling
 
@@ -63,7 +63,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Implementar consultas de check-in por aluno e por tenant
 - [x] Implementar classes/agendas CRUD
 - [x] Implementar booking e unbooking de aulas
-- [ ] Expor consultas operacionais de reservas por aula e por aluno
+- [x] Expor consultas operacionais de reservas por aula e por aluno
 
 ## Fase 5: User Profile
 
@@ -74,7 +74,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Permitir upload e troca de foto de perfil
 - [x] Permitir definicao de `username`
 - [x] Expor plano ativo do usuario a partir de um dominio real de planos
-- [ ] Integrar area de profile com troca de senha ja existente
+- [x] Integrar area de profile com troca de senha ja existente
 
 ## Fase 5.1: Plans & Memberships
 

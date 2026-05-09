@@ -2,6 +2,10 @@
 
 public static class TenantEndpoints
 {
+    /// <summary>
+    /// Registra os endpoints de tenant e branding da plataforma.
+    /// O grupo mistura consultas publicas por slug com operacoes autenticadas do tenant atual.
+    /// </summary>
     public static IEndpointRouteBuilder MapTenantEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/tenants")
@@ -54,6 +58,9 @@ public static class TenantEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Retorna os dados completos do tenant da sessao atual.
+    /// </summary>
     private static async Task<IResult> GetCurrentAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -77,6 +84,10 @@ public static class TenantEndpoints
         return Results.Ok(tenant);
     }
 
+    /// <summary>
+    /// Atualiza a logo do tenant atual no storage e no banco.
+    /// Quando ja existir uma logo anterior, o arquivo antigo e removido para evitar lixo de storage.
+    /// </summary>
     private static async Task<IResult> UpdateLogoAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, IRedisCacheService cache, HttpContext context)
     {
         if (file == null || file.Length == 0)
@@ -139,6 +150,10 @@ public static class TenantEndpoints
         ));
     }
 
+    /// <summary>
+    /// Lista as features habilitadas para o tenant atual.
+    /// Essa consulta apoia tanto o app cliente quanto o controle de modulos opcionais.
+    /// </summary>
     private static async Task<IResult> GetCurrentFeaturesAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -155,6 +170,10 @@ public static class TenantEndpoints
         return Results.Ok(new TenantFeaturesResponse(features.ToList()));
     }
 
+    /// <summary>
+    /// Atualiza os dados basicos do tenant autenticado.
+    /// O filtro por `id` e `tenantId` impede que um administrador altere outro tenant por engano ou abuso.
+    /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id, UpdateTenantRequest request, AppDbContext db, IRedisCacheService cache, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -187,6 +206,10 @@ public static class TenantEndpoints
         ));
     }
 
+    /// <summary>
+    /// Resolve a configuracao publica de um tenant pelo slug.
+    /// Essa consulta usa cache Redis para reduzir leituras repetidas de branding no bootstrap do app cliente.
+    /// </summary>
     private static async Task<IResult> GetBySlugAsync(string slug, AppDbContext db, IRedisCacheService cache)
     {
         if (string.IsNullOrWhiteSpace(slug))

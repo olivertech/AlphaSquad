@@ -2,6 +2,10 @@
 
 public static class MediaEndpoints
 {
+    /// <summary>
+    /// Registra os endpoints do modulo de midias.
+    /// Todo acesso e restrito a perfis de gestao porque os arquivos servem de apoio aos demais modulos do tenant.
+    /// </summary>
     public static IEndpointRouteBuilder MapMediaEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/media")
@@ -59,6 +63,9 @@ public static class MediaEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Retorna os dados publicos de uma midia especifica do tenant atual.
+    /// </summary>
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -76,6 +83,10 @@ public static class MediaEndpoints
         return Results.Ok(media);
     }
 
+    /// <summary>
+    /// Lista as midias do tenant autenticado com paginacao simples.
+    /// Essa consulta serve como base de selecao para logo, exercicios, eventos e loja.
+    /// </summary>
     private static async Task<IResult> GetAllAsync(AppDbContext db,
                                                    HttpContext context,
                                                    int page = 1,
@@ -113,10 +124,14 @@ public static class MediaEndpoints
         });
     }
 
-    private static async Task<IResult> ReplaceFileAsync(Guid id, 
-                                                        IFormFile file, 
+    /// <summary>
+    /// Substitui o binario de uma midia existente preservando o mesmo registro logico.
+    /// O arquivo anterior so e removido depois que o novo upload foi concluido.
+    /// </summary>
+    private static async Task<IResult> ReplaceFileAsync(Guid id,
+                                                        IFormFile file,
                                                         AppDbContext db,
-                                                        IObjectStorageService storage, 
+                                                        IObjectStorageService storage,
                                                         HttpContext context)
     {
         if (file is null || file.Length == 0)
@@ -156,6 +171,10 @@ public static class MediaEndpoints
         ));
     }
 
+    /// <summary>
+    /// Remove uma midia do tenant atual quando ela nao esta mais em uso.
+    /// A exclusao trata primeiro referencias sensiveis, como logo do tenant e exercicios vinculados.
+    /// </summary>
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, IObjectStorageService storage, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -166,7 +185,7 @@ public static class MediaEndpoints
         if (media is null)
             return Results.NotFound();
 
-        // CORREÇÃO: Verificar se esta mídia é a logo de algum tenant para evitar violação de FK
+        // Se a midia estiver em uso como logo do tenant atual, o vinculo e limpo antes da remocao fisica.
         var tenantWithLogo = await db.Tenants.FirstOrDefaultAsync(x => x.LogoMediaId == id && x.Id == tenantId);
         if (tenantWithLogo != null)
         {
@@ -187,6 +206,9 @@ public static class MediaEndpoints
         return Results.NoContent();
     }
 
+    /// <summary>
+    /// Faz upload de uma nova midia para o tenant atual e persiste seus metadados basicos.
+    /// </summary>
     private static async Task<IResult> UploadAsync(IFormFile file, AppDbContext db, IObjectStorageService storage, HttpContext context)
     {
         if (file == null || file.Length == 0)

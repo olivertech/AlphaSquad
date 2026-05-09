@@ -57,6 +57,10 @@ public static class AuthEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Retorna a sessao autenticada atual com os dados persistidos mais recentes do usuario.
+    /// Isso evita depender apenas das claims do token quando profile ou plano mudaram apos o login.
+    /// </summary>
     private static async Task<IResult> MeAsync(AppDbContext db, ClaimsPrincipal user)
     {
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -84,6 +88,10 @@ public static class AuthEndpoints
         ));
     }
 
+    /// <summary>
+    /// Executa o login principal da plataforma.
+    /// O fluxo valida tenant, credenciais e a regra comercial de plano ativo antes de emitir a sessao.
+    /// </summary>
     private static async Task<IResult> LoginAsync([FromBody] LoginRequest request,
                                                   AppDbContext db,
                                                   IBCryptPasswordHasher passwordHasher,
@@ -106,6 +114,7 @@ public static class AuthEndpoints
         if (!hasActiveMembership)
             return Results.Json(new { message = "Only users with an active membership plan can access the platform." }, statusCode: StatusCodes.Status401Unauthorized);
 
+        // O access token leva o contexto do tenant e da role; o refresh token fica persistido para rotacao futura.
         var accessToken = jwtService.GenerateAccessToken(user, tenant, out var expiresAt);
         var newRefreshToken = jwtService.GenerateRefreshToken();
 
@@ -137,9 +146,13 @@ public static class AuthEndpoints
         return Results.Ok(response);
     }
 
+    /// <summary>
+    /// Renova a sessao a partir de um refresh token ainda valido.
+    /// O token anterior e marcado como usado para impedir reutilizacao indevida.
+    /// </summary>
     private static async Task<IResult> RefreshAsync([FromBody] RefreshRequest request,
-                                                  AppDbContext db,
-                                                  IJwtService jwtService)
+                                                    AppDbContext db,
+                                                    IJwtService jwtService)
     {
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
             return Results.BadRequest("Refresh token is required.");
@@ -193,10 +206,14 @@ public static class AuthEndpoints
         return Results.Ok(response);
     }
 
+    /// <summary>
+    /// Altera a senha do usuario autenticado pelo modulo de autenticacao.
+    /// A troca revoga todos os refresh tokens ativos para forcar novo login em outras sessoes.
+    /// </summary>
     private static async Task<IResult> ChangePasswordAsync([FromBody] ChangePasswordRequest request,
-                                                         AppDbContext db,
-                                                         IBCryptPasswordHasher passwordHasher,
-                                                         ClaimsPrincipal user)
+                                                           AppDbContext db,
+                                                           IBCryptPasswordHasher passwordHasher,
+                                                           ClaimsPrincipal user)
     {
         if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
             return Results.BadRequest("Current and new passwords are required.");
@@ -227,6 +244,10 @@ public static class AuthEndpoints
         return Results.Ok("Password changed successfully and all active sessions were terminated.");
     }
 
+    /// <summary>
+    /// Encerra a sessao atual revogando os refresh tokens ainda validos do usuario.
+    /// Esse comportamento impede que a sessao seja reativada por renovacao posterior.
+    /// </summary>
     private static async Task<IResult> LogoutAsync(AppDbContext db, ClaimsPrincipal user)
     {
         var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);

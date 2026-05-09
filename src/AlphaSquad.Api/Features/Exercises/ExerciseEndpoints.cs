@@ -2,6 +2,10 @@
 
 public static class ExerciseEndpoints
 {
+    /// <summary>
+    /// Registra os endpoints do modulo de exercicios.
+    /// Leituras ficam disponiveis para autenticados; escritas exigem perfis de gestao.
+    /// </summary>
     public static IEndpointRouteBuilder MapExerciseEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/exercises")
@@ -52,6 +56,10 @@ public static class ExerciseEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Lista os exercicios do tenant atual, incluindo a URL da midia quando existir.
+    /// O join com midia tambem respeita o tenant para evitar cruzamento indevido de dados.
+    /// </summary>
     private static async Task<IResult> GetAllAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -74,6 +82,9 @@ public static class ExerciseEndpoints
         return Results.Ok(exercises.ToList());
     }
 
+    /// <summary>
+    /// Retorna o detalhamento de um exercicio especifico do tenant atual.
+    /// </summary>
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -98,6 +109,10 @@ public static class ExerciseEndpoints
         return Results.Ok(exercise);
     }
 
+    /// <summary>
+    /// Cria um novo exercicio para o tenant autenticado.
+    /// Quando houver `MediaId`, a midia precisa pertencer ao mesmo tenant do exercicio.
+    /// </summary>
     private static async Task<IResult> CreateAsync(ExerciseCreateRequest request, AppDbContext db, HttpContext context)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -142,6 +157,10 @@ public static class ExerciseEndpoints
         return Results.Created($"/api/exercises/{exercise.Id}", response);
     }
 
+    /// <summary>
+    /// Atualiza um exercicio existente do tenant atual.
+    /// Mantem a mesma validacao de pertencimento de midia aplicada na criacao.
+    /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id, ExerciseUpdateRequest request, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -184,6 +203,10 @@ public static class ExerciseEndpoints
         return Results.Ok(response);
     }
 
+    /// <summary>
+    /// Remove um exercicio do tenant atual.
+    /// Nesta V1 a exclusao continua fisica.
+    /// </summary>
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();

@@ -2,6 +2,23 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-08] - V1 Closure: Workouts, Profile & Class Operations
+
+### Added
+
+- Endpoint `PUT /api/profile/me/password` para permitir troca de senha dentro da area de profile.
+- Endpoint `GET /api/classes/{id}/bookings` para consulta operacional de reservas por aula.
+- Endpoint `GET /api/classes/bookings/by-user/{userId}` para consulta operacional de reservas por aluno.
+
+### Changed
+
+- `Workouts` agora valida nome com mais rigor, evita duplicidade por tenant e aceita limpar a composicao do treino sem inconsistencias.
+- `README.md` e `ROADMAP.md` atualizados para refletir o fechamento desses pontos da V1.
+
+### Noted
+
+- A troca de senha pelo profile revoga as sessoes ativas do usuario, mantendo a mesma regra de seguranca do modulo de autenticacao.
+
 ## [2026-05-08] - Events Module & Outdoor Participation
 
 ### Added

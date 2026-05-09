@@ -39,6 +39,14 @@ public static class ProfileEndpoints
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status409Conflict);
 
+        group.MapPut("/me/password", UpdatePasswordAsync)
+            .WithName("UpdateMyProfilePassword")
+            .WithSummary("Atualiza a senha do usuario autenticado pela area de profile.")
+            .WithDescription("Permite trocar a propria senha dentro do modulo de profile, exigindo a senha atual e revogando as sessoes ativas do usuario.")
+            .Produces<string>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized);
+
         group.MapPut("/me/photo", UpdatePhotoAsync)
             .DisableAntiforgery()
             .WithName("UpdateMyProfilePhoto")
@@ -166,6 +174,50 @@ public static class ProfileEndpoints
 
         var response = await BuildResponseAsync(userId, tenantId, db);
         return Results.Ok(response!);
+    }
+
+    /// <summary>
+    /// Atualiza a senha pela propria area de profile.
+    /// A regra e equivalente ao endpoint de auth, mas fica exposta onde o app espera esse ajuste de conta.
+    /// </summary>
+    private static async Task<IResult> UpdatePasswordAsync(ChangePasswordRequest request,
+                                                           AppDbContext db,
+                                                           IBCryptPasswordHasher passwordHasher,
+                                                           HttpContext context)
+    {
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            return Results.BadRequest("Current and new passwords are required.");
+
+        if (request.NewPassword.Trim().Length < 6)
+            return Results.BadRequest("New password must have at least 6 characters.");
+
+        var tenantId = context.GetTenantId();
+        var userId = GetUserId(context.User);
+
+        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == userId && x.TenantId == tenantId && x.IsActive);
+        if (user is null)
+            return Results.Unauthorized();
+
+        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+            return Results.BadRequest("Current password is incorrect.");
+
+        if (passwordHasher.Verify(request.NewPassword, user.PasswordHash))
+            return Results.BadRequest("New password must be different from current password.");
+
+        user.PasswordHash = passwordHasher.Hash(request.NewPassword);
+
+        var tokens = await db.RefreshTokens
+            .Where(x => x.UserId == userId && !x.IsRevoked)
+            .ToListAsync();
+
+        foreach (var token in tokens)
+        {
+            token.IsRevoked = true;
+        }
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok("Password changed successfully and all active sessions were terminated.");
     }
 
     /// <summary>

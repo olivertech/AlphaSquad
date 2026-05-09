@@ -45,8 +45,6 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 
 ### Modulos em consolidacao
 
-- Workouts/treinos
-- Associacao treino-exercicio
 - Padronizacao de paginacao e filtros
 
 ### Proximas frentes core do produto
@@ -144,6 +142,7 @@ Status atual:
 - `GET /api/profile/me`
 - `PUT /api/profile/me`
 - `PUT /api/profile/me/email`
+- `PUT /api/profile/me/password`
 - `PUT /api/profile/me/photo`
 - `DELETE /api/profile/me/photo`
 - validacao mais forte de formato de e-mail e username
@@ -349,6 +348,8 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `DELETE /api/classes/{id}`
 - `POST /api/classes/{id}/book`
 - `DELETE /api/classes/{id}/book`
+- `GET /api/classes/{id}/bookings`
+- `GET /api/classes/bookings/by-user/{userId}`
 
 Observacao:
 - aulas podem ser marcadas como `aulão` para gerar pontuacao especial no booking do aluno
@@ -358,6 +359,7 @@ Observacao:
 - `GET /api/profile/me`
 - `PUT /api/profile/me`
 - `PUT /api/profile/me/email`
+- `PUT /api/profile/me/password`
 - `PUT /api/profile/me/photo`
 - `DELETE /api/profile/me/photo`
 

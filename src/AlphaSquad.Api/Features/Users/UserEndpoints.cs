@@ -2,6 +2,10 @@
 
 public static class UserEndpoints
 {
+    /// <summary>
+    /// Registra os endpoints administrativos de usuarios do tenant.
+    /// A leitura e liberada para perfis de gestao; a escrita fica restrita a administradores.
+    /// </summary>
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/users")
@@ -57,6 +61,9 @@ public static class UserEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Lista os usuarios ativos do tenant autenticado.
+    /// </summary>
     private static async Task<IResult> GetAllAsync(AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -78,6 +85,9 @@ public static class UserEndpoints
         return Results.Ok(users);
     }
 
+    /// <summary>
+    /// Retorna um usuario especifico do tenant atual.
+    /// </summary>
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -101,8 +111,12 @@ public static class UserEndpoints
         return Results.Ok(user);
     }
 
-    private static async Task<IResult> CreateAsync(CreateUserRequest request, 
-                                                   AppDbContext db, 
+    /// <summary>
+    /// Cria um novo usuario no tenant autenticado.
+    /// O e-mail e normalizado para comparacao consistente e a senha ja nasce com hash seguro.
+    /// </summary>
+    private static async Task<IResult> CreateAsync(CreateUserRequest request,
+                                                   AppDbContext db,
                                                    IBCryptPasswordHasher passwordHasher,
                                                    HttpContext context)
     {
@@ -151,6 +165,10 @@ public static class UserEndpoints
         return Results.Created($"/api/users/{user.Id}", response);
     }
 
+    /// <summary>
+    /// Atualiza os dados administrativos de um usuario existente do tenant.
+    /// Nesta V1 a equipe pode alterar nome, role e status ativo.
+    /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id,
                                                    UpdateUserRequest request,
                                                    AppDbContext db,
@@ -185,6 +203,10 @@ public static class UserEndpoints
         return Results.Ok(response);
     }
 
+    /// <summary>
+    /// Desativa logicamente um usuario do tenant atual.
+    /// O registro permanece no banco para preservar historico e relacionamentos.
+    /// </summary>
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();

@@ -74,6 +74,28 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapGet("/{id:guid}/bookings", GetBookingsByClassAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .WithName("GetClassBookingsByClass")
+            .WithSummary("Lista as reservas de uma aula para a equipe da academia.")
+            .WithDescription("Retorna as reservas da aula informada, com dados do aluno e ordenacao por data de reserva.")
+            .Produces<List<ClassBookingManagementResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapGet("/bookings/by-user/{userId:guid}", GetBookingsByUserAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .WithName("GetClassBookingsByUser")
+            .WithSummary("Lista as reservas de aula de um aluno para a equipe da academia.")
+            .WithDescription("Retorna as reservas vinculadas ao aluno informado dentro do tenant atual, com filtros opcionais por status e periodo.")
+            .Produces<List<ClassBookingManagementResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
     }
 
@@ -340,6 +362,115 @@ public static class ClassEndpoints
         await db.SaveChangesAsync();
 
         return Results.NoContent();
+    }
+
+    /// <summary>
+    /// Retorna a lista operacional de reservas de uma aula especifica.
+    /// Essa consulta ajuda a recepcao e a equipe a visualizar rapidamente quem reservou a turma.
+    /// </summary>
+    private static async Task<IResult> GetBookingsByClassAsync(Guid id,
+                                                               AppDbContext db,
+                                                               HttpContext context,
+                                                               bool? onlyActiveClasses = null)
+    {
+        var tenantId = context.GetTenantId();
+        var gymClassExists = await db.GymClasses.AnyAsync(x =>
+            x.Id == id &&
+            x.TenantId == tenantId &&
+            (!onlyActiveClasses.HasValue || x.IsActive == onlyActiveClasses.Value));
+
+        if (!gymClassExists)
+            return Results.NotFound();
+
+        var connection = db.Database.GetDbConnection();
+
+        const string sql = @"SELECT cb.id AS BookingId,
+                                    gc.id AS GymClassId,
+                                    gc.name AS ClassName,
+                                    gc.starts_at AS StartsAt,
+                                    gc.ends_at AS EndsAt,
+                                    gc.location,
+                                    gc.is_special_class AS IsSpecialClass,
+                                    u.id AS UserId,
+                                    u.name AS UserName,
+                                    u.email AS UserEmail,
+                                    u.role AS UserRole,
+                                    cb.booked_at AS BookedAt
+                             FROM class_bookings cb
+                             JOIN gym_classes gc
+                               ON gc.id = cb.gym_class_id
+                              AND gc.tenant_id = cb.tenant_id
+                             JOIN users u
+                               ON u.id = cb.user_id
+                              AND u.tenant_id = cb.tenant_id
+                             WHERE cb.tenant_id = @TenantId
+                               AND cb.gym_class_id = @GymClassId
+                             ORDER BY cb.booked_at ASC, u.name";
+
+        var items = await connection.QueryAsync<ClassBookingManagementResponse>(sql, new
+        {
+            TenantId = tenantId,
+            GymClassId = id
+        });
+
+        return Results.Ok(items.ToList());
+    }
+
+    /// <summary>
+    /// Retorna a lista operacional de reservas de um aluno especifico.
+    /// A equipe pode usar essa visao para acompanhar presenca planejada e agenda do aluno.
+    /// </summary>
+    private static async Task<IResult> GetBookingsByUserAsync(Guid userId,
+                                                              AppDbContext db,
+                                                              HttpContext context,
+                                                              bool? onlyActiveClasses = null,
+                                                              DateTime? dateFrom = null,
+                                                              DateTime? dateTo = null)
+    {
+        var tenantId = context.GetTenantId();
+        var userExists = await db.Users.AnyAsync(x => x.Id == userId && x.TenantId == tenantId && x.IsActive);
+        if (!userExists)
+            return Results.NotFound();
+
+        var connection = db.Database.GetDbConnection();
+        var dateToExclusive = dateTo?.Date.AddDays(1);
+
+        const string sql = @"SELECT cb.id AS BookingId,
+                                    gc.id AS GymClassId,
+                                    gc.name AS ClassName,
+                                    gc.starts_at AS StartsAt,
+                                    gc.ends_at AS EndsAt,
+                                    gc.location,
+                                    gc.is_special_class AS IsSpecialClass,
+                                    u.id AS UserId,
+                                    u.name AS UserName,
+                                    u.email AS UserEmail,
+                                    u.role AS UserRole,
+                                    cb.booked_at AS BookedAt
+                             FROM class_bookings cb
+                             JOIN gym_classes gc
+                               ON gc.id = cb.gym_class_id
+                              AND gc.tenant_id = cb.tenant_id
+                             JOIN users u
+                               ON u.id = cb.user_id
+                              AND u.tenant_id = cb.tenant_id
+                             WHERE cb.tenant_id = @TenantId
+                               AND cb.user_id = @UserId
+                               AND (@OnlyActiveClasses IS NULL OR gc.is_active = @OnlyActiveClasses)
+                               AND (@DateFrom IS NULL OR gc.starts_at >= @DateFrom)
+                               AND (@DateToExclusive IS NULL OR gc.starts_at < @DateToExclusive)
+                             ORDER BY gc.starts_at ASC, cb.booked_at ASC";
+
+        var items = await connection.QueryAsync<ClassBookingManagementResponse>(sql, new
+        {
+            TenantId = tenantId,
+            UserId = userId,
+            OnlyActiveClasses = onlyActiveClasses,
+            DateFrom = dateFrom,
+            DateToExclusive = dateToExclusive
+        });
+
+        return Results.Ok(items.ToList());
     }
 
     /// <summary>

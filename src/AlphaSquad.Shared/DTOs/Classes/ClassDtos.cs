@@ -58,3 +58,22 @@ public record ClassBookingResponse(
     string UserName,
     DateTime BookedAt
 );
+
+/// <summary>
+/// DTO usado em consultas operacionais de reservas para a equipe da academia.
+/// Reune dados da aula, do aluno e do agendamento em uma unica projecao.
+/// </summary>
+public record ClassBookingManagementResponse(
+    Guid BookingId,
+    Guid GymClassId,
+    string ClassName,
+    DateTime StartsAt,
+    DateTime EndsAt,
+    string? Location,
+    bool IsSpecialClass,
+    Guid UserId,
+    string UserName,
+    string UserEmail,
+    UserRole UserRole,
+    DateTime BookedAt
+);
