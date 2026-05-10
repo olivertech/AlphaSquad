@@ -3,7 +3,7 @@ namespace AlphaSquad.Lmt.Application.Contracts.Dtos;
 public sealed class ProductVariantResponseDto
 {
     public string? Color { get; set; }
-    public DateTimeOffsetDto? CreatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
     public Guid? Id { get; set; }
     public bool? IsActive { get; set; }
     public string? Name { get; set; }

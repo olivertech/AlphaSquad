@@ -4,7 +4,7 @@ public sealed class UserWithoutActivePlanResponseDto
 {
     public int? DaysWithoutActivePlan { get; set; }
     public string? Email { get; set; }
-    public DateTimeOffsetDto? LastPlanEndedAt { get; set; }
+    public DateTimeOffset? LastPlanEndedAt { get; set; }
     public Guid? LastPlanId { get; set; }
     public string? LastPlanName { get; set; }
     public int? Role { get; set; }

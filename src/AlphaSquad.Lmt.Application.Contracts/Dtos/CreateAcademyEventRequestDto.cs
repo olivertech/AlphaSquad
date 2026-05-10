@@ -4,11 +4,11 @@ public sealed class CreateAcademyEventRequestDto
 {
     public bool? AllowParticipation { get; set; }
     public string? Description { get; set; }
-    public DateTimeOffsetDto? EndsAt { get; set; }
+    public DateTimeOffset? EndsAt { get; set; }
     public bool? IsActive { get; set; }
     public bool? IsOutdoorEvent { get; set; }
     public string? Location { get; set; }
     public Guid? MediaId { get; set; }
-    public DateTimeOffsetDto? StartsAt { get; set; }
+    public DateTimeOffset? StartsAt { get; set; }
     public string? Title { get; set; }
 }

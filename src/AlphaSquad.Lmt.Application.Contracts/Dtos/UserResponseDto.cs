@@ -2,7 +2,7 @@ namespace AlphaSquad.Lmt.Application.Contracts.Dtos;
 
 public sealed class UserResponseDto
 {
-    public DateTimeOffsetDto? CreatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
     public string? Email { get; set; }
     public Guid? Id { get; set; }
     public bool? IsActive { get; set; }

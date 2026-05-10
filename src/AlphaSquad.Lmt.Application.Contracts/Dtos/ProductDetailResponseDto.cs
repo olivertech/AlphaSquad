@@ -2,7 +2,7 @@ namespace AlphaSquad.Lmt.Application.Contracts.Dtos;
 
 public sealed class ProductDetailResponseDto
 {
-    public DateTimeOffsetDto? CreatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
     public string? Description { get; set; }
     public int? DisplayOrder { get; set; }
     public Guid? Id { get; set; }

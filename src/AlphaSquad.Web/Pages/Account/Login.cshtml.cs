@@ -83,8 +83,8 @@ public sealed class LoginModel(IAuthService authService) : PageModel
             TenantLogoUrl = response.Tenant.LogoUrl,
             PrimaryColor = response.Tenant.PrimaryColor,
             SecondaryColor = response.Tenant.SecondaryColor,
-            // O contrato gerado ainda não materializa a data de expiração; usamos uma janela local coerente com o cookie.
-            ExpiresAtUtc = response.ExpiresAt?.ToDateTimeOffset() ?? DateTimeOffset.UtcNow.AddHours(8)
+            // A camada de aplicação agora já expõe ExpiresAt como DateTimeOffset? pronto para uso no painel.
+            ExpiresAtUtc = response.ExpiresAt ?? DateTimeOffset.UtcNow.AddHours(8)
         };
 
         HttpContext.Session.SetDashboardSession(sessionState);

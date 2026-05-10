@@ -6,7 +6,7 @@ public sealed class ProfileResponseDto
     public int? ActivePlanDurationDays { get; set; }
     public Guid? ActivePlanId { get; set; }
     public double? ActivePlanPrice { get; set; }
-    public DateTimeOffsetDto? CreatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
     public string? Email { get; set; }
     public bool? IsActive { get; set; }
     public string? Name { get; set; }
