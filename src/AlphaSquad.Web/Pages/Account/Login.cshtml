@@ -1,0 +1,97 @@
+@page
+@model AlphaSquad.Web.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Entrar";
+    Layout = "_AuthLayout";
+}
+
+<div class="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-10">
+    <div class="grid w-full gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <section class="relative overflow-hidden rounded-[2rem] border border-white/20 bg-slate-950 p-8 text-white shadow-2xl shadow-slate-950/20">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.24),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(56,189,248,0.18),_transparent_28%)]"></div>
+            <div class="relative space-y-8">
+                <div class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-200">
+                    <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                    Painel administrativo AlphaSquad
+                </div>
+
+                <div class="space-y-4">
+                    <p class="text-sm uppercase tracking-[0.28em] text-emerald-300">Gestão conectada</p>
+                    <h1 class="max-w-xl text-4xl font-semibold leading-tight sm:text-5xl">
+                        Um painel moderno para operar a academia com clareza e ritmo.
+                    </h1>
+                    <p class="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+                        Acompanhe a rotina da academia, organize sua operação e mantenha tudo em dia com treinos, eventos, loja e engajamento dos alunos.
+                    </p>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <article class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                        <p class="text-sm text-slate-300">Painel responsivo</p>
+                        <h2 class="mt-3 text-xl font-medium">Operação no dia a dia</h2>
+                    </article>
+                    <article class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                        <p class="text-sm text-slate-300">Acesso protegido</p>
+                        <h2 class="mt-3 text-xl font-medium">Cada academia no seu espaço</h2>
+                    </article>
+                    <article class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                        <p class="text-sm text-slate-300">Base pronta para crescer</p>
+                        <h2 class="mt-3 text-xl font-medium">Tudo conectado em um só lugar</h2>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/70 sm:p-8">
+            <div class="mb-8 space-y-3">
+                <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-9A2.25 2.25 0 002.25 5.25v13.5A2.25 2.25 0 004.5 21h9a2.25 2.25 0 002.25-2.25V15m6-6l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-semibold tracking-tight text-slate-900">Entrar no painel</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">
+                        Este painel foi pensado para quem cuida da operação da academia. Alunos continuam sendo atendidos pelo aplicativo.
+                    </p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="alert alert-error mb-6 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700">
+                    <span>@Model.ErrorMessage</span>
+                </div>
+            }
+
+            <form method="post" class="space-y-5">
+                <div>
+                    <label asp-for="Input.TenantSlug" class="mb-2 block text-sm font-medium text-slate-700"></label>
+                    <input asp-for="Input.TenantSlug" class="input input-bordered h-12 w-full rounded-2xl border-slate-200 bg-slate-50 text-base" placeholder="Ex.: alpha-demo" />
+                    <p class="mt-2 text-xs leading-5 text-slate-500">Use o nome curto cadastrado para a sua academia.</p>
+                    <span asp-validation-for="Input.TenantSlug" class="mt-2 block text-sm text-rose-600"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.Email" class="mb-2 block text-sm font-medium text-slate-700"></label>
+                    <input asp-for="Input.Email" class="input input-bordered h-12 w-full rounded-2xl border-slate-200 bg-slate-50 text-base" placeholder="admin@alphasquad.app" />
+                    <span asp-validation-for="Input.Email" class="mt-2 block text-sm text-rose-600"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.Password" class="mb-2 block text-sm font-medium text-slate-700"></label>
+                    <input asp-for="Input.Password" class="input input-bordered h-12 w-full rounded-2xl border-slate-200 bg-slate-50 text-base" placeholder="Sua senha" />
+                    <span asp-validation-for="Input.Password" class="mt-2 block text-sm text-rose-600"></span>
+                </div>
+
+                <button type="submit" class="btn h-12 w-full rounded-2xl border-0 bg-slate-950 text-base font-medium text-white hover:bg-slate-800">
+                    Entrar no painel
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

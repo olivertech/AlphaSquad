@@ -6,7 +6,8 @@ public sealed class AccessTokenAccessor(IHttpContextAccessor httpContextAccessor
 {
     public Task<string?> GetAccessTokenAsync(CancellationToken cancellationToken = default)
     {
-        var token = httpContextAccessor.HttpContext?.Session.GetString("access_token");
-        return Task.FromResult(token);
+        // A camada HTTP gerada pela LMT consome o token da sessao web atual, sem expor JWT nas paginas.
+        var session = httpContextAccessor.HttpContext?.Session.GetDashboardSession();
+        return Task.FromResult(session?.AccessToken);
     }
 }

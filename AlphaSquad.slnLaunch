@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "src\\AlphaSquad.Web\\AlphaSquad.Web.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\AlphaSquad.Api\\AlphaSquad.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

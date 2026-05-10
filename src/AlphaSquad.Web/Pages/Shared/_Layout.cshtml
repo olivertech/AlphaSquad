@@ -1,52 +1,118 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@using AlphaSquad.Web.Security
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AlphaSquad.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] - AlphaSquad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.24/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui"]
+                    }
+                }
+            }
+        };
+    </script>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/AlphaSquad.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">AlphaSquad.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+<body class="min-h-screen bg-slate-100 font-sans text-slate-900">
+    @{
+        var session = Context.Session.GetDashboardSession();
+        var tenantName = session?.TenantName ?? "AlphaSquad";
+        var userName = session?.Name ?? User.Identity?.Name ?? "Gestão";
+        var role = session?.Role ?? string.Empty;
+    }
+
+    <div class="drawer lg:drawer-open">
+        <input id="dashboard-drawer" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content flex min-h-screen flex-col">
+            <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+                <div class="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center gap-3">
+                        <label for="dashboard-drawer" class="btn btn-ghost btn-circle lg:hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                        </label>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">Painel AlphaSquad</p>
+                            <h1 class="text-lg font-semibold text-slate-950">@tenantName</h1>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-right sm:block">
+                            <p class="text-sm font-medium text-slate-900">@userName</p>
+                            <p class="text-xs uppercase tracking-[0.24em] text-slate-500">@role</p>
+                        </div>
+                        <form method="post" asp-page="/Account/Logout">
+                            <button type="submit" class="btn rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-100">
+                                Sair
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                @RenderBody()
+            </main>
+        </div>
+
+        <aside class="drawer-side z-40">
+            <label for="dashboard-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+            <div class="flex min-h-full w-80 flex-col bg-slate-950 text-slate-200">
+                <div class="border-b border-white/10 px-6 py-6">
+                    <div class="flex items-center gap-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a1.5 1.5 0 10-3 0v3.75M7.5 10.5h9a2.25 2.25 0 012.25 2.25v4.5A2.25 2.25 0 0116.5 19.5h-9a2.25 2.25 0 01-2.25-2.25v-4.5A2.25 2.25 0 017.5 10.5z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-400">Área administrativa</p>
+                            <h2 class="text-xl font-semibold text-white">@tenantName</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="flex-1 px-4 py-5">
+                    <ul class="menu gap-2 rounded-box p-0 text-sm">
+                        <li>
+                            <a asp-page="/Dashboard/Index" class="rounded-2xl px-4 py-3 @(ViewContext.RouteData.Values["page"]?.ToString() == "/Dashboard/Index" ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white")">
+                                Dashboard
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
+                        <li><a class="rounded-2xl px-4 py-3 text-slate-500">Usuários</a></li>
+                        <li><a class="rounded-2xl px-4 py-3 text-slate-500">Planos</a></li>
+                        <li><a class="rounded-2xl px-4 py-3 text-slate-500">Loja</a></li>
+                        <li><a class="rounded-2xl px-4 py-3 text-slate-500">Eventos</a></li>
+                        <li><a class="rounded-2xl px-4 py-3 text-slate-500">Gamificação</a></li>
                     </ul>
+                </nav>
+
+                <div class="border-t border-white/10 p-4">
+                    <div class="rounded-3xl bg-white/5 p-4">
+                        <p class="text-xs uppercase tracking-[0.22em] text-emerald-300">Academia conectada</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">
+                            Um painel simples de usar, conectado ao sistema da academia para facilitar a operação do dia a dia.
+                        </p>
+                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </aside>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - AlphaSquad.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
