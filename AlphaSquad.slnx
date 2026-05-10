@@ -1,11 +1,19 @@
 <Solution>
-  <Folder Name="/1-AlphaSquad.Api/">
+  <Folder Name="/0-AlphaSquad.Web/">
+    <Project Path="src/AlphaSquad.Web/AlphaSquad.Web.csproj" />
+  </Folder>
+  <Folder Name="/1-AlphaSquad.Application/">
+    <Project Path="src/AlphaSquad.Lmt.Application.ApiClient/AlphaSquad.Lmt.Application.ApiClient.csproj" />
+    <Project Path="src/AlphaSquad.Lmt.Application.Contracts/AlphaSquad.Lmt.Application.Contracts.csproj" />
+    <Project Path="src/AlphaSquad.Lmt.Application.Http/AlphaSquad.Lmt.Application.Http.csproj" />
+  </Folder>
+  <Folder Name="/2-AlphaSquad.Api/">
     <Project Path="src/AlphaSquad.Api/AlphaSquad.Api.csproj" />
   </Folder>
-  <Folder Name="/2-AlphaSquad.Infrastructure/">
+  <Folder Name="/3-AlphaSquad.Infrastructure/">
     <Project Path="src/AlphaSquad.Infrastructure/AlphaSquad.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/3-AlphaSquad.Shared/">
+  <Folder Name="/4-AlphaSquad.Shared/">
     <Project Path="src/AlphaSquad.Shared/AlphaSquad.Shared.csproj" />
   </Folder>
 </Solution>
