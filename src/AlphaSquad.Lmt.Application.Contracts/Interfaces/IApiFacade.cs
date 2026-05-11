@@ -6,6 +6,8 @@ namespace AlphaSquad.Lmt.Application.Contracts.Interfaces;
 
 public interface IApiFacade
 {
+    Task<DashboardConfigurationResponseDto?> GETApiConfigurationsMeDashboardAsync(CancellationToken cancellationToken = default);
+
     Task DELETEApiClassesByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task DELETEApiClassesByIdBookAsync(string id, CancellationToken cancellationToken = default);
@@ -161,6 +163,8 @@ public interface IApiFacade
     Task<WorkoutDetailsResponseDto?> POSTApiWorkoutsByIdExercisesAsync(string id, List<ExerciseAssignmentRequestDto> request, CancellationToken cancellationToken = default);
 
     Task<GymClassResponseDto?> PUTApiClassesByIdAsync(Guid id, UpdateGymClassRequestDto request, CancellationToken cancellationToken = default);
+
+    Task<DashboardConfigurationResponseDto?> PUTApiConfigurationsMeDashboardAsync(UpdateDashboardConfigurationRequestDto request, CancellationToken cancellationToken = default);
 
     Task<AcademyEventResponseDto?> PUTApiEventsByIdAsync(Guid id, UpdateAcademyEventRequestDto request, CancellationToken cancellationToken = default);
 

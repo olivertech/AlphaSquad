@@ -13,7 +13,7 @@ namespace AlphaSquad.Web.Pages.Account;
 /// <summary>
 /// Centraliza o login do painel administrativo e cria a sessão reaproveitada pela camada LMT.
 /// </summary>
-public sealed class LoginModel(IAuthService authService) : PageModel
+public sealed class LoginModel(IAuthService authService, ITenantsService tenantsService) : PageModel
 {
     [BindProperty]
     public InputModel Input { get; set; } = new();
@@ -76,6 +76,7 @@ public sealed class LoginModel(IAuthService authService) : PageModel
             Name = response.User.Name,
             Email = response.User.Email,
             Username = response.User.Username,
+            ProfilePhotoUrl = response.User.ProfilePhotoUrl,
             Role = role,
             TenantId = response.Tenant.Id,
             TenantSlug = response.Tenant.Slug,
@@ -83,10 +84,14 @@ public sealed class LoginModel(IAuthService authService) : PageModel
             TenantLogoUrl = response.Tenant.LogoUrl,
             PrimaryColor = response.Tenant.PrimaryColor,
             SecondaryColor = response.Tenant.SecondaryColor,
-            // A camada de aplicação agora já expõe ExpiresAt como DateTimeOffset? pronto para uso no painel.
+            // A camada de aplicação já expõe ExpiresAt como DateTimeOffset? pronto para uso no painel.
             ExpiresAtUtc = response.ExpiresAt ?? DateTimeOffset.UtcNow.AddHours(8)
         };
 
+        // O token entra primeiro na sessão para que a camada LMT consiga autenticar a chamada seguinte
+        // que recupera os módulos contratados pela academia.
+        HttpContext.Session.SetDashboardSession(sessionState);
+        sessionState.EnabledFeatureCodes = await LoadEnabledFeatureCodesAsync(cancellationToken);
         HttpContext.Session.SetDashboardSession(sessionState);
 
         var claims = new List<Claim>
@@ -130,5 +135,28 @@ public sealed class LoginModel(IAuthService authService) : PageModel
         [DataType(DataType.Password)]
         [Display(Name = "Senha")]
         public string? Password { get; set; }
+    }
+
+    /// <summary>
+    /// Carrega as features habilitadas para a academia atual.
+    /// Em caso de falha, o painel continua navegável apenas com as áreas centrais.
+    /// </summary>
+    private async Task<List<string>> LoadEnabledFeatureCodesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var featuresResponse = await tenantsService.GETApiTenantsCurrentFeaturesAsync(cancellationToken);
+
+            return featuresResponse?.Features?
+                .Select(feature => feature.Name?.Trim())
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Cast<string>()
+                .ToList() ?? [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 }

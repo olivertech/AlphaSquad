@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AlphaSquad.Lmt.Application.Contracts\AlphaSquad.Lmt.Application.Contracts.csproj" />
     <ProjectReference Include="..\AlphaSquad.Lmt.Application.Http\AlphaSquad.Lmt.Application.Http.csproj" />
+    <ProjectReference Include="..\AlphaSquad.Shared\AlphaSquad.Shared.csproj" />
   </ItemGroup>
 
 </Project>

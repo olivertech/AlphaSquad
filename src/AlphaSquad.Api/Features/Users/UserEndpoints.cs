@@ -1,10 +1,10 @@
-﻿namespace AlphaSquad.Api.Features.Users;
+namespace AlphaSquad.Api.Features.Users;
 
 public static class UserEndpoints
 {
     /// <summary>
-    /// Registra os endpoints administrativos de usuarios do tenant.
-    /// A leitura e liberada para perfis de gestao; a escrita fica restrita a administradores.
+    /// Registra os endpoints administrativos de usuários do tenant.
+    /// A leitura e a escrita ficam restritas a administradores por lidarem com cadastro, status e perfis de acesso.
     /// </summary>
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
@@ -15,8 +15,8 @@ public static class UserEndpoints
         group.MapGet("/", GetAllAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetUsers")
-            .WithSummary("Lista os usuários ativos do tenant atual.")
-            .WithDescription("Retorna os usuários ativos vinculados ao tenant da sessão, ordenados por nome.")
+            .WithSummary("Lista os usuários do tenant atual.")
+            .WithDescription("Retorna os usuários vinculados ao tenant da sessão, incluindo perfis ativos e inativos para uso administrativo.")
             .Produces<List<UserResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status403Forbidden);
 
@@ -62,7 +62,8 @@ public static class UserEndpoints
     }
 
     /// <summary>
-    /// Lista os usuarios ativos do tenant autenticado.
+    /// Lista todos os usuários do tenant autenticado.
+    /// A gestão precisa enxergar perfis ativos e inativos para conseguir auditar a base e reativar acessos quando necessário.
     /// </summary>
     private static async Task<IResult> GetAllAsync(AppDbContext db, HttpContext context)
     {
@@ -77,7 +78,7 @@ public static class UserEndpoints
                                     is_active AS IsActive, 
                                     created_at AS CreatedAt 
                              FROM users 
-                             WHERE tenant_id = @TenantId AND is_active = true 
+                             WHERE tenant_id = @TenantId
                              ORDER BY name";
 
         var users = await connection.QueryAsync<UserResponse>(sql, new { TenantId = tenantId });
@@ -86,7 +87,7 @@ public static class UserEndpoints
     }
 
     /// <summary>
-    /// Retorna um usuario especifico do tenant atual.
+    /// Retorna um usuário específico do tenant atual.
     /// </summary>
     private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
     {
@@ -112,8 +113,8 @@ public static class UserEndpoints
     }
 
     /// <summary>
-    /// Cria um novo usuario no tenant autenticado.
-    /// O e-mail e normalizado para comparacao consistente e a senha ja nasce com hash seguro.
+    /// Cria um novo usuário no tenant autenticado.
+    /// O e-mail é normalizado para comparação consistente e a senha já nasce com hash seguro.
     /// </summary>
     private static async Task<IResult> CreateAsync(CreateUserRequest request,
                                                    AppDbContext db,
@@ -166,7 +167,7 @@ public static class UserEndpoints
     }
 
     /// <summary>
-    /// Atualiza os dados administrativos de um usuario existente do tenant.
+    /// Atualiza os dados administrativos de um usuário existente do tenant.
     /// Nesta V1 a equipe pode alterar nome, role e status ativo.
     /// </summary>
     private static async Task<IResult> UpdateAsync(Guid id,
@@ -204,8 +205,8 @@ public static class UserEndpoints
     }
 
     /// <summary>
-    /// Desativa logicamente um usuario do tenant atual.
-    /// O registro permanece no banco para preservar historico e relacionamentos.
+    /// Desativa logicamente um usuário do tenant atual.
+    /// O registro permanece no banco para preservar histórico e relacionamentos.
     /// </summary>
     private static async Task<IResult> DeleteAsync(Guid id, AppDbContext db, HttpContext context)
     {
@@ -217,7 +218,7 @@ public static class UserEndpoints
             return Results.NotFound();
 
         user.IsActive = false;
-        
+
         await db.SaveChangesAsync();
 
         return Results.NoContent();

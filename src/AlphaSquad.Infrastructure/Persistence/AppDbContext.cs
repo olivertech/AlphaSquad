@@ -39,6 +39,7 @@ public class AppDbContext : DbContext
     public DbSet<PointsLedger> PointsLedgers => Set<PointsLedger>();
     public DbSet<MonthlyStudentRanking> MonthlyStudentRankings => Set<MonthlyStudentRanking>();
     public DbSet<TenantLegalContent> TenantLegalContents => Set<TenantLegalContent>();
+    public DbSet<Configuration> Configurations => Set<Configuration>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -146,6 +147,34 @@ public class AppDbContext : DbContext
             entity.HasOne(x => x.Feature)
                 .WithMany(x => x.TenantFeatures)
                 .HasForeignKey(x => x.FeatureId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mapeia configuracoes persistidas por tenant e usuario.
+        // A V1 usa essa tabela para guardar a selecao de medidores da home do dashboard.
+        modelBuilder.Entity<Configuration>(entity =>
+        {
+            entity.ToTable("configurations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.Key).HasColumnName("key").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.ValueJson).HasColumnName("value_json").IsRequired();
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.Key }).IsUnique();
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

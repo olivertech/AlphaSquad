@@ -1,5 +1,7 @@
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
 using AlphaSquad.Lmt.Application.Http.DependencyInjection;
+using AlphaSquad.Web.Dashboard.Metrics;
+using AlphaSquad.Web.Navigation;
 using AlphaSquad.Web.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -39,6 +41,8 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped<IAccessTokenAccessor, AccessTokenAccessor>();
+builder.Services.AddScoped<IDashboardNavigationService, DashboardNavigationService>();
+builder.Services.AddSingleton<IDashboardMetricCatalog, DashboardMetricCatalog>();
 builder.Services.AddGeneratedApi(apiBaseUrl);
 
 // Add services to the container.

@@ -1,0 +1,135 @@
+@page "{id:guid}"
+@model AlphaSquad.Web.Pages.Dashboard.Users.DetailsModel
+@{
+    ViewData["Title"] = "Detalhes do usuário";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>Gestão</li>
+            <li><a asp-page="/Dashboard/Users/Index" class="hover:text-slate-700">Usuários</a></li>
+            <li class="font-medium tenant-text">Detalhes</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Detalhes do usuário</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Consulte o perfil completo do usuário e siga para as ações administrativas necessárias.
+        </p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    {
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+    {
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+            @Model.LoadErrorMessage
+        </div>
+    }
+    else if (Model.UserDetails is not null)
+    {
+        <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <h2 class="text-xl font-semibold tenant-text">Resumo do perfil</h2>
+                    <p class="mt-1 text-sm leading-6 text-slate-500">
+                        Visão rápida para identificar o papel desse usuário dentro da operação da academia.
+                    </p>
+                </div>
+
+                <div class="space-y-6 px-6 py-6 sm:px-8">
+                    <div class="flex items-center gap-5">
+                        <div class="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-semibold text-white"
+                             style="background: var(--tenant-primary);">
+                            @Model.UserDetails.Initials
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-950">@Model.UserDetails.Name</h3>
+                            <p class="mt-1 text-sm text-slate-500">@Model.UserDetails.Email</p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <article class="rounded-[1.5rem] tenant-soft-bg p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Perfil</p>
+                            <h4 class="mt-3 text-lg font-semibold text-slate-950">@Model.UserDetails.RoleLabel</h4>
+                            <p class="mt-2 text-sm leading-6 text-slate-600">@Model.UserDetails.RoleDescription</p>
+                        </article>
+                        <article class="rounded-[1.5rem] bg-slate-50 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Status atual</p>
+                            <h4 class="mt-3 text-lg font-semibold @(Model.UserDetails.IsActive ? "text-emerald-700" : "text-slate-700")">@Model.UserDetails.StatusLabel</h4>
+                            <p class="mt-2 text-sm leading-6 text-slate-600">
+                                @(Model.UserDetails.IsActive
+                                    ? "Este usuário está apto a acessar as áreas permitidas pelo seu perfil."
+                                    : "Este usuário permanece no histórico, mas está bloqueado para novos acessos.")
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <h2 class="text-xl font-semibold tenant-text">Informações administrativas</h2>
+                    <p class="mt-1 text-sm leading-6 text-slate-500">
+                        Dados de apoio para manutenção do cadastro e tomada de decisão.
+                    </p>
+                </div>
+
+                <div class="space-y-5 px-6 py-6 sm:px-8">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="rounded-[1.5rem] border border-slate-200 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Cadastrado em</p>
+                            <p class="mt-3 text-base font-semibold text-slate-950">@Model.UserDetails.CreatedAt?.ToLocalTime().ToString("dd/MM/yyyy 'às' HH:mm")</p>
+                        </div>
+                        <div class="rounded-[1.5rem] border border-slate-200 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Identificador</p>
+                            <p class="mt-3 break-all text-sm font-medium text-slate-700">@Model.UserDetails.Id</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-[1.5rem] bg-slate-50 p-5">
+                        <h3 class="text-base font-semibold text-slate-950">Próximas ações</h3>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">
+                            Use os botões abaixo para atualizar o cadastro, revisar permissões ou desativar o acesso quando necessário.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
+                        <a asp-page="/Dashboard/Users/Edit"
+                           asp-route-id="@Model.UserDetails.Id"
+                           class="rounded-full px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                           style="background: var(--tenant-primary);">
+                            Editar usuário
+                        </a>
+                        <a asp-page="/Dashboard/Users/Index"
+                           class="rounded-full border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                            Voltar para a lista
+                        </a>
+
+                        @if (Model.UserDetails.IsActive)
+                        {
+                            <form method="post"
+                                  asp-page-handler="Deactivate"
+                                  asp-route-id="@Model.UserDetails.Id"
+                                  onsubmit="return confirm('Deseja realmente desativar este usuário?');">
+                                <button type="submit"
+                                        class="rounded-full border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100">
+                                    Desativar usuário
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </section>
+        </div>
+    }
+</section>

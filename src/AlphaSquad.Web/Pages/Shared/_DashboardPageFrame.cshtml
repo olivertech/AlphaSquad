@@ -1,0 +1,35 @@
+@model AlphaSquad.Web.Models.DashboardPageFrameModel
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>@Model.Section</li>
+            <li class="font-medium text-slate-900">@Model.Title</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950">@Model.Title</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">@Model.Description</p>
+    </div>
+
+    <section class="min-h-[72vh] overflow-y-auto rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+        <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+            <h2 class="text-lg font-semibold text-slate-950">@Model.PanelTitle</h2>
+            <p class="mt-1 text-sm leading-6 text-slate-500">@Model.PanelDescription</p>
+        </div>
+
+        <div class="flex min-h-[58vh] items-center justify-center px-6 py-10 sm:px-8">
+            <div class="max-w-xl text-center">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Estrutura inicial
+                </span>
+                <p class="mt-4 text-base leading-7 text-slate-500">
+                    Esta área já está pronta para receber os componentes reais do módulo, mantendo o mesmo padrão visual
+                    do restante do painel administrativo.
+                </p>
+            </div>
+        </div>
+    </section>
+</section>

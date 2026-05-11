@@ -53,6 +53,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICheckinsService, CheckinsService>();
         services.AddScoped<IClassesService, ClassesService>();
+        services.AddScoped<IConfigurationsService, ConfigurationsService>();
         services.AddScoped<IEventsService, EventsService>();
         services.AddScoped<IExercisesService, ExercisesService>();
         services.AddScoped<IGamificationService, GamificationService>();

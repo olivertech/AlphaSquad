@@ -12,6 +12,7 @@ public sealed class DashboardSessionState
     public string? Name { get; set; }
     public string? Email { get; set; }
     public string? Username { get; set; }
+    public string? ProfilePhotoUrl { get; set; }
     public string? Role { get; set; }
     public Guid? TenantId { get; set; }
     public string? TenantSlug { get; set; }
@@ -20,4 +21,6 @@ public sealed class DashboardSessionState
     public string? PrimaryColor { get; set; }
     public string? SecondaryColor { get; set; }
     public DateTimeOffset? ExpiresAtUtc { get; set; }
+    public List<string> EnabledFeatureCodes { get; set; } = [];
+    public List<string> SelectedDashboardMetricKeys { get; set; } = [];
 }

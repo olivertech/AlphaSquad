@@ -1,0 +1,166 @@
+@page
+@model AlphaSquad.Web.Pages.Dashboard.Plans.IndexModel
+@{
+    ViewData["Title"] = "Planos";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>Gestão</li>
+            <li class="font-medium tenant-text">Planos</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Planos da academia</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Acompanhe o catálogo ativo da academia e os principais sinais de retenção ligados a alunos sem plano vigente.
+        </p>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Total de planos</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.TotalPlans</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Quantidade de planos cadastrados no catálogo da academia.</p>
+        </article>
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Planos ativos</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.ActivePlans</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Planos disponíveis para novas adesões e renovações.</p>
+        </article>
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Preço médio</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.AveragePrice.ToString("C", new System.Globalization.CultureInfo("pt-BR"))</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Leitura rápida do posicionamento comercial do catálogo atual.</p>
+        </article>
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Alunos sem plano</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.InactiveStudents</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Alunos sem plano ativo dentro da régua de retenção selecionada.</p>
+        </article>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+    {
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+            @Model.LoadErrorMessage
+        </div>
+    }
+    else
+    {
+        <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <h2 class="text-xl font-semibold tenant-text">Catálogo de planos</h2>
+                    <p class="mt-1 text-sm leading-6 text-slate-500">
+                        Catálogo atual para apoiar decisões comerciais, reposicionamento de oferta e manutenção do portfólio.
+                    </p>
+                </div>
+
+                @if (Model.Plans.Count == 0)
+                {
+                    <div class="px-6 py-10 text-center sm:px-8">
+                        <div class="tenant-soft-bg mx-auto max-w-xl rounded-[1.75rem] border tenant-soft-border px-8 py-10">
+                            <p class="text-base font-medium text-slate-700">
+                                Ainda não há planos cadastrados para exibir.
+                            </p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="overflow-x-auto">
+                        <table class="table">
+                            <thead>
+                                <tr class="text-slate-500">
+                                    <th>Plano</th>
+                                    <th>Valor</th>
+                                    <th>Duração</th>
+                                    <th>Status</th>
+                                    <th>Criado em</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var plan in Model.Plans)
+                                {
+                                    <tr class="hover">
+                                        <td>
+                                            <div class="font-semibold text-slate-900">@plan.Name</div>
+                                            <div class="mt-1 text-sm text-slate-500">@plan.Description</div>
+                                        </td>
+                                        <td class="font-medium text-slate-700">@plan.PriceLabel</td>
+                                        <td class="text-slate-600">@plan.DurationDays dias</td>
+                                        <td>
+                                            <span class="rounded-full px-3 py-1 text-xs font-semibold @(plan.IsActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600")">
+                                                @plan.StatusLabel
+                                            </span>
+                                        </td>
+                                        <td class="text-slate-600">@plan.CreatedAt?.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h2 class="text-xl font-semibold tenant-text">Régua de retenção</h2>
+                            <p class="mt-1 text-sm leading-6 text-slate-500">
+                                Alunos que já tiveram plano, mas estão sem vínculo ativo há alguns dias.
+                            </p>
+                        </div>
+                        <form method="get" class="flex items-end gap-3">
+                            <label class="form-control">
+                                <span class="mb-2 text-sm font-medium text-slate-700">Dias sem plano</span>
+                                <input asp-for="DaysWithoutPlan" type="number" min="1" class="input input-bordered h-12 w-32 rounded-2xl border-slate-200 bg-white" />
+                            </label>
+                            <button type="submit"
+                                    class="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                                    style="background: var(--tenant-primary);">
+                                Atualizar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="space-y-4 px-6 py-6 sm:px-8">
+                    @if (Model.InactiveUsers.Count == 0)
+                    {
+                        <div class="rounded-[1.75rem] bg-slate-50 px-6 py-8 text-center text-sm text-slate-600">
+                            Nenhum aluno foi encontrado sem plano ativo nesta faixa de dias.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var user in Model.InactiveUsers.Take(8))
+                        {
+                            <article class="rounded-[1.5rem] border border-slate-200 px-5 py-4">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h3 class="text-base font-semibold text-slate-900">@user.UserName</h3>
+                                        <p class="mt-1 text-sm text-slate-500">@user.Email</p>
+                                    </div>
+                                    <span class="rounded-full tenant-soft-bg px-3 py-1 text-xs font-semibold text-slate-700">
+                                        @user.DaysWithoutPlanLabel
+                                    </span>
+                                </div>
+
+                                <div class="mt-3 text-sm leading-6 text-slate-600">
+                                    <p>Último plano: <strong class="text-slate-700">@(string.IsNullOrWhiteSpace(user.LastPlanName) ? "Não informado" : user.LastPlanName)</strong></p>
+                                    <p>Encerrado em: <strong class="text-slate-700">@user.LastPlanEndedAt?.ToLocalTime().ToString("dd/MM/yyyy")</strong></p>
+                                </div>
+                            </article>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+    }
+</section>

@@ -27,6 +27,7 @@ global using AlphaSquad.Shared.DTOs.Social;
 global using AlphaSquad.Shared.DTOs.Gamification;
 global using AlphaSquad.Shared.DTOs.Events;
 global using AlphaSquad.Shared.DTOs.Legal;
+global using AlphaSquad.Shared.DTOs.Configurations;
 global using AlphaSquad.Api.Features.Classes;
 global using AlphaSquad.Api.Features.Exercises;
 global using AlphaSquad.Api.Features.Workouts;
@@ -38,6 +39,7 @@ global using AlphaSquad.Api.Features.Social;
 global using AlphaSquad.Api.Features.Gamification;
 global using AlphaSquad.Api.Features.Events;
 global using AlphaSquad.Api.Features.Legal;
+global using AlphaSquad.Api.Features.Configurations;
 global using AlphaSquad.Infrastructure.Features;
 global using AlphaSquad.Infrastructure.Gamification;
 // System namespaces

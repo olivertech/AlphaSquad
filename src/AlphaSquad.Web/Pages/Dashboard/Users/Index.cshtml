@@ -1,0 +1,248 @@
+@page
+@model AlphaSquad.Web.Pages.Dashboard.Users.IndexModel
+@{
+    ViewData["Title"] = "Usuários";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>Gestão</li>
+            <li class="font-medium tenant-text">Usuários</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Usuários da academia</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Gerencie quem participa do ecossistema da academia, acompanhe perfis de acesso e mantenha a operação organizada.
+        </p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    {
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Total de usuários</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.TotalUsers</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Quantidade total de perfis cadastrados para a academia atual.</p>
+        </article>
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Usuários ativos</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.ActiveUsers</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Perfis habilitados para acesso ao painel ou ao aplicativo.</p>
+        </article>
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Alunos</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.Students</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Base de alunos usada em retenção, gamificação e experiências do app.</p>
+        </article>
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Inativos</p>
+            <h2 class="mt-4 text-4xl font-semibold tenant-text">@Model.InactiveUsers</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Perfis que permanecem no histórico, mas estão bloqueados para uso.</p>
+        </article>
+    </div>
+
+    <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+        <div class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <div>
+                <h2 class="text-xl font-semibold tenant-text">Base de usuários</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Filtre a lista, consulte detalhes e use os atalhos para cadastrar ou atualizar usuários da academia.
+                </p>
+            </div>
+            <a asp-page="/Dashboard/Users/Create"
+               class="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+               style="background: var(--tenant-primary);">
+                Novo usuário
+            </a>
+        </div>
+
+        <div class="border-b border-slate-200 bg-slate-50/80 px-6 py-5 sm:px-8">
+            <form method="get" class="grid gap-4 xl:grid-cols-[1.25fr_0.8fr_0.8fr_0.8fr_auto] xl:items-end">
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Pesquisar</span>
+                    <input asp-for="Search"
+                           class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white"
+                           placeholder="Buscar por nome ou e-mail" />
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Perfil</span>
+                    <select asp-for="Role" class="select select-bordered h-12 rounded-2xl border-slate-200 bg-white">
+                        <option value="">Todos os perfis</option>
+                        @foreach (var roleOption in Model.RoleOptions)
+                        {
+                            <option value="@roleOption.Value">@roleOption.Label</option>
+                        }
+                    </select>
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Status</span>
+                    <select asp-for="Status" class="select select-bordered h-12 rounded-2xl border-slate-200 bg-white">
+                        <option value="todos">Todos</option>
+                        <option value="ativos">Somente ativos</option>
+                        <option value="inativos">Somente inativos</option>
+                    </select>
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Itens por página</span>
+                    <select asp-for="PageSize" class="select select-bordered h-12 rounded-2xl border-slate-200 bg-white">
+                        @foreach (var pageSizeOption in Model.PageSizeOptions)
+                        {
+                            <option value="@pageSizeOption">@pageSizeOption por página</option>
+                        }
+                    </select>
+                </label>
+
+                <div class="flex gap-3">
+                    <button type="submit"
+                            class="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                            style="background: var(--tenant-primary);">
+                        Aplicar
+                    </button>
+                    <a asp-page="/Dashboard/Users/Index"
+                       class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+        {
+            <div class="px-6 py-6 sm:px-8">
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                    @Model.LoadErrorMessage
+                </div>
+            </div>
+        }
+        else if (Model.FilteredUsers.Count == 0)
+        {
+            <div class="px-6 py-10 text-center sm:px-8">
+                <div class="tenant-soft-bg mx-auto max-w-xl rounded-[1.75rem] border tenant-soft-border px-8 py-10">
+                    <p class="text-base font-medium text-slate-700">
+                        Nenhum usuário foi encontrado com os filtros informados.
+                    </p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4 text-sm text-slate-500 sm:px-8">
+                <p>
+                    Exibindo <strong class="text-slate-700">@Model.PagedUsers!.Items.Count</strong> de
+                    <strong class="text-slate-700">@Model.FilteredUsers.Count</strong> usuários encontrados.
+                </p>
+                <p>Página <strong class="text-slate-700">@Model.PagedUsers.PageNumber</strong> de <strong class="text-slate-700">@Model.PagedUsers.TotalPages</strong></p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr class="text-slate-500">
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Perfil</th>
+                            <th>Status</th>
+                            <th>Criado em</th>
+                            <th class="text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.PagedUsers!.Items)
+                        {
+                            <tr class="hover">
+                                <td>
+                                    <div class="font-semibold text-slate-900">@user.Name</div>
+                                </td>
+                                <td class="text-slate-600">@user.Email</td>
+                                <td>
+                                    <span class="rounded-full tenant-soft-bg px-3 py-1 text-xs font-semibold text-slate-700">
+                                        @user.RoleLabel
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="rounded-full px-3 py-1 text-xs font-semibold @(user.IsActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600")">
+                                        @user.StatusLabel
+                                    </span>
+                                </td>
+                                <td class="text-slate-600">@user.CreatedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <div class="flex justify-end gap-2">
+                                        @if (user.IsActive)
+                                        {
+                                            <form method="post"
+                                                  asp-page-handler="Deactivate"
+                                                  asp-route-id="@user.Id"
+                                                  onsubmit="return confirm('Deseja realmente desativar este usuário?');">
+                                                <input type="hidden" asp-for="Search" />
+                                                <input type="hidden" asp-for="Role" />
+                                                <input type="hidden" asp-for="Status" />
+                                                <input type="hidden" asp-for="PageNumber" />
+                                                <input type="hidden" asp-for="PageSize" />
+                                                <button type="submit"
+                                                        class="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100">
+                                                    Desativar
+                                                </button>
+                                            </form>
+                                        }
+                                        <a asp-page="/Dashboard/Users/Details"
+                                           asp-route-id="@user.Id"
+                                           class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                                            Ver
+                                        </a>
+                                        <a asp-page="/Dashboard/Users/Edit"
+                                           asp-route-id="@user.Id"
+                                           class="rounded-full px-4 py-2 text-xs font-semibold text-white transition hover:brightness-95"
+                                           style="background: var(--tenant-primary);">
+                                            Editar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex flex-col gap-3 border-t border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+                <p class="text-sm text-slate-500">
+                    Use a paginação para navegar pela base completa sem perder os filtros atuais.
+                </p>
+                <div class="join">
+                    <a asp-page="/Dashboard/Users/Index"
+                       asp-route-search="@Model.Search"
+                       asp-route-role="@Model.Role"
+                       asp-route-status="@Model.Status"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-pageNumber="@(Model.PagedUsers.HasPreviousPage ? Model.PagedUsers.PageNumber - 1 : Model.PagedUsers.PageNumber)"
+                       class="join-item btn rounded-full border-slate-200 bg-white text-slate-700 @(Model.PagedUsers.HasPreviousPage ? string.Empty : "btn-disabled")">
+                        Anterior
+                    </a>
+                    <button type="button" class="join-item btn rounded-full border-slate-200 bg-slate-50 text-slate-700">
+                        @Model.PagedUsers.PageNumber / @Model.PagedUsers.TotalPages
+                    </button>
+                    <a asp-page="/Dashboard/Users/Index"
+                       asp-route-search="@Model.Search"
+                       asp-route-role="@Model.Role"
+                       asp-route-status="@Model.Status"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-pageNumber="@(Model.PagedUsers.HasNextPage ? Model.PagedUsers.PageNumber + 1 : Model.PagedUsers.PageNumber)"
+                       class="join-item btn rounded-full border-slate-200 bg-white text-slate-700 @(Model.PagedUsers.HasNextPage ? string.Empty : "btn-disabled")">
+                        Próxima
+                    </a>
+                </div>
+            </div>
+        }
+    </section>
+</section>
