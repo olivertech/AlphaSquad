@@ -41,6 +41,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Check-ins",
                             PagePath = "/Dashboard/Checkins/Index",
+                            IconKey = "checkins",
                             FeatureCode = FeatureCodes.CheckIn,
                             AllowedRoles = [DashboardRoles.Admin]
                         },
@@ -48,6 +49,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Aulas",
                             PagePath = "/Dashboard/Classes/Index",
+                            IconKey = "classes",
                             FeatureCode = FeatureCodes.Schedule,
                             AllowedRoles = [DashboardRoles.Admin, DashboardRoles.Teacher]
                         },
@@ -55,6 +57,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Eventos",
                             PagePath = "/Dashboard/Events/Index",
+                            IconKey = "events",
                             FeatureCode = FeatureCodes.Events,
                             AllowedRoles = [DashboardRoles.Admin, DashboardRoles.Teacher]
                         },
@@ -62,6 +65,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Loja",
                             PagePath = "/Dashboard/Store/Index",
+                            IconKey = "store",
                             FeatureCode = FeatureCodes.Store,
                             AllowedRoles = [DashboardRoles.Admin]
                         }
@@ -78,6 +82,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Exercícios",
                             PagePath = "/Dashboard/Exercises/Index",
+                            IconKey = "exercises",
                             FeatureCode = FeatureCodes.Workouts,
                             AllowedRoles = [DashboardRoles.Admin, DashboardRoles.Teacher]
                         },
@@ -85,6 +90,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Treinos",
                             PagePath = "/Dashboard/Workouts/Index",
+                            IconKey = "workouts",
                             FeatureCode = FeatureCodes.Workouts,
                             AllowedRoles = [DashboardRoles.Admin, DashboardRoles.Teacher]
                         }
@@ -101,6 +107,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Social",
                             PagePath = "/Dashboard/Social/Index",
+                            IconKey = "social",
                             FeatureCode = FeatureCodes.Social,
                             AllowedRoles = [DashboardRoles.Admin, DashboardRoles.Teacher]
                         },
@@ -108,6 +115,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Gamificação",
                             PagePath = "/Dashboard/Gamification/Index",
+                            IconKey = "gamification",
                             FeatureCode = FeatureCodes.Gamification,
                             AllowedRoles = [DashboardRoles.Admin]
                         }
@@ -124,6 +132,7 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Usuários",
                             PagePath = "/Dashboard/Users/Index",
+                            IconKey = "users",
                             FeatureCode = FeatureCodes.UserManagement,
                             AllowedRoles = [DashboardRoles.Admin]
                         },
@@ -131,12 +140,14 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Planos",
                             PagePath = "/Dashboard/Plans/Index",
+                            IconKey = "plans",
                             AllowedRoles = [DashboardRoles.Admin]
                         },
                         new DashboardMenuItem
                         {
                             Label = "Mídias",
                             PagePath = "/Dashboard/Media/Index",
+                            IconKey = "media",
                             FeatureCode = FeatureCodes.Media,
                             AllowedRoles = [DashboardRoles.Admin]
                         },
@@ -144,12 +155,14 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
                         {
                             Label = "Academia",
                             PagePath = "/Dashboard/Academy/Index",
+                            IconKey = "academy",
                             AllowedRoles = [DashboardRoles.Admin]
                         },
                         new DashboardMenuItem
                         {
                             Label = "Termos e políticas",
                             PagePath = "/Dashboard/Legal/Index",
+                            IconKey = "legal",
                             AllowedRoles = [DashboardRoles.Admin]
                         }
                     ]

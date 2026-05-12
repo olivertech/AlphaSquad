@@ -9,6 +9,7 @@ namespace AlphaSquad.Web.Pages.Dashboard.Metrics;
 public sealed class DetailsModel(IDashboardMetricCatalog metricCatalog) : DashboardPageModelBase
 {
     public DashboardMetricDefinition? Metric { get; private set; }
+    public IReadOnlyList<DashboardMetricDefinition> AvailableMetrics { get; private set; } = [];
     public object? ChartOptions { get; private set; }
     public string ChartExplanation { get; private set; } = string.Empty;
 
@@ -18,6 +19,7 @@ public sealed class DetailsModel(IDashboardMetricCatalog metricCatalog) : Dashbo
         if (result is not PageResult)
             return result;
 
+        AvailableMetrics = metricCatalog.GetAll();
         Metric = metricCatalog.GetByKey(metricKey);
         if (Metric is null)
             return Page();

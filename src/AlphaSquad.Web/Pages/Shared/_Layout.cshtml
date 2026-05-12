@@ -98,10 +98,14 @@
                                     {
                                         <li x-data="{ menuKey: '@menuKey', open: false }"
                                             x-init="open = isMenuOpen(menuKey, @(isActive ? "true" : "false"))"
-                                            class="rounded-2xl">
+                                            class="relative rounded-2xl"
+                                            @@click.outside="if (sidebarCompact) { open = false; setMenuOpen(menuKey, false); }">
                                             <button type="button"
                                                     class="dashboard-menu-item w-full justify-between"
-                                                    :class="open ? 'bg-white/8 text-white' : 'text-slate-300 hover:bg-white/5 hover:text-white'"
+                                                    :class="[
+                                                        open ? 'dashboard-menu-item-open' : 'text-slate-300 hover:bg-white/5 hover:text-white',
+                                                        sidebarCompact ? 'justify-center dashboard-menu-item-compact' : ''
+                                                    ]"
                                                     @@click="open = !open; setMenuOpen(menuKey, open); rememberNavScroll()">
                                                 <span class="flex items-center gap-3" :class="sidebarCompact ? 'justify-center' : ''">
                                                     <span class="dashboard-menu-icon">
@@ -116,7 +120,7 @@
                                                      viewBox="0 0 24 24"
                                                      stroke="currentColor"
                                                      stroke-width="1.8"
-                                                     :class="open ? 'rotate-90' : ''">
+                                                     :class="open ? 'rotate-90 tenant-text' : ''">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" />
                                                 </svg>
                                             </button>
@@ -129,11 +133,34 @@
                                                         <a asp-page="@child.PagePath"
                                                            @@click="rememberNavScroll()"
                                                            class="dashboard-submenu-item @(childActive ? "dashboard-submenu-item-active" : string.Empty)">
-                                                            @child.Label
+                                                            <span class="dashboard-submenu-icon">
+                                                                <partial name="_MenuIcon" model="child.IconKey ?? string.Empty" />
+                                                            </span>
+                                                            <span>@child.Label</span>
                                                         </a>
                                                     </li>
                                                 }
                                             </ul>
+
+                                            <div x-show="open && sidebarCompact"
+                                                 x-transition.opacity.scale.origin.left
+                                                 class="absolute left-full top-0 z-50 ml-3 w-20 rounded-[1.5rem] border border-white/10 bg-[#242a33] p-2 shadow-2xl shadow-slate-950/40">
+                                                <div class="space-y-2">
+                                                    @foreach (var child in item.Children)
+                                                    {
+                                                        var childActive = child.Matches(currentPage);
+                                                        <a asp-page="@child.PagePath"
+                                                           @@click="rememberNavScroll()"
+                                                           class="dashboard-compact-submenu-item tooltip tooltip-right @(childActive ? "dashboard-compact-submenu-item-active" : string.Empty)"
+                                                           data-tip="@child.Label"
+                                                           title="@child.Label">
+                                                            <span class="dashboard-menu-icon">
+                                                                <partial name="_MenuIcon" model="child.IconKey ?? string.Empty" />
+                                                            </span>
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
                                         </li>
                                     }
                                     else
@@ -142,7 +169,7 @@
                                             <a asp-page="@item.PagePath"
                                                @@click="rememberNavScroll()"
                                                class="dashboard-menu-item @(isActive ? "dashboard-menu-item-active" : "text-slate-300 hover:bg-white/5 hover:text-white")"
-                                               :class="sidebarCompact ? 'justify-center' : ''">
+                                               :class="sidebarCompact ? 'justify-center dashboard-menu-item-compact' : ''">
                                                 <span class="dashboard-menu-icon">
                                                     <partial name="_MenuIcon" model="item.IconKey ?? string.Empty" />
                                                 </span>
