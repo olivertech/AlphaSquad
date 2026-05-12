@@ -56,6 +56,11 @@ public sealed class ClassesService : IClassesService
         return _apiFacade.POSTApiClassesByIdBookAsync(id, cancellationToken);
     }
 
+    public Task<ClassBookingResponseDto?> POSTApiClassesByIdBookingsAsync(string id, CreateClassBookingForUserRequestDto request, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.POSTApiClassesByIdBookingsAsync(id, request, cancellationToken);
+    }
+
     public Task<GymClassResponseDto?> PUTApiClassesByIdAsync(Guid id, UpdateGymClassRequestDto request, CancellationToken cancellationToken = default)
     {
         return _apiFacade.PUTApiClassesByIdAsync(id, request, cancellationToken);

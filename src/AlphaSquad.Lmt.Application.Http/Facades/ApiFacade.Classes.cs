@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Kiota.Abstractions;
@@ -97,6 +98,16 @@ public sealed partial class ApiFacade
 
         return GeneratedDtoMapper.Map<ClassBookingResponseDto>(result);
 
+    }
+
+    public async Task<ClassBookingResponseDto?> POSTApiClassesByIdBookingsAsync(string id, CreateClassBookingForUserRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        var response = await client.PostAsJsonAsync($"api/classes/{id}/bookings", request, cancellationToken).ConfigureAwait(false);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<ClassBookingResponseDto>(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<GymClassResponseDto?> PUTApiClassesByIdAsync(Guid id, UpdateGymClassRequestDto request, CancellationToken cancellationToken = default)

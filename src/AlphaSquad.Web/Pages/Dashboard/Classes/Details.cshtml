@@ -1,0 +1,229 @@
+@page "{id:guid}"
+@model AlphaSquad.Web.Pages.Dashboard.Classes.DetailsModel
+@{
+    ViewData["Title"] = "Detalhes da aula";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>Operação</li>
+            <li><a asp-page="/Dashboard/Classes/Index" class="hover:text-slate-700">Aulas</a></li>
+            <li class="font-medium tenant-text">Detalhes</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Detalhes da aula</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Consulte o resumo da turma, acompanhe a ocupação atual e visualize as reservas mais importantes em uma única tela.
+        </p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    {
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+    {
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+            @Model.LoadErrorMessage
+        </div>
+    }
+    else if (Model.ClassDetails is not null)
+    {
+        <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <h2 class="text-xl font-semibold tenant-text">Resumo da turma</h2>
+                    <p class="mt-1 text-sm leading-6 text-slate-500">
+                        Leitura rápida para confirmar posicionamento da aula na grade e identificar o papel dela na operação.
+                    </p>
+                </div>
+
+                <div class="space-y-6 px-6 py-6 sm:px-8">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-950">@Model.ClassDetails.Name</h3>
+                            <p class="mt-2 max-w-2xl text-sm leading-7 text-slate-500">@Model.ClassDetails.Description</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="rounded-full @(Model.ClassDetails.IsSpecialClass ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600") px-3 py-1 text-xs font-semibold">
+                                @Model.ClassDetails.SpecialClassLabel
+                            </span>
+                            <span class="rounded-full @(Model.ClassDetails.IsActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600") px-3 py-1 text-xs font-semibold">
+                                @Model.ClassDetails.StatusLabel
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <article class="rounded-[1.5rem] tenant-soft-bg p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Horário</p>
+                            <p class="mt-3 text-base font-semibold text-slate-950">@Model.ClassDetails.ScheduleLabel</p>
+                        </article>
+                        <article class="rounded-[1.5rem] bg-slate-50 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Local</p>
+                            <p class="mt-3 text-base font-semibold text-slate-950">@Model.ClassDetails.Location</p>
+                        </article>
+                        <article class="rounded-[1.5rem] bg-slate-50 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Instrutor</p>
+                            <p class="mt-3 text-base font-semibold text-slate-950">@Model.ClassDetails.InstructorName</p>
+                        </article>
+                        <article class="rounded-[1.5rem] bg-slate-50 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Capacidade</p>
+                            <p class="mt-3 text-base font-semibold text-slate-950">@Model.ClassDetails.Capacity vagas</p>
+                        </article>
+                    </div>
+
+                    <div class="rounded-[1.5rem] border border-slate-200 p-5">
+                        <div class="mb-3 flex items-center justify-between gap-4 text-sm font-medium text-slate-600">
+                            <span>Ocupação atual</span>
+                            <span>@Model.ClassDetails.OccupancyLabel</span>
+                        </div>
+                        <progress class="progress h-3 w-full" value="@Model.ClassDetails.OccupancyRate" max="100"></progress>
+                    </div>
+                </div>
+            </section>
+
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <h2 class="text-xl font-semibold tenant-text">Ações administrativas</h2>
+                    <p class="mt-1 text-sm leading-6 text-slate-500">
+                        Use estes atalhos para ajustar a turma, confirmar reservas ou voltar para a visão geral do módulo.
+                    </p>
+                </div>
+
+                <div class="space-y-5 px-6 py-6 sm:px-8">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="rounded-[1.5rem] border border-slate-200 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Criada em</p>
+                            <p class="mt-3 text-base font-semibold text-slate-950">@Model.ClassDetails.CreatedAt?.ToLocalTime().ToString("dd/MM/yyyy 'às' HH:mm")</p>
+                        </div>
+                        <div class="rounded-[1.5rem] border border-slate-200 p-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Identificador</p>
+                            <p class="mt-3 break-all text-sm font-medium text-slate-700">@Model.ClassDetails.Id</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-[1.5rem] bg-slate-50 p-5">
+                        <h3 class="text-base font-semibold text-slate-950">Uso recomendado</h3>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">
+                            Revise ocupação, reservas e disponibilidade antes de editar uma turma já ativa, para evitar impactos na recepção e na agenda dos alunos.
+                        </p>
+                    </div>
+
+                    @if (Model.CanManageClasses)
+                    {
+                        <form method="post"
+                              asp-page-handler="AddBooking"
+                              asp-route-id="@Model.ClassDetails.Id"
+                              class="space-y-4 rounded-[1.5rem] border border-slate-200 p-5">
+                            <div>
+                                <h3 class="text-base font-semibold text-slate-950">Reservar vaga para um aluno</h3>
+                                <p class="mt-1 text-sm leading-6 text-slate-500">
+                                    Use este atalho quando a equipe da academia precisar confirmar a vaga pelo atendimento presencial.
+                                </p>
+                            </div>
+
+                            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                                <label class="form-control">
+                                    <span class="mb-2 text-sm font-medium text-slate-700">Aluno</span>
+                                    <select asp-for="SelectedStudentId" class="select select-bordered h-12 rounded-2xl border-slate-200 bg-white">
+                                        <option value="">Selecione um aluno</option>
+                                        @foreach (var student in Model.StudentOptions)
+                                        {
+                                            <option value="@student.Value">@student.DisplayLabel</option>
+                                        }
+                                    </select>
+                                </label>
+
+                                <button type="submit"
+                                        class="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                                        style="background: var(--tenant-primary);">
+                                    Confirmar reserva
+                                </button>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.BookingErrorMessage))
+                            {
+                                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                                    @Model.BookingErrorMessage
+                                </div>
+                            }
+                        </form>
+                    }
+
+                    <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
+                        @if (Model.CanManageClasses)
+                        {
+                            <a asp-page="/Dashboard/Classes/Edit"
+                               asp-route-id="@Model.ClassDetails.Id"
+                               class="rounded-full px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                               style="background: var(--tenant-primary);">
+                                Editar aula
+                            </a>
+                        }
+
+                        <a asp-page="/Dashboard/Classes/Index"
+                           class="rounded-full border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                            Voltar para a lista
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                <h2 class="text-xl font-semibold tenant-text">Reservas da turma</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Relação dos alunos já vinculados a esta aula, útil para recepção, conferência de vagas e contato rápido.
+                </p>
+            </div>
+
+            @if (Model.Bookings.Count == 0)
+            {
+                <div class="px-6 py-10 text-center text-sm text-slate-600 sm:px-8">
+                    Esta turma ainda não possui reservas registradas.
+                </div>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead>
+                            <tr class="text-slate-500">
+                                <th>Aluno</th>
+                                <th>E-mail</th>
+                                <th>Perfil</th>
+                                <th>Horário</th>
+                                <th>Reserva feita em</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model.Bookings)
+                            {
+                                <tr class="hover">
+                                    <td class="font-semibold text-slate-900">@booking.UserName</td>
+                                    <td class="text-slate-600">@booking.UserEmail</td>
+                                    <td>
+                                        <span class="rounded-full @(booking.IsSpecialClass ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600") px-3 py-1 text-xs font-semibold">
+                                            @(booking.IsSpecialClass ? "Reserva em aulão" : booking.UserRoleLabel)
+                                        </span>
+                                    </td>
+                                    <td class="text-slate-600">@booking.ScheduleLabel</td>
+                                    <td class="text-slate-600">@booking.BookedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</section>

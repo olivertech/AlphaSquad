@@ -66,6 +66,18 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status409Conflict);
 
+        group.MapPost("/{id:guid}/bookings", CreateBookingForUserAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("CreateClassBookingForUser")
+            .WithSummary("Reserva uma vaga em uma aula para um aluno específico.")
+            .WithDescription("Permite que a gestão da academia confirme uma reserva em nome de um aluno, útil para recepção e atendimento presencial.")
+            .Produces<ClassBookingResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
+
         group.MapDelete("/{id:guid}/book", UnbookAsync)
             .WithName("UnbookClass")
             .WithSummary("Cancela a reserva da aula para o usuÃ¡rio autenticado.")
@@ -200,7 +212,10 @@ public static class ClassEndpoints
     private static async Task<IResult> CreateAsync(CreateGymClassRequest request, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
-        var validation = await ValidateRequestAsync(request.Name, request.StartsAt, request.EndsAt, request.Capacity, request.InstructorUserId, tenantId, db);
+        var normalizedStartsAt = NormalizeToUtc(request.StartsAt);
+        var normalizedEndsAt = NormalizeToUtc(request.EndsAt);
+
+        var validation = await ValidateRequestAsync(request.Name, normalizedStartsAt, normalizedEndsAt, request.Capacity, request.InstructorUserId, tenantId, db);
         if (validation is not null)
             return validation;
 
@@ -211,8 +226,8 @@ public static class ClassEndpoints
             Name = request.Name.Trim(),
             Description = NormalizeOptional(request.Description),
             InstructorUserId = request.InstructorUserId,
-            StartsAt = request.StartsAt,
-            EndsAt = request.EndsAt,
+            StartsAt = normalizedStartsAt,
+            EndsAt = normalizedEndsAt,
             Location = NormalizeOptional(request.Location),
             Capacity = request.Capacity,
             IsActive = true,
@@ -238,15 +253,18 @@ public static class ClassEndpoints
         if (gymClass is null)
             return Results.NotFound();
 
-        var validation = await ValidateRequestAsync(request.Name, request.StartsAt, request.EndsAt, request.Capacity, request.InstructorUserId, tenantId, db);
+        var normalizedStartsAt = NormalizeToUtc(request.StartsAt);
+        var normalizedEndsAt = NormalizeToUtc(request.EndsAt);
+
+        var validation = await ValidateRequestAsync(request.Name, normalizedStartsAt, normalizedEndsAt, request.Capacity, request.InstructorUserId, tenantId, db);
         if (validation is not null)
             return validation;
 
         gymClass.Name = request.Name.Trim();
         gymClass.Description = NormalizeOptional(request.Description);
         gymClass.InstructorUserId = request.InstructorUserId;
-        gymClass.StartsAt = request.StartsAt;
-        gymClass.EndsAt = request.EndsAt;
+        gymClass.StartsAt = normalizedStartsAt;
+        gymClass.EndsAt = normalizedEndsAt;
         gymClass.Location = NormalizeOptional(request.Location);
         gymClass.Capacity = request.Capacity;
         gymClass.IsActive = request.IsActive;
@@ -343,6 +361,77 @@ public static class ClassEndpoints
     /// <summary>
     /// Remove a reserva do usuÃ¡rio autenticado para uma aula do tenant atual.
     /// </summary>
+    /// <summary>
+    /// Cria uma reserva administrativa para um aluno específico.
+    /// Esse fluxo foi pensado para recepção e atendimento presencial, onde a equipe confirma a vaga pelo painel.
+    /// </summary>
+    private static async Task<IResult> CreateBookingForUserAsync(Guid id,
+                                                                 CreateClassBookingForUserRequest request,
+                                                                 AppDbContext db,
+                                                                 IGamificationService gamificationService,
+                                                                 HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+
+        if (request.UserId == Guid.Empty)
+            return Results.BadRequest("UserId is required.");
+
+        var appUser = await db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId && x.TenantId == tenantId && x.IsActive);
+        if (appUser is null)
+            return Results.BadRequest("User does not belong to this tenant or is inactive.");
+
+        if (appUser.Role != UserRole.Student)
+            return Results.BadRequest("Only students can be booked into classes.");
+
+        var gymClass = await db.GymClasses.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId && x.IsActive);
+        if (gymClass is null)
+            return Results.NotFound();
+
+        if (gymClass.StartsAt <= DateTime.UtcNow)
+            return Results.BadRequest("Class has already started or finished.");
+
+        var alreadyBooked = await db.ClassBookings.AnyAsync(x => x.GymClassId == id && x.UserId == request.UserId && x.TenantId == tenantId);
+        if (alreadyBooked)
+            return Results.Conflict("User is already booked for this class.");
+
+        var currentBookings = await db.ClassBookings.CountAsync(x => x.GymClassId == id && x.TenantId == tenantId);
+        if (currentBookings >= gymClass.Capacity)
+            return Results.BadRequest("Class is already full.");
+
+        var booking = new ClassBooking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            GymClassId = id,
+            UserId = request.UserId,
+            BookedAt = DateTime.UtcNow
+        };
+
+        db.ClassBookings.Add(booking);
+        await db.SaveChangesAsync();
+
+        if (gymClass.IsSpecialClass)
+        {
+            await gamificationService.AwardEventAsync(
+                tenantId,
+                request.UserId,
+                GamificationEventType.ClassSpecialParticipation,
+                "class_booking",
+                booking.Id,
+                booking.BookedAt,
+                "Special class booking processed successfully.");
+        }
+
+        return Results.Created($"/api/classes/{id}/bookings", new ClassBookingResponse(
+            booking.Id,
+            gymClass.Id,
+            gymClass.Name,
+            appUser.Id,
+            appUser.Name,
+            booking.BookedAt
+        ));
+    }
+
     private static async Task<IResult> UnbookAsync(Guid id, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
@@ -544,6 +633,20 @@ public static class ClassEndpoints
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    /// <summary>
+    /// Converte datas recebidas pela API para UTC antes de persistir em colunas timestamptz.
+    /// O dashboard trabalha com data e hora local, mas o PostgreSQL via Npgsql exige UTC no save.
+    /// </summary>
+    private static DateTime NormalizeToUtc(DateTime value)
+    {
+        return value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime()
+        };
     }
 }
 

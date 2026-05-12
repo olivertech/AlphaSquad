@@ -1,0 +1,142 @@
+@page "{id:guid}"
+@model AlphaSquad.Web.Pages.Dashboard.Classes.EditModel
+@{
+    ViewData["Title"] = "Editar aula";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>Operação</li>
+            <li><a asp-page="/Dashboard/Classes/Index" class="hover:text-slate-700">Aulas</a></li>
+            <li class="font-medium tenant-text">Editar aula</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Editar aula</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Ajuste agenda, local, instrutor e status da turma sem perder a consistência da operação.
+        </p>
+    </div>
+
+    <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+        <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+            <h2 class="text-xl font-semibold tenant-text">Dados da aula</h2>
+            <p class="mt-1 text-sm leading-6 text-slate-500">
+                Atualize apenas o que mudou no dia a dia da academia e mantenha a grade em sincronia com as reservas.
+            </p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+        {
+            <div class="px-6 py-6 sm:px-8">
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                    @Model.LoadErrorMessage
+                </div>
+            </div>
+        }
+        else
+        {
+            <form method="post" class="space-y-6 px-6 py-6 sm:px-8">
+                @if (!string.IsNullOrWhiteSpace(Model.SubmitErrorMessage))
+                {
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                        @Model.SubmitErrorMessage
+                    </div>
+                }
+
+                <div asp-validation-summary="ModelOnly" class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800"></div>
+
+                <div class="grid gap-5 lg:grid-cols-2">
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Nome da aula</span>
+                        <input asp-for="Input.Name" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        <span asp-validation-for="Input.Name" class="mt-2 text-sm text-rose-600"></span>
+                    </label>
+
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Local</span>
+                        <input asp-for="Input.Location" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        <span asp-validation-for="Input.Location" class="mt-2 text-sm text-rose-600"></span>
+                    </label>
+                </div>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Descrição</span>
+                    <textarea asp-for="Input.Description" rows="4" class="textarea textarea-bordered rounded-[1.5rem] border-slate-200 bg-white"></textarea>
+                    <span asp-validation-for="Input.Description" class="mt-2 text-sm text-rose-600"></span>
+                </label>
+
+                <div class="grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Início</span>
+                        <input asp-for="Input.StartsAt" type="datetime-local" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        <span asp-validation-for="Input.StartsAt" class="mt-2 text-sm text-rose-600"></span>
+                    </label>
+
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Término</span>
+                        <input asp-for="Input.EndsAt" type="datetime-local" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        <span asp-validation-for="Input.EndsAt" class="mt-2 text-sm text-rose-600"></span>
+                    </label>
+
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Capacidade</span>
+                        <input asp-for="Input.Capacity" type="number" min="1" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        <span asp-validation-for="Input.Capacity" class="mt-2 text-sm text-rose-600"></span>
+                    </label>
+
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Instrutor</span>
+                        <select asp-for="Input.InstructorUserId" class="select select-bordered h-12 rounded-2xl border-slate-200 bg-white">
+                            <option value="">Sem instrutor definido</option>
+                            @foreach (var option in Model.InstructorOptions)
+                            {
+                                <option value="@option.Value">@option.DisplayLabel</option>
+                            }
+                        </select>
+                    </label>
+                </div>
+
+                <div class="grid gap-4 lg:grid-cols-2">
+                    <label class="flex items-center gap-4 rounded-[1.5rem] border border-slate-200 px-5 py-4">
+                        <input asp-for="Input.IsSpecialClass" class="toggle toggle-warning" />
+                        <div>
+                            <span class="text-base font-semibold text-slate-900">Marcar como aulão</span>
+                            <span class="mt-1 block text-sm leading-6 text-slate-500">
+                                Destaque a aula como experiência especial para o app e para a operação.
+                            </span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-4 rounded-[1.5rem] border border-slate-200 px-5 py-4">
+                        <input asp-for="Input.IsActive" class="toggle toggle-success" />
+                        <div>
+                            <span class="text-base font-semibold text-slate-900">Aula ativa</span>
+                            <span class="mt-1 block text-sm leading-6 text-slate-500">
+                                Desative a turma para tirá-la da operação sem perder o histórico cadastrado.
+                            </span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
+                    <a asp-page="/Dashboard/Classes/Details"
+                       asp-route-id="@Model.ClassId"
+                       class="rounded-full border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                        Voltar aos detalhes
+                    </a>
+                    <button type="submit"
+                            class="rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                            style="background: var(--tenant-primary);">
+                        Salvar alterações
+                    </button>
+                </div>
+            </form>
+        }
+    </section>
+
+    <partial name="_ValidationScriptsPartial" />
+</section>

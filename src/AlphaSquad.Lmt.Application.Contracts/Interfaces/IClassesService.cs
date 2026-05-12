@@ -22,5 +22,7 @@ public interface IClassesService
 
     Task<ClassBookingResponseDto?> POSTApiClassesByIdBookAsync(string id, CancellationToken cancellationToken = default);
 
+    Task<ClassBookingResponseDto?> POSTApiClassesByIdBookingsAsync(string id, CreateClassBookingForUserRequestDto request, CancellationToken cancellationToken = default);
+
     Task<GymClassResponseDto?> PUTApiClassesByIdAsync(Guid id, UpdateGymClassRequestDto request, CancellationToken cancellationToken = default);
 }

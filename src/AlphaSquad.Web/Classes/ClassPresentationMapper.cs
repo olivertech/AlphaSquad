@@ -10,6 +10,51 @@ namespace AlphaSquad.Web.Classes;
 /// </summary>
 public static class ClassPresentationMapper
 {
+    public static ClassDetailsViewModel ToDetails(
+        GymClassResponseDto gymClass,
+        int bookingCount)
+    {
+        var listItem = ToListItem(gymClass, bookingCount);
+
+        return new ClassDetailsViewModel
+        {
+            Id = listItem.Id,
+            Name = listItem.Name,
+            Description = listItem.Description,
+            InstructorName = listItem.InstructorName,
+            InstructorUserId = gymClass.InstructorUserId,
+            ScheduleLabel = listItem.ScheduleLabel,
+            StartsAt = listItem.StartsAt,
+            EndsAt = listItem.EndsAt,
+            Location = listItem.Location,
+            Capacity = listItem.Capacity,
+            BookingCount = listItem.BookingCount,
+            OccupancyRate = listItem.OccupancyRate,
+            OccupancyLabel = listItem.OccupancyLabel,
+            IsActive = listItem.IsActive,
+            StatusLabel = listItem.StatusLabel,
+            IsSpecialClass = listItem.IsSpecialClass,
+            SpecialClassLabel = listItem.SpecialClassLabel,
+            CreatedAt = gymClass.CreatedAt
+        };
+    }
+
+    public static ClassFormInputModel ToFormInput(GymClassResponseDto gymClass)
+    {
+        return new ClassFormInputModel
+        {
+            Name = gymClass.Name?.Trim() ?? string.Empty,
+            Description = gymClass.Description?.Trim(),
+            Location = gymClass.Location?.Trim(),
+            Capacity = gymClass.Capacity,
+            StartsAt = gymClass.StartsAt?.ToLocalTime().DateTime,
+            EndsAt = gymClass.EndsAt?.ToLocalTime().DateTime,
+            InstructorUserId = gymClass.InstructorUserId,
+            IsSpecialClass = gymClass.IsSpecialClass == true,
+            IsActive = gymClass.IsActive == true
+        };
+    }
+
     public static ClassListItemViewModel ToListItem(
         GymClassResponseDto gymClass,
         int bookingCount)

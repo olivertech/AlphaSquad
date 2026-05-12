@@ -2,6 +2,7 @@ using AlphaSquad.Lmt.Application.Contracts.Dtos;
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
 using AlphaSquad.Web.Classes;
 using AlphaSquad.Web.Models;
+using AlphaSquad.Web.Security;
 
 namespace AlphaSquad.Web.Pages.Dashboard.Classes;
 
@@ -29,18 +30,23 @@ public sealed class IndexModel(IClassesService classesService) : DashboardPageMo
     public IReadOnlyList<ClassListItemViewModel> Classes { get; private set; } = [];
     public IReadOnlyList<ClassBookingListItemViewModel> RecentBookings { get; private set; } = [];
     public IReadOnlyList<ClassListItemViewModel> TopOccupiedClasses { get; private set; } = [];
+    public bool CanManageClasses => SessionState?.Role == DashboardRoles.Admin;
     public int TotalClasses => Classes.Count;
     public int ActiveClasses => Classes.Count(item => item.IsActive);
     public int SpecialClasses => Classes.Count(item => item.IsSpecialClass);
     public int TotalReservations => Classes.Sum(item => item.BookingCount);
     public decimal AverageOccupancy => Classes.Count == 0 ? 0m : Math.Round(Classes.Average(item => item.OccupancyRate), 1);
     public string? LoadErrorMessage { get; private set; }
+    public string? SuccessMessage { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
+    public async Task<IActionResult> OnGetAsync(bool? deleted, CancellationToken cancellationToken)
     {
         var result = PageOrLogin();
         if (result is not PageResult)
             return result;
+
+        if (deleted == true)
+            SuccessMessage = "A aula foi removida com sucesso.";
 
         if (DateTo.HasValue && DateFrom.HasValue && DateTo.Value < DateFrom.Value)
         {
@@ -89,6 +95,35 @@ public sealed class IndexModel(IClassesService classesService) : DashboardPageMo
         }
 
         return result;
+    }
+
+    public async Task<IActionResult> OnPostDeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var result = PageOrLogin();
+        if (result is not PageResult)
+            return result;
+
+        if (!CanManageClasses)
+            return Forbid();
+
+        try
+        {
+            await classesService.DELETEApiClassesByIdAsync(id, cancellationToken);
+            return RedirectToPage(new
+            {
+                Search,
+                DateFrom,
+                DateTo,
+                IsActive,
+                OnlySpecialClasses,
+                deleted = true
+            });
+        }
+        catch
+        {
+            LoadErrorMessage = "Nao foi possivel remover a aula agora.";
+            return await OnGetAsync(false, cancellationToken);
+        }
     }
 
     /// <summary>
