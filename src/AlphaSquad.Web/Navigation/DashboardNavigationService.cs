@@ -163,13 +163,6 @@ public sealed class DashboardNavigationService : IDashboardNavigationService
             [
                 new DashboardMenuItem
                 {
-                    Label = "Meu perfil",
-                    PagePath = "/Dashboard/Profile/Index",
-                    IconKey = "profile",
-                    AllowedRoles = [DashboardRoles.Admin, DashboardRoles.Teacher]
-                },
-                new DashboardMenuItem
-                {
                     Label = "Configurações",
                     PagePath = "/Dashboard/Settings/Index",
                     IconKey = "settings",

@@ -4,6 +4,13 @@
   --tenant-secondary: #475569;
 }
 
+@font-face {
+  font-family: "Material Symbols Rounded";
+  src: url("/fonts/GoogleMaterialSymbolsRounded.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 700;
+}
+
 html {
   font-size: 16px;
   min-height: 100%;
@@ -42,11 +49,36 @@ body {
 
 .dashboard-menu-icon {
   display: inline-flex;
-  height: 1.25rem;
-  width: 1.25rem;
+  height: 1.75rem;
+  width: 1.75rem;
   align-items: center;
   justify-content: center;
   color: currentColor;
+  flex-shrink: 0;
+}
+
+.material-symbols-rounded {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+.dashboard-material-icon {
+  font-size: 1.55rem;
 }
 
 .dashboard-submenu-item {

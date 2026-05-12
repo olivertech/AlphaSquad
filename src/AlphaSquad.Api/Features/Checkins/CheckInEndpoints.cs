@@ -138,8 +138,8 @@ public static class CheckInEndpoints
                                   FROM checkins c
                                   WHERE c.tenant_id = @TenantId
                                     AND c.user_id = @UserId
-                                    AND (@DateFrom IS NULL OR c.checked_in_at >= @DateFrom)
-                                    AND (@DateToExclusive IS NULL OR c.checked_in_at < @DateToExclusive)";
+                                    AND (CAST(@DateFrom AS timestamptz) IS NULL OR c.checked_in_at >= CAST(@DateFrom AS timestamptz))
+                                    AND (CAST(@DateToExclusive AS timestamptz) IS NULL OR c.checked_in_at < CAST(@DateToExclusive AS timestamptz))";
 
         const string itemsSql = @"SELECT c.id,
                                          c.user_id AS UserId,
@@ -152,8 +152,8 @@ public static class CheckInEndpoints
                                   WHERE c.tenant_id = @TenantId
                                     AND c.user_id = @UserId
                                     AND u.tenant_id = @TenantId
-                                    AND (@DateFrom IS NULL OR c.checked_in_at >= @DateFrom)
-                                    AND (@DateToExclusive IS NULL OR c.checked_in_at < @DateToExclusive)
+                                    AND (CAST(@DateFrom AS timestamptz) IS NULL OR c.checked_in_at >= CAST(@DateFrom AS timestamptz))
+                                    AND (CAST(@DateToExclusive AS timestamptz) IS NULL OR c.checked_in_at < CAST(@DateToExclusive AS timestamptz))
                                   ORDER BY c.checked_in_at DESC
                                   LIMIT @Limit OFFSET @Offset";
 
@@ -268,9 +268,9 @@ public static class CheckInEndpoints
                                   JOIN users u ON u.id = c.user_id
                                   WHERE c.tenant_id = @TenantId
                                     AND u.tenant_id = @TenantId
-                                    AND (@UserId IS NULL OR c.user_id = @UserId)
-                                    AND (@DateFrom IS NULL OR c.checked_in_at >= @DateFrom)
-                                    AND (@DateToExclusive IS NULL OR c.checked_in_at < @DateToExclusive)";
+                                    AND (CAST(@UserId AS uuid) IS NULL OR c.user_id = CAST(@UserId AS uuid))
+                                    AND (CAST(@DateFrom AS timestamptz) IS NULL OR c.checked_in_at >= CAST(@DateFrom AS timestamptz))
+                                    AND (CAST(@DateToExclusive AS timestamptz) IS NULL OR c.checked_in_at < CAST(@DateToExclusive AS timestamptz))";
 
         const string itemsSql = @"SELECT c.id,
                                          c.user_id AS UserId,
@@ -282,9 +282,9 @@ public static class CheckInEndpoints
                                   JOIN users u ON u.id = c.user_id
                                   WHERE c.tenant_id = @TenantId
                                     AND u.tenant_id = @TenantId
-                                    AND (@UserId IS NULL OR c.user_id = @UserId)
-                                    AND (@DateFrom IS NULL OR c.checked_in_at >= @DateFrom)
-                                    AND (@DateToExclusive IS NULL OR c.checked_in_at < @DateToExclusive)
+                                    AND (CAST(@UserId AS uuid) IS NULL OR c.user_id = CAST(@UserId AS uuid))
+                                    AND (CAST(@DateFrom AS timestamptz) IS NULL OR c.checked_in_at >= CAST(@DateFrom AS timestamptz))
+                                    AND (CAST(@DateToExclusive AS timestamptz) IS NULL OR c.checked_in_at < CAST(@DateToExclusive AS timestamptz))
                                   ORDER BY c.checked_in_at DESC
                                   LIMIT @Limit OFFSET @Offset";
 
