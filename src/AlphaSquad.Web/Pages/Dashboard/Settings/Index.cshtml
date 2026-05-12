@@ -20,20 +20,6 @@
         </p>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
-    {
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            @Model.SuccessMessage
-        </div>
-    }
-
-    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
-    {
-        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
-            @Model.LoadErrorMessage
-        </div>
-    }
-
     <div class="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <section class="rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
             <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
@@ -65,11 +51,6 @@
                             <p class="mt-2 text-sm leading-6 text-slate-500">@metric.ShortDescription</p>
                         </div>
                     </label>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(Model.SelectionErrorMessage))
-                {
-                    <p class="text-sm font-medium text-rose-600">@Model.SelectionErrorMessage</p>
                 }
 
                 <div class="flex justify-end">

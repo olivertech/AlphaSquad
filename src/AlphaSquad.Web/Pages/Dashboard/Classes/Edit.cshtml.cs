@@ -7,8 +7,8 @@ using AlphaSquad.Web.Users;
 namespace AlphaSquad.Web.Pages.Dashboard.Classes;
 
 /// <summary>
-/// Tela de edicao de aulas.
-/// Ela ajuda a academia a ajustar agenda, instrutor, lotacao e status operacional sem sair do painel.
+/// Tela de edição de aulas.
+/// Ela ajuda a academia a ajustar agenda, instrutor, lotação e status operacional sem sair do painel.
 /// </summary>
 public sealed class EditModel(
     IClassesService classesService,
@@ -20,7 +20,6 @@ public sealed class EditModel(
     public Guid ClassId { get; private set; }
     public IReadOnlyList<InstructorOptionViewModel> InstructorOptions { get; private set; } = [];
     public string? LoadErrorMessage { get; private set; }
-    public string? SubmitErrorMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -63,18 +62,18 @@ public sealed class EditModel(
             if (response?.Id is Guid classId)
                 return RedirectToPage("/Dashboard/Classes/Details", new { id = classId, updated = true });
 
-            SubmitErrorMessage = "Nao foi possivel salvar as alteracoes da aula agora. Tente novamente em instantes.";
+            ShowErrorToast("Não foi possível salvar as alterações da aula agora. Tente novamente em instantes.");
         }
         catch
         {
-            SubmitErrorMessage = "Nao foi possivel salvar as alteracoes da aula agora. Revise os dados e tente novamente.";
+            ShowErrorToast("Não foi possível salvar as alterações da aula agora. Revise os dados e tente novamente.");
         }
 
         return Page();
     }
 
     /// <summary>
-    /// Busca os dados da aula e converte para o formato mais amigavel do formulario.
+    /// Busca os dados da aula e converte para o formato mais amigável do formulário.
     /// </summary>
     private async Task<IActionResult> LoadClassAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -88,7 +87,8 @@ public sealed class EditModel(
         }
         catch
         {
-            LoadErrorMessage = "Nao foi possivel carregar os dados desta aula agora.";
+            LoadErrorMessage = "Não foi possível carregar os dados desta aula agora.";
+            ShowErrorToast(LoadErrorMessage);
         }
 
         return Page();
@@ -105,7 +105,7 @@ public sealed class EditModel(
                 .Select(user => new InstructorOptionViewModel
                 {
                     Value = user.Id!.Value,
-                    Name = string.IsNullOrWhiteSpace(user.Name) ? "Usuario sem nome" : user.Name.Trim(),
+                    Name = string.IsNullOrWhiteSpace(user.Name) ? "Usuário sem nome" : user.Name.Trim(),
                     RoleLabel = UserPresentationMapper.ToRoleLabel(user.Role)
                 })
                 .ToList();

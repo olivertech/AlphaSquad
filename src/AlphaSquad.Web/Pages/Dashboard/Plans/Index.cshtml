@@ -43,13 +43,7 @@
         </article>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
-    {
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
-            @Model.LoadErrorMessage
-        </div>
-    }
-    else
+    @if (Model.LoadErrorMessage is null)
     {
         <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
             <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">

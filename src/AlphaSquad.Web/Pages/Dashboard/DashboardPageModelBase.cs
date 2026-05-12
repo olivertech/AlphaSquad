@@ -12,6 +12,10 @@ namespace AlphaSquad.Web.Pages.Dashboard;
 [Authorize(Policy = "DashboardAccess")]
 public abstract class DashboardPageModelBase : PageModel
 {
+    private const string ToastMessageKey = "Dashboard.Toast.Message";
+    private const string ToastTypeKey = "Dashboard.Toast.Type";
+    private const string ToastTitleKey = "Dashboard.Toast.Title";
+
     public DashboardSessionState? SessionState { get; protected set; }
 
     protected IActionResult PageOrLogin()
@@ -24,5 +28,38 @@ public abstract class DashboardPageModelBase : PageModel
             return RedirectToPage("/Account/Login");
 
         return Page();
+    }
+
+    protected void ShowSuccessToast(string message, bool persist = false, string? title = null) =>
+        SetToast("success", message, persist, title);
+
+    protected void ShowErrorToast(string message, bool persist = false, string? title = null) =>
+        SetToast("error", message, persist, title);
+
+    protected void ShowWarningToast(string message, bool persist = false, string? title = null) =>
+        SetToast("warning", message, persist, title);
+
+    private void SetToast(string type, string message, bool persist, string? title)
+    {
+        if (persist)
+        {
+            TempData[ToastTypeKey] = type;
+            TempData[ToastMessageKey] = message;
+
+            if (!string.IsNullOrWhiteSpace(title))
+                TempData[ToastTitleKey] = title;
+            else
+                TempData.Remove(ToastTitleKey);
+
+            return;
+        }
+
+        ViewData[ToastTypeKey] = type;
+        ViewData[ToastMessageKey] = message;
+
+        if (!string.IsNullOrWhiteSpace(title))
+            ViewData[ToastTitleKey] = title;
+        else
+            ViewData.Remove(ToastTitleKey);
     }
 }

@@ -49,6 +49,7 @@ public sealed class IndexModel(IPlansService plansService) : AdminDashboardPageM
         catch
         {
             LoadErrorMessage = "Não foi possível carregar os dados de planos agora. Tente novamente em instantes.";
+            ShowErrorToast(LoadErrorMessage);
         }
 
         return result;

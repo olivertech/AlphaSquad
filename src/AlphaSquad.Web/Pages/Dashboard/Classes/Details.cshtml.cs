@@ -22,8 +22,6 @@ public sealed class DetailsModel(
     public IReadOnlyList<StudentOptionViewModel> StudentOptions { get; private set; } = [];
     public bool CanManageClasses => SessionState?.Role == DashboardRoles.Admin;
     public string? LoadErrorMessage { get; private set; }
-    public string? SuccessMessage { get; private set; }
-    public string? BookingErrorMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(
         Guid id,
@@ -39,15 +37,15 @@ public sealed class DetailsModel(
             return result;
 
         if (created == true)
-            SuccessMessage = "Aula cadastrada com sucesso.";
+            ShowSuccessToast("Aula cadastrada com sucesso.");
         else if (updated == true)
-            SuccessMessage = "Aula atualizada com sucesso.";
+            ShowSuccessToast("Aula atualizada com sucesso.");
         else if (deleted == true)
-            SuccessMessage = "A aula foi removida com sucesso.";
+            ShowSuccessToast("A aula foi removida com sucesso.");
         else if (booked == true)
-            SuccessMessage = "Reserva criada com sucesso para o aluno selecionado.";
+            ShowSuccessToast("Reserva criada com sucesso para o aluno selecionado.");
         else if (unbooked == true)
-            SuccessMessage = "Reserva removida com sucesso.";
+            ShowSuccessToast("Reserva removida com sucesso.");
 
         await LoadStudentOptionsAsync(cancellationToken);
         await LoadClassDataAsync(id, cancellationToken);
@@ -65,7 +63,7 @@ public sealed class DetailsModel(
 
         if (!SelectedStudentId.HasValue || SelectedStudentId == Guid.Empty)
         {
-            BookingErrorMessage = "Selecione um aluno para confirmar a reserva.";
+            ShowWarningToast("Selecione um aluno para confirmar a reserva.");
             await LoadStudentOptionsAsync(cancellationToken);
             await LoadClassDataAsync(id, cancellationToken);
             return Page();
@@ -82,7 +80,7 @@ public sealed class DetailsModel(
         }
         catch
         {
-            BookingErrorMessage = "Nao foi possivel confirmar a reserva agora. Verifique se o aluno ja esta reservado ou se ainda existem vagas.";
+            ShowErrorToast("Não foi possível confirmar a reserva agora. Verifique se o aluno já está reservado ou se ainda existem vagas.");
             await LoadStudentOptionsAsync(cancellationToken);
             await LoadClassDataAsync(id, cancellationToken);
             return Page();
@@ -105,7 +103,7 @@ public sealed class DetailsModel(
         }
         catch
         {
-            BookingErrorMessage = "Nao foi possivel remover a reserva agora. Tente novamente em instantes.";
+            ShowErrorToast("Não foi possível remover a reserva agora. Tente novamente em instantes.");
             await LoadStudentOptionsAsync(cancellationToken);
             await LoadClassDataAsync(id, cancellationToken);
             return Page();
@@ -148,7 +146,8 @@ public sealed class DetailsModel(
             var response = await classesService.GETApiClassesByIdAsync(id, cancellationToken);
             if (response?.Id is not Guid)
             {
-                LoadErrorMessage = "A aula informada nao foi encontrada.";
+                LoadErrorMessage = "A aula informada não foi encontrada.";
+                ShowWarningToast(LoadErrorMessage);
                 return;
             }
 
@@ -162,7 +161,8 @@ public sealed class DetailsModel(
         }
         catch
         {
-            LoadErrorMessage = "Nao foi possivel carregar os detalhes desta aula agora.";
+            LoadErrorMessage = "Não foi possível carregar os detalhes desta aula agora.";
+            ShowErrorToast(LoadErrorMessage);
         }
     }
 }

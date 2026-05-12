@@ -15,7 +15,6 @@ public sealed class CreateModel(IUsersService usersService) : AdminDashboardPage
     public UserFormInputModel Input { get; set; } = new();
 
     public IReadOnlyList<UserRoleOptionViewModel> RoleOptions => UserPresentationMapper.RoleOptions;
-    public string? SubmitErrorMessage { get; private set; }
 
     public IActionResult OnGet()
     {
@@ -52,11 +51,11 @@ public sealed class CreateModel(IUsersService usersService) : AdminDashboardPage
             if (response?.Id is Guid userId)
                 return RedirectToPage("/Dashboard/Users/Details", new { id = userId, created = true });
 
-            SubmitErrorMessage = "Não foi possível concluir o cadastro agora. Tente novamente em instantes.";
+            ShowErrorToast("Não foi possível concluir o cadastro agora. Tente novamente em instantes.");
         }
         catch
         {
-            SubmitErrorMessage = "Não foi possível concluir o cadastro agora. Revise os dados e tente novamente.";
+            ShowErrorToast("Não foi possível concluir o cadastro agora. Revise os dados e tente novamente.");
         }
 
         return Page();

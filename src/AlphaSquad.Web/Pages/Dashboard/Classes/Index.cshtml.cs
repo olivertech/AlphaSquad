@@ -37,7 +37,6 @@ public sealed class IndexModel(IClassesService classesService) : DashboardPageMo
     public int TotalReservations => Classes.Sum(item => item.BookingCount);
     public decimal AverageOccupancy => Classes.Count == 0 ? 0m : Math.Round(Classes.Average(item => item.OccupancyRate), 1);
     public string? LoadErrorMessage { get; private set; }
-    public string? SuccessMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(bool? deleted, CancellationToken cancellationToken)
     {
@@ -46,12 +45,10 @@ public sealed class IndexModel(IClassesService classesService) : DashboardPageMo
             return result;
 
         if (deleted == true)
-            SuccessMessage = "A aula foi removida com sucesso.";
+            ShowSuccessToast("A aula foi removida com sucesso.");
 
         if (DateTo.HasValue && DateFrom.HasValue && DateTo.Value < DateFrom.Value)
-        {
             (DateFrom, DateTo) = (DateTo, DateFrom);
-        }
 
         try
         {
@@ -92,6 +89,7 @@ public sealed class IndexModel(IClassesService classesService) : DashboardPageMo
         catch
         {
             LoadErrorMessage = "Não foi possível carregar os dados de aulas agora. Tente novamente em instantes.";
+            ShowErrorToast(LoadErrorMessage);
         }
 
         return result;
@@ -121,7 +119,8 @@ public sealed class IndexModel(IClassesService classesService) : DashboardPageMo
         }
         catch
         {
-            LoadErrorMessage = "Nao foi possivel remover a aula agora.";
+            LoadErrorMessage = "Não foi possível remover a aula agora.";
+            ShowErrorToast(LoadErrorMessage);
             return await OnGetAsync(false, cancellationToken);
         }
     }
@@ -134,9 +133,7 @@ public sealed class IndexModel(IClassesService classesService) : DashboardPageMo
         var query = classes.AsEnumerable();
 
         if (OnlySpecialClasses)
-        {
             query = query.Where(item => item.IsSpecialClass == true);
-        }
 
         if (!string.IsNullOrWhiteSpace(Search))
         {

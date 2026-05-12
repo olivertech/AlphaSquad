@@ -17,7 +17,6 @@ public sealed class EditModel(IUsersService usersService) : AdminDashboardPageMo
     public IReadOnlyList<UserRoleOptionViewModel> RoleOptions => UserPresentationMapper.RoleOptions;
     public Guid UserId { get; private set; }
     public string? LoadErrorMessage { get; private set; }
-    public string? SubmitErrorMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -52,11 +51,11 @@ public sealed class EditModel(IUsersService usersService) : AdminDashboardPageMo
             if (response?.Id is Guid userId)
                 return RedirectToPage("/Dashboard/Users/Details", new { id = userId, updated = true });
 
-            SubmitErrorMessage = "Não foi possível salvar as alterações agora. Tente novamente em instantes.";
+            ShowErrorToast("Não foi possível salvar as alterações agora. Tente novamente em instantes.");
         }
         catch
         {
-            SubmitErrorMessage = "Não foi possível salvar as alterações agora. Revise os dados e tente novamente.";
+            ShowErrorToast("Não foi possível salvar as alterações agora. Revise os dados e tente novamente.");
         }
 
         return Page();
@@ -84,6 +83,7 @@ public sealed class EditModel(IUsersService usersService) : AdminDashboardPageMo
         catch
         {
             LoadErrorMessage = "Não foi possível carregar os dados desse usuário agora.";
+            ShowErrorToast(LoadErrorMessage);
         }
 
         return Page();

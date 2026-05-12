@@ -7,7 +7,7 @@ namespace AlphaSquad.Web.Pages.Dashboard.Classes;
 
 /// <summary>
 /// Tela de cadastro de novas aulas da academia.
-/// Ela traduz o contrato da API para um formulario mais claro para a operacao administrativa.
+/// Ela traduz o contrato da API para um formulário mais claro para a operação administrativa.
 /// </summary>
 public sealed class CreateModel(
     IClassesService classesService,
@@ -17,7 +17,6 @@ public sealed class CreateModel(
     public ClassFormInputModel Input { get; set; } = new();
 
     public IReadOnlyList<InstructorOptionViewModel> InstructorOptions { get; private set; } = [];
-    public string? SubmitErrorMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
@@ -58,11 +57,11 @@ public sealed class CreateModel(
             if (response?.Id is Guid classId)
                 return RedirectToPage("/Dashboard/Classes/Details", new { id = classId, created = true });
 
-            SubmitErrorMessage = "Nao foi possivel cadastrar a aula agora. Tente novamente em instantes.";
+            ShowErrorToast("Não foi possível cadastrar a aula agora. Tente novamente em instantes.");
         }
         catch
         {
-            SubmitErrorMessage = "Nao foi possivel cadastrar a aula agora. Revise os dados e tente novamente.";
+            ShowErrorToast("Não foi possível cadastrar a aula agora. Revise os dados e tente novamente.");
         }
 
         return Page();
@@ -70,7 +69,7 @@ public sealed class CreateModel(
 
     /// <summary>
     /// Carrega somente administradores e professores ativos como candidatos a instrutor.
-    /// Isso mantem o select coerente com a regra do backend.
+    /// Isso mantém o select coerente com a regra do backend.
     /// </summary>
     private async Task LoadInstructorOptionsAsync(CancellationToken cancellationToken)
     {
@@ -83,7 +82,7 @@ public sealed class CreateModel(
                 .Select(user => new InstructorOptionViewModel
                 {
                     Value = user.Id!.Value,
-                    Name = string.IsNullOrWhiteSpace(user.Name) ? "Usuario sem nome" : user.Name.Trim(),
+                    Name = string.IsNullOrWhiteSpace(user.Name) ? "Usuário sem nome" : user.Name.Trim(),
                     RoleLabel = UserPresentationMapper.ToRoleLabel(user.Role)
                 })
                 .ToList();

@@ -62,6 +62,7 @@ public sealed class IndexModel(ICheckinsService checkinsService) : AdminDashboar
         catch
         {
             LoadErrorMessage = "Não foi possível carregar os dados de check-ins agora. Tente novamente em instantes.";
+            ShowErrorToast(LoadErrorMessage);
         }
 
         return result;

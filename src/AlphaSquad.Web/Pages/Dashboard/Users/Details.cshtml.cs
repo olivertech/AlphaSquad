@@ -12,7 +12,6 @@ public sealed class DetailsModel(IUsersService usersService) : AdminDashboardPag
 {
     public UserDetailsViewModel? UserDetails { get; private set; }
     public string? LoadErrorMessage { get; private set; }
-    public string? SuccessMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(Guid id, bool? created, bool? updated, bool? deactivated, CancellationToken cancellationToken)
     {
@@ -21,11 +20,11 @@ public sealed class DetailsModel(IUsersService usersService) : AdminDashboardPag
             return result;
 
         if (created == true)
-            SuccessMessage = "Usuário cadastrado com sucesso.";
+            ShowSuccessToast("Usuário cadastrado com sucesso.");
         else if (updated == true)
-            SuccessMessage = "Usuário atualizado com sucesso.";
+            ShowSuccessToast("Usuário atualizado com sucesso.");
         else if (deactivated == true)
-            SuccessMessage = "Usuário desativado com sucesso.";
+            ShowSuccessToast("Usuário desativado com sucesso.");
 
         try
         {
@@ -38,6 +37,7 @@ public sealed class DetailsModel(IUsersService usersService) : AdminDashboardPag
         catch
         {
             LoadErrorMessage = "Não foi possível carregar os detalhes desse usuário agora.";
+            ShowErrorToast(LoadErrorMessage);
         }
 
         return result;
@@ -57,6 +57,7 @@ public sealed class DetailsModel(IUsersService usersService) : AdminDashboardPag
         catch
         {
             LoadErrorMessage = "Não foi possível desativar esse usuário agora.";
+            ShowErrorToast(LoadErrorMessage);
             return await OnGetAsync(id, false, false, false, cancellationToken);
         }
     }

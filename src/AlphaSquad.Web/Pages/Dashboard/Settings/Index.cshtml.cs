@@ -47,12 +47,14 @@ public sealed class IndexModel(
         if (Input.SelectedMetricKeys.Count == 0)
         {
             SelectionErrorMessage = "Selecione pelo menos um medidor para aparecer na home do dashboard.";
+            ShowWarningToast(SelectionErrorMessage);
             return Page();
         }
 
         if (Input.SelectedMetricKeys.Count > DashboardMetricCatalog.MaxDashboardMetrics)
         {
             SelectionErrorMessage = $"Selecione no máximo {DashboardMetricCatalog.MaxDashboardMetrics} medidores para a tela inicial.";
+            ShowWarningToast(SelectionErrorMessage);
             return Page();
         }
 
@@ -75,17 +77,19 @@ public sealed class IndexModel(
 
             HttpContext.Session.SetDashboardSession(SessionState);
             SuccessMessage = "Os medidores da tela inicial foram salvos com sucesso para o seu usuário.";
+            ShowSuccessToast(SuccessMessage);
         }
         catch
         {
             SelectionErrorMessage = "Não foi possível salvar suas preferências agora. Tente novamente em instantes.";
+            ShowErrorToast(SelectionErrorMessage);
         }
 
         return Page();
     }
 
     /// <summary>
-    /// Carrega a selecao atual de medidores do banco e replica a escolha na sessao para manter a home sincronizada.
+    /// Carrega a seleção atual de medidores do banco e replica a escolha na sessão para manter a home sincronizada.
     /// </summary>
     private async Task LoadViewStateAsync(CancellationToken cancellationToken)
     {
@@ -107,6 +111,7 @@ public sealed class IndexModel(
         catch
         {
             LoadErrorMessage = "Não foi possível carregar as preferências salvas agora. O painel exibiu uma seleção padrão temporária.";
+            ShowWarningToast(LoadErrorMessage);
         }
 
         SessionState ??= HttpContext.Session.GetDashboardSession();

@@ -21,20 +21,7 @@
         </p>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
-    {
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            @Model.SuccessMessage
-        </div>
-    }
-
-    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
-    {
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
-            @Model.LoadErrorMessage
-        </div>
-    }
-    else if (Model.UserDetails is not null)
+    @if (Model.UserDetails is not null)
     {
         <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
             <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">

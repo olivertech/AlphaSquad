@@ -36,7 +36,6 @@ public sealed class IndexModel(IUsersService usersService) : AdminDashboardPageM
     public int Teachers => Users.Count(user => user.RoleValue == 2);
     public int InactiveUsers => Users.Count(user => !user.IsActive);
     public string? LoadErrorMessage { get; private set; }
-    public string? SuccessMessage { get; private set; }
     public IReadOnlyList<UserRoleOptionViewModel> RoleOptions => UserPresentationMapper.RoleOptions;
     public IReadOnlyList<int> PageSizeOptions => [10, 20, 30];
 
@@ -47,7 +46,7 @@ public sealed class IndexModel(IUsersService usersService) : AdminDashboardPageM
             return result;
 
         if (deactivated == true)
-            SuccessMessage = "Usuário desativado com sucesso.";
+            ShowSuccessToast("Usuário desativado com sucesso.");
 
         try
         {
@@ -64,6 +63,7 @@ public sealed class IndexModel(IUsersService usersService) : AdminDashboardPageM
         catch
         {
             LoadErrorMessage = "Não foi possível carregar os usuários da academia agora. Tente novamente em instantes.";
+            ShowErrorToast(LoadErrorMessage);
         }
 
         return result;
@@ -150,6 +150,7 @@ public sealed class IndexModel(IUsersService usersService) : AdminDashboardPageM
         catch
         {
             LoadErrorMessage = "Não foi possível desativar esse usuário agora. Tente novamente em instantes.";
+            ShowErrorToast(LoadErrorMessage);
             return await OnGetAsync(false, cancellationToken);
         }
     }
