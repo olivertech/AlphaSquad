@@ -98,8 +98,7 @@
                                     {
                                         <li x-data="{ menuKey: '@menuKey', open: false }"
                                             x-init="open = isMenuOpen(menuKey, @(isActive ? "true" : "false"))"
-                                            class="relative rounded-2xl"
-                                            @@click.outside="if (sidebarCompact) { open = false; setMenuOpen(menuKey, false); }">
+                                            class="rounded-2xl">
                                             <button type="button"
                                                     class="dashboard-menu-item w-full justify-between"
                                                     :class="[
@@ -142,13 +141,13 @@
                                                 }
                                             </ul>
 
-                                            <div x-show="open && sidebarCompact"
-                                                 x-transition.opacity.scale.origin.left
-                                                 class="absolute left-full top-0 z-50 ml-3 w-20 rounded-[1.5rem] border border-white/10 bg-[#242a33] p-2 shadow-2xl shadow-slate-950/40">
-                                                <div class="space-y-2">
-                                                    @foreach (var child in item.Children)
-                                                    {
-                                                        var childActive = child.Matches(currentPage);
+                                            <ul x-show="open && sidebarCompact"
+                                                x-collapse
+                                                class="mt-2 grid grid-cols-1 justify-items-center gap-2">
+                                                @foreach (var child in item.Children)
+                                                {
+                                                    var childActive = child.Matches(currentPage);
+                                                    <li>
                                                         <a asp-page="@child.PagePath"
                                                            @@click="rememberNavScroll()"
                                                            class="dashboard-compact-submenu-item tooltip tooltip-right @(childActive ? "dashboard-compact-submenu-item-active" : string.Empty)"
@@ -158,9 +157,9 @@
                                                                 <partial name="_MenuIcon" model="child.IconKey ?? string.Empty" />
                                                             </span>
                                                         </a>
-                                                    }
-                                                </div>
-                                            </div>
+                                                    </li>
+                                                }
+                                            </ul>
                                         </li>
                                     }
                                     else
