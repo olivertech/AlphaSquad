@@ -12,6 +12,8 @@ public interface IApiFacade
 
     Task DELETEApiClassesByIdBookAsync(string id, CancellationToken cancellationToken = default);
 
+    Task DELETEApiClassesByIdBookingsByBookingIdAsync(string id, Guid bookingId, CancellationToken cancellationToken = default);
+
     Task DELETEApiEventsByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task DELETEApiExercisesByIdAsync(Guid id, CancellationToken cancellationToken = default);

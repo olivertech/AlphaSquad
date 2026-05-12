@@ -10,6 +10,8 @@ public interface IClassesService
 
     Task DELETEApiClassesByIdBookAsync(string id, CancellationToken cancellationToken = default);
 
+    Task DELETEApiClassesByIdBookingsByBookingIdAsync(string id, Guid bookingId, CancellationToken cancellationToken = default);
+
     Task<List<GymClassResponseDto>?> GETApiClassesAsync(DateTimeOffset? dateFrom, DateTimeOffset? dateTo, bool? isActive, int? page, int? pageSize, CancellationToken cancellationToken = default);
 
     Task<List<ClassBookingManagementResponseDto>?> GETApiClassesBookingsByUserByUserIdAsync(Guid userId, DateTimeOffset? dateFrom, DateTimeOffset? dateTo, bool? onlyActiveClasses, CancellationToken cancellationToken = default);

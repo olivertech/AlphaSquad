@@ -78,6 +78,16 @@ public static class ClassEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status409Conflict);
 
+        group.MapDelete("/{id:guid}/bookings/{bookingId:guid}", DeleteBookingForUserAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("DeleteClassBookingForUser")
+            .WithSummary("Remove a reserva de um aluno em uma aula.")
+            .WithDescription("Permite que a gestão da academia cancele uma reserva feita para um aluno, útil para ajustes operacionais e atendimento presencial.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
+
         group.MapDelete("/{id:guid}/book", UnbookAsync)
             .WithName("UnbookClass")
             .WithSummary("Cancela a reserva da aula para o usuÃ¡rio autenticado.")
@@ -430,6 +440,31 @@ public static class ClassEndpoints
             appUser.Name,
             booking.BookedAt
         ));
+    }
+
+    /// <summary>
+    /// Remove administrativamente a reserva de um aluno em uma aula.
+    /// Esse fluxo ajuda a recepção e a gestão a liberar vagas quando a reserva precisa ser cancelada manualmente.
+    /// </summary>
+    private static async Task<IResult> DeleteBookingForUserAsync(Guid id,
+                                                                 Guid bookingId,
+                                                                 AppDbContext db,
+                                                                 HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+
+        var booking = await db.ClassBookings.FirstOrDefaultAsync(x =>
+            x.Id == bookingId &&
+            x.GymClassId == id &&
+            x.TenantId == tenantId);
+
+        if (booking is null)
+            return Results.NotFound();
+
+        db.ClassBookings.Remove(booking);
+        await db.SaveChangesAsync();
+
+        return Results.NoContent();
     }
 
     private static async Task<IResult> UnbookAsync(Guid id, AppDbContext db, HttpContext context)

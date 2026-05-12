@@ -26,6 +26,11 @@ public sealed class ClassesService : IClassesService
         return _apiFacade.DELETEApiClassesByIdBookAsync(id, cancellationToken);
     }
 
+    public Task DELETEApiClassesByIdBookingsByBookingIdAsync(string id, Guid bookingId, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.DELETEApiClassesByIdBookingsByBookingIdAsync(id, bookingId, cancellationToken);
+    }
+
     public Task<List<GymClassResponseDto>?> GETApiClassesAsync(DateTimeOffset? dateFrom, DateTimeOffset? dateTo, bool? isActive, int? page, int? pageSize, CancellationToken cancellationToken = default)
     {
         return _apiFacade.GETApiClassesAsync(dateFrom, dateTo, isActive, page, pageSize, cancellationToken);

@@ -203,6 +203,10 @@
                                 <th>Perfil</th>
                                 <th>Horário</th>
                                 <th>Reserva feita em</th>
+                                @if (Model.CanManageClasses)
+                                {
+                                    <th class="text-right">Ações</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -218,6 +222,21 @@
                                     </td>
                                     <td class="text-slate-600">@booking.ScheduleLabel</td>
                                     <td class="text-slate-600">@booking.BookedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    @if (Model.CanManageClasses)
+                                    {
+                                        <td class="text-right">
+                                            <form method="post"
+                                                  asp-page-handler="RemoveBooking"
+                                                  asp-route-id="@Model.ClassDetails.Id"
+                                                  asp-route-bookingId="@booking.BookingId"
+                                                  class="inline">
+                                                <button type="submit"
+                                                        class="rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>

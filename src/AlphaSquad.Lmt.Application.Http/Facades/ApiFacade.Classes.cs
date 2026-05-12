@@ -27,6 +27,14 @@ public sealed partial class ApiFacade
 
     }
 
+    public async Task DELETEApiClassesByIdBookingsByBookingIdAsync(string id, Guid bookingId, CancellationToken cancellationToken = default)
+    {
+        var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        var response = await client.DeleteAsync($"api/classes/{id}/bookings/{bookingId}", cancellationToken).ConfigureAwait(false);
+
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<List<GymClassResponseDto>?> GETApiClassesAsync(DateTimeOffset? dateFrom, DateTimeOffset? dateTo, bool? isActive, int? page, int? pageSize, CancellationToken cancellationToken = default)
     {
         var result = await _apiClient.Api.Classes.GetAsync(config =>

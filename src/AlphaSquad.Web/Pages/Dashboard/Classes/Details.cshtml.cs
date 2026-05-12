@@ -31,6 +31,7 @@ public sealed class DetailsModel(
         bool? updated,
         bool? deleted,
         bool? booked,
+        bool? unbooked,
         CancellationToken cancellationToken)
     {
         var result = PageOrLogin();
@@ -45,6 +46,8 @@ public sealed class DetailsModel(
             SuccessMessage = "A aula foi removida com sucesso.";
         else if (booked == true)
             SuccessMessage = "Reserva criada com sucesso para o aluno selecionado.";
+        else if (unbooked == true)
+            SuccessMessage = "Reserva removida com sucesso.";
 
         await LoadStudentOptionsAsync(cancellationToken);
         await LoadClassDataAsync(id, cancellationToken);
@@ -80,6 +83,29 @@ public sealed class DetailsModel(
         catch
         {
             BookingErrorMessage = "Nao foi possivel confirmar a reserva agora. Verifique se o aluno ja esta reservado ou se ainda existem vagas.";
+            await LoadStudentOptionsAsync(cancellationToken);
+            await LoadClassDataAsync(id, cancellationToken);
+            return Page();
+        }
+    }
+
+    public async Task<IActionResult> OnPostRemoveBookingAsync(Guid id, Guid bookingId, CancellationToken cancellationToken)
+    {
+        var result = PageOrLogin();
+        if (result is not PageResult)
+            return result;
+
+        if (!CanManageClasses)
+            return Forbid();
+
+        try
+        {
+            await classesService.DELETEApiClassesByIdBookingsByBookingIdAsync(id.ToString(), bookingId, cancellationToken);
+            return RedirectToPage(new { id, unbooked = true });
+        }
+        catch
+        {
+            BookingErrorMessage = "Nao foi possivel remover a reserva agora. Tente novamente em instantes.";
             await LoadStudentOptionsAsync(cancellationToken);
             await LoadClassDataAsync(id, cancellationToken);
             return Page();
