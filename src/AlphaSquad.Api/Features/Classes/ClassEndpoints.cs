@@ -120,9 +120,9 @@ public static class ClassEndpoints
         const string countSql = @"SELECT COUNT(*)
                                   FROM gym_classes gc
                                   WHERE gc.tenant_id = @TenantId
-                                    AND (@IsActive IS NULL OR gc.is_active = @IsActive)
-                                    AND (@DateFrom IS NULL OR gc.starts_at >= @DateFrom)
-                                    AND (@DateToExclusive IS NULL OR gc.starts_at < @DateToExclusive)";
+                                    AND (CAST(@IsActive AS boolean) IS NULL OR gc.is_active = @IsActive)
+                                    AND (CAST(@DateFrom AS timestamptz) IS NULL OR gc.starts_at >= @DateFrom)
+                                    AND (CAST(@DateToExclusive AS timestamptz) IS NULL OR gc.starts_at < @DateToExclusive)";
 
         const string itemsSql = @"SELECT gc.id,
                                          gc.name,
@@ -139,9 +139,9 @@ public static class ClassEndpoints
                                   FROM gym_classes gc
                                   LEFT JOIN users u ON u.id = gc.instructor_user_id AND u.tenant_id = @TenantId
                                   WHERE gc.tenant_id = @TenantId
-                                    AND (@IsActive IS NULL OR gc.is_active = @IsActive)
-                                    AND (@DateFrom IS NULL OR gc.starts_at >= @DateFrom)
-                                    AND (@DateToExclusive IS NULL OR gc.starts_at < @DateToExclusive)
+                                    AND (CAST(@IsActive AS boolean) IS NULL OR gc.is_active = @IsActive)
+                                    AND (CAST(@DateFrom AS timestamptz) IS NULL OR gc.starts_at >= @DateFrom)
+                                    AND (CAST(@DateToExclusive AS timestamptz) IS NULL OR gc.starts_at < @DateToExclusive)
                                   ORDER BY gc.starts_at ASC
                                   LIMIT @Limit OFFSET @Offset";
 
@@ -450,9 +450,9 @@ public static class ClassEndpoints
                               AND u.tenant_id = cb.tenant_id
                              WHERE cb.tenant_id = @TenantId
                                AND cb.user_id = @UserId
-                               AND (@OnlyActiveClasses IS NULL OR gc.is_active = @OnlyActiveClasses)
-                               AND (@DateFrom IS NULL OR gc.starts_at >= @DateFrom)
-                               AND (@DateToExclusive IS NULL OR gc.starts_at < @DateToExclusive)
+                               AND (CAST(@OnlyActiveClasses AS boolean) IS NULL OR gc.is_active = @OnlyActiveClasses)
+                               AND (CAST(@DateFrom AS timestamptz) IS NULL OR gc.starts_at >= @DateFrom)
+                               AND (CAST(@DateToExclusive AS timestamptz) IS NULL OR gc.starts_at < @DateToExclusive)
                              ORDER BY gc.starts_at ASC, cb.booked_at ASC";
 
         var items = await connection.QueryAsync<ClassBookingManagementResponse>(sql, new

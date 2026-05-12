@@ -42,6 +42,8 @@ body {
 }
 
 .dashboard-menu-item-compact {
+  display: flex;
+  align-items: center;
   justify-content: center;
   width: 3.75rem;
   min-height: 3.75rem;
@@ -134,12 +136,13 @@ body {
 }
 
 .dashboard-compact-submenu-item {
+  position: relative;
   display: flex;
-  height: 2.9rem;
-  width: 2.9rem;
+  height: 2.35rem;
+  width: 2.35rem;
   align-items: center;
   justify-content: center;
-  border-radius: 1rem;
+  border-radius: 0.8rem;
   margin-inline: auto;
   color: #cbd5e1;
   transition: all 0.2s ease;
@@ -154,6 +157,25 @@ body {
   background: rgba(255, 255, 255, 0.1);
   color: var(--tenant-primary);
 }
+
+.dashboard-compact-submenu-list {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 0.4rem;
+  padding-block: 0.15rem 0.25rem;
+}
+
+.dashboard-compact-submenu-item .dashboard-menu-icon {
+  height: 1.3rem;
+  width: 1.3rem;
+}
+
+.dashboard-compact-submenu-item .dashboard-material-icon {
+  font-size: 1.12rem;
+}
+
 
 .tenant-text {
   color: var(--tenant-primary);

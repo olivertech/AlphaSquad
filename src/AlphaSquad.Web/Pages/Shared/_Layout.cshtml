@@ -100,10 +100,10 @@
                                             x-init="open = isMenuOpen(menuKey, @(isActive ? "true" : "false"))"
                                             class="rounded-2xl">
                                             <button type="button"
-                                                    class="dashboard-menu-item w-full justify-between"
+                                                    class="dashboard-menu-item"
                                                     :class="[
                                                         open ? 'dashboard-menu-item-open' : 'text-slate-300 hover:bg-white/5 hover:text-white',
-                                                        sidebarCompact ? 'justify-center dashboard-menu-item-compact' : ''
+                                                        sidebarCompact ? 'dashboard-menu-item-compact' : 'w-full justify-between'
                                                     ]"
                                                     @@click="open = !open; setMenuOpen(menuKey, open); rememberNavScroll()">
                                                 <span class="flex items-center gap-3" :class="sidebarCompact ? 'justify-center' : ''">
@@ -143,16 +143,14 @@
 
                                             <ul x-show="open && sidebarCompact"
                                                 x-collapse
-                                                class="mt-2 grid grid-cols-1 justify-items-center gap-2">
+                                                class="dashboard-compact-submenu-list">
                                                 @foreach (var child in item.Children)
                                                 {
                                                     var childActive = child.Matches(currentPage);
                                                     <li>
                                                         <a asp-page="@child.PagePath"
                                                            @@click="rememberNavScroll()"
-                                                           class="dashboard-compact-submenu-item tooltip tooltip-right @(childActive ? "dashboard-compact-submenu-item-active" : string.Empty)"
-                                                           data-tip="@child.Label"
-                                                           title="@child.Label">
+                                                           class="dashboard-compact-submenu-item @(childActive ? "dashboard-compact-submenu-item-active" : string.Empty)">
                                                             <span class="dashboard-menu-icon">
                                                                 <partial name="_MenuIcon" model="child.IconKey ?? string.Empty" />
                                                             </span>
