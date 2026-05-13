@@ -1,8 +1,7 @@
-﻿using AlphaSquad.Lmt.Application.Contracts.Dtos;
+﻿using System.ComponentModel.DataAnnotations;
+using AlphaSquad.Lmt.Application.Contracts.Dtos;
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
+using AlphaSquad.Web.Security;
 
 namespace AlphaSquad.Web.Pages.Dashboard.Profile;
 
@@ -33,14 +32,13 @@ public class ProfileManageViewModel
 /// Tela unificada de gerenciamento de perfil.
 /// Centraliza a edição de dados pessoais, segurança e foto em um único local.
 /// </summary>
-public sealed class ManageModel(IProfileService profileService) : AdminDashboardPageModelBase {
+public sealed class ManageModel(IProfileService profileService) : AdminDashboardPageModelBase
+{
     [BindProperty]
     public ProfileManageViewModel Input { get; set; } = new();
     
     public string? LoadErrorMessage { get; private set; }
 
-    // Método auxiliar para garantir que os dados do perfil sejam sempre recarregados
-    // evitando que o formulário fique em branco em caso de erro ou postback.
     private async Task LoadProfileDataAsync(CancellationToken cancellationToken)
     {
         try
@@ -55,7 +53,7 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
         }
         catch
         {
-            // Erros de carregamento são tratados no OnGet, aqui apenas garantimos a tentativa de preencher.
+            // Erros de carregamento são tratados no OnGet.
         }
     }
 
@@ -176,8 +174,14 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
             var response = await profileService.PUTApiProfileMePhotoAsync(request, cancellationToken);
             if (response != null)
             {
+                var session = HttpContext.Session.GetDashboardSession();
+                if (session != null)
+                {
+                    session.ProfilePhotoUrl = response.ProfilePhotoUrl;
+                    HttpContext.Session.SetDashboardSession(session);
+                }
+
                 ShowSuccessToast("Foto atualizada com sucesso!");
-                // Redireciona para forçar o recarregamento completo dos dados via OnGet
                 return RedirectToPage();
             }
             
@@ -201,6 +205,14 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
         try
         {
             await profileService.DELETEApiProfileMePhotoAsync(cancellationToken);
+            
+            var session = HttpContext.Session.GetDashboardSession();
+            if (session != null)
+            {
+                session.ProfilePhotoUrl = null;
+                HttpContext.Session.SetDashboardSession(session);
+            }
+
             ShowSuccessToast("Foto removida com sucesso!");
         }
         catch
