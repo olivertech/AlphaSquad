@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Kiota.Abstractions;
 using AlphaSquad.Lmt.Application.Contracts.Dtos;
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
 
@@ -50,4 +50,5 @@ public sealed class EventsService : IEventsService
     {
         return _apiFacade.PUTApiEventsByIdAsync(id, request, cancellationToken);
     }
+
 }

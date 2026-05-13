@@ -1,0 +1,112 @@
+﻿@page "{id:guid}"
+@model AlphaSquad.Web.Pages.Dashboard.Events.EditModel
+@{
+    ViewData["Title"] = "Editar Evento";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li><a asp-page="/Dashboard/Events/Index" class="hover:text-slate-700">Eventos</a></li>
+            <li class="font-medium tenant-text">Editar Evento</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Editar Evento</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Atualize as informações do evento e a mídia publicitária.
+        </p>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[0.4fr_1fr]">
+        @* Coluna Esquerda: Visualização da Mídia *@
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70 p-8 flex flex-col items-center text-center gap-6">
+            <div class="relative group w-full">
+                @if (!string.IsNullOrEmpty(Model.CurrentMediaUrl))
+                {
+                    <img src="@Model.CurrentMediaUrl" 
+                         alt="Cartaz do Evento" 
+                         class="w-full rounded-2xl object-cover shadow-md transition group-hover:brightness-90" />
+                }
+                else
+                {
+                    <div class="flex h-64 w-full items-center justify-center rounded-2xl bg-slate-100 text-slate-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                }
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-lg font-semibold text-slate-900">Mídia do Evento</h3>
+                <p class="text-xs text-slate-500">O cartaz publicitário exibido no mural e no app.</p>
+            </div>
+        </section>
+
+        @* Coluna Direita: Formulário *@
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                <h2 class="text-xl font-semibold tenant-text">Detalhes do Evento</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Ajuste as informações do evento. Eventos encerrados não podem ser reativados.
+                </p>
+            </div>
+
+            @if (Model.LoadErrorMessage is null)
+            {
+                <form method="post" class="space-y-6 px-6 py-6 sm:px-8">
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <label class="form-control">
+                            <span class="mb-2 text-sm font-medium text-slate-700">Título do Evento</span>
+                            <input asp-for="Input.Title" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                            <span asp-validation-for="Input.Title" class="mt-2 text-sm text-rose-600"></span>
+                        </label>
+                        <label class="form-control">
+                            <span class="mb-2 text-sm font-medium text-slate-700">Localização</span>
+                            <input asp-for="Input.Location" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        </label>
+                    </div>
+
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Descrição do Evento</span>
+                        <textarea asp-for="Input.Description" rows="4" class="textarea textarea-bordered rounded-2xl border-slate-200 bg-white"></textarea>
+                    </label>
+
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <label class="form-control">
+                            <span class="mb-2 text-sm font-medium text-slate-700">Data de Início</span>
+                            <input asp-for="Input.StartsAt" type="datetime-local" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        </label>
+                        <label class="form-control">
+                            <span class="mb-2 text-sm font-medium text-slate-700">Data de Término</span>
+                            <input asp-for="Input.EndsAt" type="datetime-local" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                        </label>
+                    </div>
+
+                    <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
+                        <a asp-page="/Dashboard/Events/Index" 
+                           class="rounded-full border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                            Cancelar
+                        </a>
+                        <div class="flex gap-3">
+                            <form method="post" asp-page-handler="Delete" onsubmit="return confirm('Deseja remover este evento? Se ele já tiver iniciado, será apenas inativado.');">
+                                <button type="submit" class="rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
+                                    Remover Evento
+                                </button>
+                            </form>
+                            <button type="submit" 
+                                    class="rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95" 
+                                    style="background: var(--tenant-primary);">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            }
+        </section>
+    </div>
+
+    <partial name="_ValidationScriptsPartial" />
+</section>

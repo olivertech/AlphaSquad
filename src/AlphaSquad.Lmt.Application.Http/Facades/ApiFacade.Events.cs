@@ -15,7 +15,6 @@ public sealed partial class ApiFacade
 #pragma warning disable CS0618
         await _apiClient.Api.Events[id].DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 #pragma warning restore CS0618
-
     }
 
     public async Task<List<AcademyEventResponseDto>?> GETApiEventsAsync(bool? isActive, bool? onlyOutdoor, int? page, int? pageSize, CancellationToken cancellationToken = default)
@@ -29,7 +28,6 @@ public sealed partial class ApiFacade
         }, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.MapList<AcademyEventResponseDto>(result?.Items);
-
     }
 
     public async Task<AcademyEventResponseDto?> GETApiEventsByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -39,7 +37,6 @@ public sealed partial class ApiFacade
 #pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<AcademyEventResponseDto>(result);
-
     }
 
     public async Task<List<AcademyEventResponseDto>?> GETApiEventsFeedAsync(string cursor, int? limit, bool? onlyOutdoor, CancellationToken cancellationToken = default)
@@ -52,17 +49,13 @@ public sealed partial class ApiFacade
         }, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.MapList<AcademyEventResponseDto>(result?.Items);
-
     }
 
     public async Task<AcademyEventResponseDto?> POSTApiEventsAsync(CreateAcademyEventRequestDto request, CancellationToken cancellationToken = default)
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.CreateAcademyEventRequest>(request);
-
         var result = await _apiClient.Api.Events.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-
         return GeneratedDtoMapper.Map<AcademyEventResponseDto>(result);
-
     }
 
     public async Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdParticipateAsync(string id, CancellationToken cancellationToken = default)
@@ -72,18 +65,16 @@ public sealed partial class ApiFacade
 #pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<AcademyEventParticipationResponseDto>(result);
-
     }
 
     public async Task<AcademyEventResponseDto?> PUTApiEventsByIdAsync(Guid id, UpdateAcademyEventRequestDto request, CancellationToken cancellationToken = default)
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateAcademyEventRequest>(request);
-
 #pragma warning disable CS0618
         var result = await _apiClient.Api.Events[id].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
 #pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<AcademyEventResponseDto>(result);
-
     }
+
 }

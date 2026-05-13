@@ -1,7 +1,89 @@
-@page
+﻿@page
 @model AlphaSquad.Web.Pages.Dashboard.Events.IndexModel
 @{
-    ViewData["Title"] = "Eventos";
+    ViewData["Title"] = "Mural de Eventos";
 }
 
-<partial name="_DashboardPageFrame" model="Model.PageFrame" />
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li class="font-medium tenant-text">Eventos</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Mural de Eventos</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Explore as ações externas e promoções da academia. Chame seus alunos e expanda a marca AlphaSquad.
+        </p>
+    </div>
+
+    @if (Model.Events.Any())
+    {
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            @foreach (var ev in Model.Events)
+            {
+                <article class="group relative flex flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70 transition hover:-translate-y-1 hover:shadow-md">
+                    <div class="border-b border-slate-100 p-5">
+                        <h3 class="truncate text-lg font-bold text-slate-900" title="@ev.Title">@ev.Title</h3>
+                        <div class="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8H4.01a2 2 0 00-2 2v11a2 2 0 002 2h15.98a2 2 0 002-2v-11a2 2 0 00-2-2H9m0 0h.01" />
+                            </svg>
+                            <span>@(ev.StartsAt?.ToString("dd/MM/yyyy"))</span>
+                        </div>
+                    </div>
+
+                    <div class="aspect-square overflow-hidden bg-slate-100">
+                        @if (!string.IsNullOrEmpty(ev.MediaUrl))
+                        {
+                            <img src="@ev.MediaUrl" alt="@ev.Title" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                        }
+                        else
+                        {
+                            <div class="flex h-full w-full items-center justify-center text-slate-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="flex-1 p-5">
+                        <p class="line-clamp-3 text-sm leading-6 text-slate-600">
+                            @ev.Description
+                        </p>
+                    </div>
+
+                    <div class="flex gap-3 p-5 pt-0">
+                        <a asp-page="/Dashboard/Events/Enrollment" 
+                           asp-route-id="@ev.Id"
+                           class="flex-1 rounded-full bg-slate-900 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-slate-800">
+                            Inscrições
+                        </a>
+                        <a asp-page="/Dashboard/Events/Edit" 
+                           asp-route-id="@ev.Id"
+                           class="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-center text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+                            Editar
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 py-20 text-center">
+            <div class="rounded-full bg-white p-4 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8H4.01a2 2 0 00-2 2v11a2 2 0 002 2h15.98a2 2 0 002-2v-11a2 2 0 00-2-2H9m0 0h.01" />
+                </svg>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold text-slate-900">Nenhum evento ativo</h3>
+            <p class="mx-auto max-w-xs text-sm text-slate-500">
+                No momento não há eventos outdoor programados. Que tal criar um novo para atrair mais alunos?
+            </p>
+        </div>
+    }
+</section>
