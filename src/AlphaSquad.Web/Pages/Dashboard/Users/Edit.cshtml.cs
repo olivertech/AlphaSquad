@@ -1,12 +1,13 @@
-using AlphaSquad.Lmt.Application.Contracts.Dtos;
+﻿using AlphaSquad.Lmt.Application.Contracts.Dtos;
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
 using AlphaSquad.Web.Models;
 using AlphaSquad.Web.Users;
+using AlphaSquad.Web.Security;
 
 namespace AlphaSquad.Web.Pages.Dashboard.Users;
 
 /// <summary>
-/// Tela de edição administrativa de usuários.
+/// Tela de ediçao administrativa de usuários.
 /// Aqui a gestão pode ajustar nome, perfil e status sem precisar voltar ao backend diretamente.
 /// </summary>
 public sealed class EditModel(IUsersService usersService) : AdminDashboardPageModelBase
@@ -17,6 +18,8 @@ public sealed class EditModel(IUsersService usersService) : AdminDashboardPageMo
     public IReadOnlyList<UserRoleOptionViewModel> RoleOptions => UserPresentationMapper.RoleOptions;
     public Guid UserId { get; private set; }
     public string? LoadErrorMessage { get; private set; }
+    public bool IsAdmin { get; private set; }
+    public string CurrentRoleLabel => UserPresentationMapper.ToRoleLabel(Input.Role);
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -25,6 +28,9 @@ public sealed class EditModel(IUsersService usersService) : AdminDashboardPageMo
             return result;
 
         UserId = id;
+
+        ResolvePermissions();
+
         return await LoadUserAsync(id, cancellationToken);
     }
 
@@ -36,17 +42,29 @@ public sealed class EditModel(IUsersService usersService) : AdminDashboardPageMo
 
         UserId = id;
 
+        ResolvePermissions();
+
+        // Se a tela for reutilizada por outro perfil no futuro, a ausência do campo de role no
+        // form não pode invalidar o submit nem abrir espaço para alteração indireta via DevTools.
+        if (!IsAdmin)
+            ModelState.Remove($"{nameof(Input)}.{nameof(Input.Role)}");
+
         if (!ModelState.IsValid)
             return Page();
 
         try
         {
-            var response = await usersService.PUTApiUsersByIdAsync(id, new UpdateUserRequestDto
+            var updateRequest = new UpdateUserRequestDto
             {
                 Name = Input.Name.Trim(),
-                Role = Input.Role,
                 IsActive = Input.IsActive
-            }, cancellationToken);
+            };
+
+            // A Role só é enviada na requisição se o usuário logado for administrador.
+            if (IsAdmin)
+                updateRequest.Role = Input.Role;
+
+            var response = await usersService.PUTApiUsersByIdAsync(id, updateRequest, cancellationToken);
 
             if (response?.Id is Guid userId)
                 return RedirectToPage("/Dashboard/Users/Details", new { id = userId, updated = true });
@@ -61,9 +79,12 @@ public sealed class EditModel(IUsersService usersService) : AdminDashboardPageMo
         return Page();
     }
 
-    /// <summary>
-    /// Carrega o usuário para a tela de edição, convertendo o retorno da API em um formulário amigável.
-    /// </summary>
+    private void ResolvePermissions()
+    {
+        var session = HttpContext.Session.GetDashboardSession();
+        IsAdmin = string.Equals(session?.Role, DashboardRoles.Admin, StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task<IActionResult> LoadUserAsync(Guid id, CancellationToken cancellationToken)
     {
         try
