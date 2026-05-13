@@ -27,7 +27,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Tenants
         {
             get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.Current.CurrentRequestBuilder(PathParameters, RequestAdapter);
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.tenants.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.tenants.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.Item.TenantsItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.Item.TenantsItemRequestBuilder this[Guid position]
@@ -39,7 +39,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Tenants
                 return new global::AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.Item.TenantsItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.tenants.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.tenants.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.Item.TenantsItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]

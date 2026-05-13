@@ -24,7 +24,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Social.Posts
         {
             get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.Social.Posts.Feed.FeedRequestBuilder(PathParameters, RequestAdapter);
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.social.posts.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.social.posts.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Social.Posts.Item.PostsItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Social.Posts.Item.PostsItemRequestBuilder this[Guid position]
@@ -36,7 +36,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Social.Posts
                 return new global::AlphaSquad.Lmt.Application.ApiClient.Api.Social.Posts.Item.PostsItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.social.posts.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.social.posts.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Social.Posts.Item.PostsItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]

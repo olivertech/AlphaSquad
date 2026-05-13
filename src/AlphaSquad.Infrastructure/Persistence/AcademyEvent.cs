@@ -32,6 +32,15 @@ public class AcademyEvent
 
     public bool IsActive { get; set; }
 
+    /// <summary>
+    /// Senha aleatória gerada na criação do evento, usada para check-in.
+    /// </summary>
+    public string CheckInPassword { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indica se o evento foi confirmado/concluído pelo administrador.
+    /// </summary>
+    public bool IsCompleted { get; set; }
     public Guid CreatedByUserId { get; set; }
     public AppUser CreatedByUser { get; set; } = null!;
 

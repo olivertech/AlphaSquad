@@ -76,5 +76,20 @@ public sealed partial class ApiFacade
 
         return GeneratedDtoMapper.Map<AcademyEventResponseDto>(result);
     }
+    public async Task<List<AcademyEventParticipationResponseDto>?> GETApiEventsByIdParticipantsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await _apiClient.Api.Events[id].Participants.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return GeneratedDtoMapper.MapList<AcademyEventParticipationResponseDto>(result);
+    }
 
+    public async Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdParticipantsByUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var result = await _apiClient.Api.Events[id].Participants[userId].PostAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return GeneratedDtoMapper.Map<AcademyEventParticipationResponseDto>(result);
+    }
+
+    public async Task DELETEApiEventsByIdParticipantsByUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _apiClient.Api.Events[id].Participants[userId].DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
 }

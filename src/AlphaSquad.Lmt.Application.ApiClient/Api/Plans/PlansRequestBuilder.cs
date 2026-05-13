@@ -36,7 +36,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Plans
         {
             get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.Plans.Users.UsersRequestBuilder(PathParameters, RequestAdapter);
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.plans.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.plans.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Plans.Item.PlansItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Plans.Item.PlansItemRequestBuilder this[Guid position]
@@ -48,7 +48,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Plans
                 return new global::AlphaSquad.Lmt.Application.ApiClient.Api.Plans.Item.PlansItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.plans.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.plans.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Plans.Item.PlansItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]

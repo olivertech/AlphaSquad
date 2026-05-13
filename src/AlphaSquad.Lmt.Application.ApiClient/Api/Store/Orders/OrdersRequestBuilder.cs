@@ -24,7 +24,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Store.Orders
         {
             get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.Store.Orders.Me.MeRequestBuilder(PathParameters, RequestAdapter);
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.store.orders.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.store.orders.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Store.Orders.Item.OrdersItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Store.Orders.Item.OrdersItemRequestBuilder this[Guid position]
@@ -36,7 +36,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Store.Orders
                 return new global::AlphaSquad.Lmt.Application.ApiClient.Api.Store.Orders.Item.OrdersItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.store.orders.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.store.orders.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Store.Orders.Item.OrdersItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]

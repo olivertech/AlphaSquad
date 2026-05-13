@@ -18,7 +18,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Users
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class UsersRequestBuilder : BaseRequestBuilder
     {
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.users.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.users.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Users.Item.UsersItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Users.Item.UsersItemRequestBuilder this[Guid position]
@@ -30,7 +30,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Users
                 return new global::AlphaSquad.Lmt.Application.ApiClient.Api.Users.Item.UsersItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.users.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.users.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Users.Item.UsersItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]
@@ -60,7 +60,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Users
         {
         }
         /// <summary>
-        /// Retorna os usuários ativos vinculados ao tenant da sessão, ordenados por nome.
+        /// Retorna os usuários vinculados ao tenant da sessão, incluindo perfis ativos e inativos para uso administrativo.
         /// </summary>
         /// <returns>A List&lt;global::AlphaSquad.Lmt.Application.ApiClient.Models.UserResponse&gt;</returns>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
@@ -99,7 +99,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Users
             return await RequestAdapter.SendAsync<global::AlphaSquad.Lmt.Application.ApiClient.Models.UserResponse>(requestInfo, global::AlphaSquad.Lmt.Application.ApiClient.Models.UserResponse.CreateFromDiscriminatorValue, default, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Retorna os usuários ativos vinculados ao tenant da sessão, ordenados por nome.
+        /// Retorna os usuários vinculados ao tenant da sessão, incluindo perfis ativos e inativos para uso administrativo.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>

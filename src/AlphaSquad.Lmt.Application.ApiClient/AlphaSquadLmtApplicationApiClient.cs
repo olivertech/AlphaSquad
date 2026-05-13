@@ -25,7 +25,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient
             get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.ApiRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::AlphaSquad.Lmt.Application.ApiClient.ApiClient"/> and sets the default values.
+        /// Instantiates a new <see cref="global::AlphaSquad.Lmt.Application.ApiClient.AlphaSquadLmtApplicationApiClient"/> and sets the default values.
         /// </summary>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
         public AlphaSquadLmtApplicationApiClient(IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}", new Dictionary<string, object>())

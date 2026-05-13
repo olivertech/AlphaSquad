@@ -24,7 +24,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Classes
         {
             get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.Classes.Bookings.BookingsRequestBuilder(PathParameters, RequestAdapter);
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.classes.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.classes.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Classes.Item.ClassesItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Classes.Item.ClassesItemRequestBuilder this[Guid position]
@@ -36,7 +36,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Classes
                 return new global::AlphaSquad.Lmt.Application.ApiClient.Api.Classes.Item.ClassesItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.classes.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.classes.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Classes.Item.ClassesItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]

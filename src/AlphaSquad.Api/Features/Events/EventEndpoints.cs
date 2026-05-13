@@ -81,6 +81,38 @@ public static class EventEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status409Conflict);
 
+        group.MapGet("/{id:guid}/participants", GetParticipantsAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("GetEventParticipants")
+            .WithSummary("Lista os participantes inscritos em um evento.")
+            .WithDescription("Retorna a lista de usuários matriculados no evento selecionado (Acesso restrito a gestores).")
+            .Produces<List<AcademyEventParticipationResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{id:guid}/participants/{userId:guid}", AddParticipantAdminAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("AddParticipantToEvent")
+            .WithSummary("Adiciona um participante a um evento.")
+            .WithDescription("Permite que um gestor matricule um aluno manualmente em um evento outdoor apto.")
+            .Produces<AcademyEventParticipationResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
+
+        group.MapDelete("/{id:guid}/participants/{userId:guid}", RemoveParticipantAdminAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("RemoveParticipantFromEvent")
+            .WithSummary("Remove um participante de um evento.")
+            .WithDescription("Permite que um gestor cancele a matrícula de um aluno manualmente.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
     }
 
@@ -770,6 +802,94 @@ public static class EventEndpoints
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Lista os usuários inscritos em um evento específico.
+    /// </summary>
+    private static async Task<IResult> GetParticipantsAsync(Guid id, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+        
+        var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+        if (academyEvent is null)
+            return Results.NotFound();
+
+        var participations = await db.AcademyEventParticipations
+            .Include(x => x.User)
+            .Where(x => x.AcademyEventId == id && x.TenantId == tenantId)
+            .Select(p => new AcademyEventParticipationResponse(
+                p.Id,
+                p.AcademyEventId,
+                academyEvent.Title,
+                p.UserId,
+                p.User!.Name,
+                p.ParticipatedAt))
+            .ToListAsync();
+
+        return Results.Ok(participations);
+    }
+
+    /// <summary>
+    /// Permite que um gestor matricule um aluno manualmente em um evento.
+    /// </summary>
+    private static async Task<IResult> AddParticipantAdminAsync(Guid id, Guid userId, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+
+        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == userId && x.TenantId == tenantId && x.IsActive);
+        if (user is null)
+            return Results.BadRequest("User not found or inactive.");
+
+        var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+        if (academyEvent is null)
+            return Results.NotFound();
+
+        var alreadyParticipating = await db.AcademyEventParticipations.AnyAsync(x => 
+            x.AcademyEventId == id && x.UserId == userId && x.TenantId == tenantId);
+
+        if (alreadyParticipating)
+            return Results.Conflict("User is already participating in this event.");
+
+        var participation = new AcademyEventParticipation
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            AcademyEventId = id,
+            UserId = userId,
+            ParticipatedAt = DateTime.UtcNow
+        };
+
+        db.AcademyEventParticipations.Add(participation);
+        await db.SaveChangesAsync();
+
+        return Results.Created($"/api/events/{id}/participants/{userId}", new AcademyEventParticipationResponse(
+            participation.Id,
+            academyEvent.Id,
+            academyEvent.Title,
+            user.Id,
+            user.Name,
+            participation.ParticipatedAt
+        ));
+    }
+
+    /// <summary>
+    /// Permite que um gestor cancele a matrícula de um aluno manualmente.
+    /// </summary>
+    private static async Task<IResult> RemoveParticipantAdminAsync(Guid id, Guid userId, AppDbContext db, HttpContext context)
+    {
+        var tenantId = context.GetTenantId();
+
+        var participation = await db.AcademyEventParticipations.FirstOrDefaultAsync(x => 
+            x.AcademyEventId == id && x.UserId == userId && x.TenantId == tenantId);
+
+        if (participation is null)
+            return Results.NotFound("Participation not found.");
+
+        db.AcademyEventParticipations.Remove(participation);
+        await db.SaveChangesAsync();
+
+        return Results.NoContent();
     }
 
     /// <summary>

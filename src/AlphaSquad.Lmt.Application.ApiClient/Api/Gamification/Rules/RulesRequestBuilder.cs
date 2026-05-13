@@ -18,7 +18,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Gamification.Rules
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class RulesRequestBuilder : BaseRequestBuilder
     {
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.gamification.rules.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.gamification.rules.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Gamification.Rules.Item.RulesItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Gamification.Rules.Item.RulesItemRequestBuilder this[Guid position]
@@ -30,7 +30,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Gamification.Rules
                 return new global::AlphaSquad.Lmt.Application.ApiClient.Api.Gamification.Rules.Item.RulesItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.gamification.rules.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.gamification.rules.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Gamification.Rules.Item.RulesItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]

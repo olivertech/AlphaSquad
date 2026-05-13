@@ -50,5 +50,18 @@ public sealed class EventsService : IEventsService
     {
         return _apiFacade.PUTApiEventsByIdAsync(id, request, cancellationToken);
     }
+    public Task<List<AcademyEventParticipationResponseDto>?> GETApiEventsByIdParticipantsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.GETApiEventsByIdParticipantsAsync(id, cancellationToken);
+    }
 
+    public Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdParticipantsByUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.POSTApiEventsByIdParticipantsByUserIdAsync(id, userId, cancellationToken);
+    }
+
+    public Task DELETEApiEventsByIdParticipantsByUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.DELETEApiEventsByIdParticipantsByUserIdAsync(id, userId, cancellationToken);
+    }
 }

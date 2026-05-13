@@ -3,6 +3,7 @@
 using AlphaSquad.Lmt.Application.ApiClient.Api.Auth;
 using AlphaSquad.Lmt.Application.ApiClient.Api.Checkins;
 using AlphaSquad.Lmt.Application.ApiClient.Api.Classes;
+using AlphaSquad.Lmt.Application.ApiClient.Api.Configurations;
 using AlphaSquad.Lmt.Application.ApiClient.Api.Events;
 using AlphaSquad.Lmt.Application.ApiClient.Api.Exercises;
 using AlphaSquad.Lmt.Application.ApiClient.Api.Gamification;
@@ -43,6 +44,11 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Classes.ClassesRequestBuilder Classes
         {
             get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.Classes.ClassesRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The configurations property</summary>
+        public global::AlphaSquad.Lmt.Application.ApiClient.Api.Configurations.ConfigurationsRequestBuilder Configurations
+        {
+            get => new global::AlphaSquad.Lmt.Application.ApiClient.Api.Configurations.ConfigurationsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The events property</summary>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Events.EventsRequestBuilder Events

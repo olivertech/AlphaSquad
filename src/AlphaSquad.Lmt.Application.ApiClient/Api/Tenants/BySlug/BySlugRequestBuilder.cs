@@ -15,7 +15,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.BySlug
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class BySlugRequestBuilder : BaseRequestBuilder
     {
-        /// <summary>Gets an item from the AlphaSquad.ApiClient.api.tenants.bySlug.item collection</summary>
+        /// <summary>Gets an item from the AlphaSquad.Lmt.Application.ApiClient.api.tenants.bySlug.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.BySlug.Item.WithSlugItemRequestBuilder"/></returns>
         public global::AlphaSquad.Lmt.Application.ApiClient.Api.Tenants.BySlug.Item.WithSlugItemRequestBuilder this[string position]

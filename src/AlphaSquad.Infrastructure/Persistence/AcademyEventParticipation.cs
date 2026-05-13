@@ -18,4 +18,9 @@ public class AcademyEventParticipation
     public AppUser User { get; set; } = null!;
 
     public DateTime ParticipatedAt { get; set; }
+    
+    /// <summary>
+    /// Indica se o aluno confirmou presença informando a senha do evento no app.
+    /// </summary>
+    public bool IsPresent { get; set; }
 }
