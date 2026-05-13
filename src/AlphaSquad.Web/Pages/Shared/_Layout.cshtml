@@ -53,12 +53,12 @@
              @@click="sidebarOpen = false"></div>
 
         <aside class="fixed inset-y-0 left-0 z-40 flex bg-[#20252d] text-slate-200 transition-all duration-300"
-               :class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', sidebarCompact ? 'lg:w-24' : 'lg:w-72']">
+               x-bind:class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', sidebarCompact ? 'lg:w-24' : 'lg:w-72']">
             <div class="flex w-full flex-col">
-                <div class="flex h-24 items-center gap-4 border-b border-white/10 px-6" :class="sidebarCompact ? 'justify-center px-3' : ''">
+                <div class="flex h-24 items-center gap-4 border-b border-white/10 px-6" x-bind:class="sidebarCompact ? 'justify-center px-3' : ''">
                     <a asp-page="/Dashboard/Index"
                        class="flex items-center gap-3"
-                       :class="sidebarCompact ? 'justify-center' : ''"
+                       x-bind:class="sidebarCompact ? 'justify-center' : ''"
                        @@click="rememberNavScroll()">
                         @if (!string.IsNullOrWhiteSpace(session?.TenantLogoUrl))
                         {
@@ -101,12 +101,12 @@
                                             class="rounded-2xl">
                                             <button type="button"
                                                     class="dashboard-menu-item"
-                                                    :class="[
+                                                    x-bind:class="[
                                                         open ? 'dashboard-menu-item-open' : 'text-slate-300 hover:bg-white/5 hover:text-white',
                                                         sidebarCompact ? 'dashboard-menu-item-compact' : 'w-full justify-between'
                                                     ]"
                                                     @@click="open = !open; setMenuOpen(menuKey, open); rememberNavScroll()">
-                                                <span class="flex items-center gap-3" :class="sidebarCompact ? 'justify-center' : ''">
+                                                <span class="flex items-center gap-3" x-bind:class="sidebarCompact ? 'justify-center' : ''">
                                                     <span class="dashboard-menu-icon">
                                                         <partial name="_MenuIcon" model="item.IconKey ?? string.Empty" />
                                                     </span>
@@ -119,7 +119,7 @@
                                                      viewBox="0 0 24 24"
                                                      stroke="currentColor"
                                                      stroke-width="1.8"
-                                                     :class="open ? 'rotate-90 tenant-text' : ''">
+                                                     x-bind:class="open ? 'rotate-90 tenant-text' : ''">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" />
                                                 </svg>
                                             </button>
@@ -166,7 +166,7 @@
                                             <a asp-page="@item.PagePath"
                                                @@click="rememberNavScroll()"
                                                class="dashboard-menu-item @(isActive ? "dashboard-menu-item-active" : "text-slate-300 hover:bg-white/5 hover:text-white")"
-                                               :class="sidebarCompact ? 'justify-center dashboard-menu-item-compact' : ''">
+                                               x-bind:class="sidebarCompact ? 'justify-center dashboard-menu-item-compact' : ''">
                                                 <span class="dashboard-menu-icon">
                                                     <partial name="_MenuIcon" model="item.IconKey ?? string.Empty" />
                                                 </span>
@@ -183,7 +183,7 @@
         </aside>
 
         <div class="min-h-screen transition-all duration-300"
-             :class="sidebarCompact ? 'lg:pl-24' : 'lg:pl-72'">
+             x-bind:class="sidebarCompact ? 'lg:pl-24' : 'lg:pl-72'">
             <header class="sticky top-0 z-20 shadow-sm" style="background: var(--tenant-primary);">
                 <div class="flex h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                     <div class="flex items-center gap-3">

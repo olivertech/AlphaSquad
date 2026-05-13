@@ -42,23 +42,31 @@ public sealed partial class ApiFacade
 
     public async Task<UploadMediaResponseDto?> POSTApiMediaUploadAsync(MultipartBodyDto request, CancellationToken cancellationToken = default)
     {
-        var kiotaRequest = GeneratedDtoMapper.MapRequired<Microsoft.Kiota.Abstractions.MultipartBody>(request);
+        using var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new ByteArrayContent(request.Content);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(request.ContentType);
+        content.Add(fileContent, "file", request.FileName);
 
-        var result = await _apiClient.Api.Media.Upload.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var response = await client.PostAsync("/api/media/upload", content, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
 
-        return GeneratedDtoMapper.Map<UploadMediaResponseDto>(result);
-
+        var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        return System.Text.Json.JsonSerializer.Deserialize<UploadMediaResponseDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
     public async Task<TenantMediaResponseDto?> PUTApiMediaByIdFileAsync(string id, MultipartBodyDto request, CancellationToken cancellationToken = default)
     {
-        var kiotaRequest = GeneratedDtoMapper.MapRequired<Microsoft.Kiota.Abstractions.MultipartBody>(request);
+        using var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new ByteArrayContent(request.Content);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(request.ContentType);
+        content.Add(fileContent, "file", request.FileName);
 
-#pragma warning disable CS0618
-        var result = await _apiClient.Api.Media[id].File.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        var response = await client.PutAsync($"/api/media/{id}/file", content, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
 
-        return GeneratedDtoMapper.Map<TenantMediaResponseDto>(result);
-
+        var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        return System.Text.Json.JsonSerializer.Deserialize<TenantMediaResponseDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 }

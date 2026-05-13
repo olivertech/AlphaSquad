@@ -13,54 +13,49 @@ public sealed partial class ApiFacade
     public async Task DELETEApiProfileMePhotoAsync(CancellationToken cancellationToken = default)
     {
         await _apiClient.Api.Profile.Me.Photo.DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-
     }
 
     public async Task<ProfileResponseDto?> GETApiProfileMeAsync(CancellationToken cancellationToken = default)
     {
         var result = await _apiClient.Api.Profile.Me.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-
         return GeneratedDtoMapper.Map<ProfileResponseDto>(result);
-
     }
 
     public async Task<ProfileResponseDto?> PUTApiProfileMeAsync(UpdateProfileRequestDto request, CancellationToken cancellationToken = default)
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateProfileRequest>(request);
-
         var result = await _apiClient.Api.Profile.Me.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-
         return GeneratedDtoMapper.Map<ProfileResponseDto>(result);
-
     }
 
     public async Task<ProfileResponseDto?> PUTApiProfileMeEmailAsync(UpdateProfileEmailRequestDto request, CancellationToken cancellationToken = default)
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateProfileEmailRequest>(request);
-
         var result = await _apiClient.Api.Profile.Me.Email.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-
         return GeneratedDtoMapper.Map<ProfileResponseDto>(result);
-
     }
 
     public async Task<string?> PUTApiProfileMePasswordAsync(ChangePasswordRequestDto request, CancellationToken cancellationToken = default)
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.ChangePasswordRequest>(request);
-
         var result = await _apiClient.Api.Profile.Me.Password.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-
         return GeneratedDtoMapper.Map<string>(result);
-
     }
 
     public async Task<ProfileResponseDto?> PUTApiProfileMePhotoAsync(MultipartBodyDto request, CancellationToken cancellationToken = default)
     {
-        var kiotaRequest = GeneratedDtoMapper.MapRequired<Microsoft.Kiota.Abstractions.MultipartBody>(request);
+        // O IFormFile do ASP.NET exige multipart/form-data com Content-Disposition incluindo filename.
+        // O Kiota MultipartBody não gera esse formato, então usamos HttpClient direto para uploads.
+        using var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new ByteArrayContent(request.Content);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(request.ContentType);
+        content.Add(fileContent, "file", request.FileName);
 
-        var result = await _apiClient.Api.Profile.Me.Photo.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var response = await client.PutAsync("/api/profile/me/photo", content, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
 
-        return GeneratedDtoMapper.Map<ProfileResponseDto>(result);
-
+        var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        return System.Text.Json.JsonSerializer.Deserialize<ProfileResponseDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 }

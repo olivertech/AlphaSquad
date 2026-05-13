@@ -50,7 +50,9 @@ public sealed partial class ApiFacade
 
     public async Task<TenantCurrentResponseDto?> PUTApiTenantsCurrentLogoAsync(MultipartBodyDto request, CancellationToken cancellationToken = default)
     {
-        var kiotaRequest = GeneratedDtoMapper.MapRequired<Microsoft.Kiota.Abstractions.MultipartBody>(request);
+        var kiotaRequest = new MultipartBody();
+        var fileStream = new MemoryStream(request.Content);
+        kiotaRequest.AddOrReplacePart("file", request.ContentType, fileStream);
 
         var result = await _apiClient.Api.Tenants.Current.Logo.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
 

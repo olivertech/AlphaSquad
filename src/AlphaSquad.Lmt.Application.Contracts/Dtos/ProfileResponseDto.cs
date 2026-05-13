@@ -1,17 +1,12 @@
-namespace AlphaSquad.Lmt.Application.Contracts.Dtos;
+﻿namespace AlphaSquad.Lmt.Application.Contracts.Dtos;
 
+/// <summary>
+/// Resposta detalhada do perfil do usuário.
+/// </summary>
 public sealed class ProfileResponseDto
 {
-    public string? ActivePlan { get; set; }
-    public int? ActivePlanDurationDays { get; set; }
-    public Guid? ActivePlanId { get; set; }
-    public double? ActivePlanPrice { get; set; }
-    public DateTimeOffset? CreatedAt { get; set; }
-    public string? Email { get; set; }
-    public bool? IsActive { get; set; }
-    public string? Name { get; set; }
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
     public string? ProfilePhotoUrl { get; set; }
-    public int? Role { get; set; }
-    public Guid? UserId { get; set; }
-    public string? Username { get; set; }
 }

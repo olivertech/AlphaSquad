@@ -1,8 +1,9 @@
-namespace AlphaSquad.Lmt.Application.Contracts.Dtos;
+﻿namespace AlphaSquad.Lmt.Application.Contracts.Dtos;
 
+/// <summary>
+/// Requisição para atualização do e-mail do perfil.
+/// </summary>
 public sealed class UpdateProfileEmailRequestDto
 {
-    public string? CurrentEmail { get; set; }
-    public string? CurrentPassword { get; set; }
-    public string? NewEmail { get; set; }
+    public string Email { get; set; } = string.Empty;
 }

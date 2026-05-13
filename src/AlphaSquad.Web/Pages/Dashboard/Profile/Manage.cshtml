@@ -1,0 +1,243 @@
+@page
+@model AlphaSquad.Web.Pages.Dashboard.Profile.ManageModel
+@{
+    ViewData["Title"] = "Gerenciar Perfil";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li><a asp-page="/Dashboard/Profile/Index" class="hover:text-slate-700">Meu Perfil</a></li>
+            <li class="font-medium tenant-text">Gerenciamento</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Gerenciar Perfil</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Atualize seus dados pessoais, configurações de segurança e sua foto de perfil em um único lugar.
+        </p>
+    </div>
+
+    @if (Model.LoadErrorMessage is null)
+    {
+        <div class="grid gap-6 lg:grid-cols-[0.6fr_1fr]">
+            @* Coluna Esquerda: Foto e Ações Rápidas *@
+            <div class="space-y-6">
+                <section x-data="photoUpload()" class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70 p-8 flex flex-col items-center text-center gap-6">
+                    @* Área de exibição da foto — alterna entre foto atual, preview local e iniciais *@
+                    <div class="relative group">
+                        @* Preview local: exibido quando o usuário selecionou uma nova imagem mas ainda não confirmou *@
+                        <template x-if="previewUrl">
+                            <img :src="previewUrl"
+                                 alt="Preview da nova foto"
+                                 class="h-40 w-40 rounded-full object-cover border-4 border-emerald-200 shadow-md ring-4 ring-emerald-100/60 transition" />
+                        </template>
+
+                        @* Foto atual do servidor: exibida quando não há preview pendente *@
+                        <template x-if="!previewUrl">
+                            @if (!string.IsNullOrEmpty(Model.Input.PhotoUrl))
+                            {
+                                <img src="@Model.Input.PhotoUrl"
+                                     alt="Sua Foto"
+                                     class="h-40 w-40 rounded-full object-cover border-4 border-slate-100 shadow-md transition group-hover:brightness-90" />
+                            }
+                            else
+                            {
+                                <div class="flex h-40 w-40 items-center justify-center rounded-full text-5xl font-semibold text-white shadow-md"
+                                     style="background: var(--tenant-primary);">
+                                    ?
+                                </div>
+                            }
+                        </template>
+
+                        @* Badge visual indicando que há uma foto pendente de confirmação *@
+                        <div x-show="previewUrl" x-transition
+                             class="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg ring-2 ring-white">
+                            <span class="material-symbols-rounded text-base">edit</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h3 class="text-lg font-semibold text-slate-900">Foto de Perfil</h3>
+                        <p class="text-xs text-slate-500" x-show="!previewUrl">Sua imagem visível para todos no Dashboard.</p>
+                        <p class="text-xs font-medium text-emerald-600" x-show="previewUrl" x-transition>
+                            Prévia da nova foto — confirme ou cancele abaixo.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-3 w-full pt-4">
+                        @* Formulário de upload: o input file fica sempre disponível para seleção *@
+                        <form method="post" asp-page-handler="UploadPhoto" enctype="multipart/form-data"
+                              x-ref="uploadForm" class="flex flex-col gap-2">
+
+                            @* Área clicável para selecionar arquivo — visível apenas quando NÃO há preview *@
+                            <label x-show="!previewUrl"
+                                   class="flex cursor-pointer flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-2xl bg-slate-50 hover:bg-slate-100 transition relative overflow-hidden">
+                                <span class="material-symbols-rounded text-2xl text-slate-400 mb-1">add_a_photo</span>
+                                <span class="text-xs font-semibold text-slate-600">Alterar Foto</span>
+                                <input type="file" name="photo" accept="image/*"
+                                       x-ref="fileInput"
+                                       class="absolute inset-0 opacity-0 cursor-pointer"
+                                       @@change="onFileSelected($event)" />
+                            </label>
+
+                            @* Botões de ação: visíveis apenas quando HÁ preview pendente *@
+                            <div x-show="previewUrl" x-transition class="flex flex-col gap-2">
+                                <button type="submit"
+                                        class="rounded-full px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                                        style="background: var(--tenant-primary);">
+                                    <span class="flex items-center justify-center gap-2">
+                                        <span class="material-symbols-rounded text-lg">check_circle</span>
+                                        Confirmar e Salvar Foto
+                                    </span>
+                                </button>
+                                <button type="button"
+                                        @@click="cancelPreview()"
+                                        class="rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50">
+                                    <span class="flex items-center justify-center gap-2">
+                                        <span class="material-symbols-rounded text-lg">undo</span>
+                                        Cancelar Alteração
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+
+                        @* Botão de remover foto: visível apenas quando há foto atual no servidor e NÃO há preview *@
+                        @if (!string.IsNullOrEmpty(Model.Input.PhotoUrl))
+                        {
+                            <form method="post" asp-page-handler="DeletePhoto" x-show="!previewUrl">
+                                <button type="submit" class="w-full rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100">
+                                    <span class="flex items-center justify-center gap-2">
+                                        <span class="material-symbols-rounded text-base">delete</span>
+                                        Remover Foto
+                                    </span>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </section>
+
+                <a asp-page="/Dashboard/Profile/Index"
+                   class="flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                    Cancelar e Voltar
+                </a>
+            </div>
+
+            @* Coluna Direita: Formulários de Dados e Segurança *@
+            <div class="space-y-6">
+                @* Seção 1: Dados Pessoais *@
+                <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                    <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                        <h2 class="text-xl font-semibold tenant-text">Dados Pessoais</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">Mantenha seu nome e e-mail atualizados.</p>
+                    </div>
+                    <form method="post" asp-page-handler="Update" class="p-6 sm:px-8 py-6 space-y-6">
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <label class="form-control">
+                                <span class="mb-2 text-sm font-medium text-slate-700">Nome Completo</span>
+                                <input asp-for="Input.Name" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                                <span asp-validation-for="Input.Name" class="mt-2 text-sm text-rose-600"></span>
+                            </label>
+                            <label class="form-control">
+                                <span class="mb-2 text-sm font-medium text-slate-700">E-mail</span>
+                                <input asp-for="Input.Email" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                                <span asp-validation-for="Input.Email" class="mt-2 text-sm text-rose-600"></span>
+                            </label>
+                        </div>
+                        <div class="flex justify-end border-t border-slate-100 pt-6">
+                            <button type="submit" class="rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95" style="background: var(--tenant-primary);">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                @* Seção 2: Segurança da Conta *@
+                <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                    <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                        <h2 class="text-xl font-semibold tenant-text">Segurança da Conta</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">Altere sua senha de acesso com segurança.</p>
+                    </div>
+                    <form method="post" asp-page-handler="ChangePassword" class="p-6 sm:px-8 py-6 space-y-6">
+                        <div class="space-y-4">
+                            <label class="form-control">
+                                <span class="mb-2 text-sm font-medium text-slate-700">Senha Atual</span>
+                                <input asp-for="Input.CurrentPassword" type="password" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                            </label>
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <label class="form-control">
+                                    <span class="mb-2 text-sm font-medium text-slate-700">Nova Senha</span>
+                                    <input asp-for="Input.NewPassword" type="password" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                                    <span asp-validation-for="Input.NewPassword" class="mt-2 text-sm text-rose-600"></span>
+                                </label>
+                                <label class="form-control">
+                                    <span class="mb-2 text-sm font-medium text-slate-700">Confirmar Nova Senha</span>
+                                    <input asp-for="Input.ConfirmPassword" type="password" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                                    <span asp-validation-for="Input.ConfirmPassword" class="mt-2 text-sm text-rose-600"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex justify-end border-t border-slate-100 pt-6">
+                            <button type="submit" class="rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95" style="background: var(--tenant-primary);">
+                                Atualizar Senha
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    }
+    else if (Model.LoadErrorMessage is not null)
+    {
+        <div class="rounded-[2rem] border border-rose-200 bg-rose-50 p-6 text-center">
+            <p class="text-rose-700 font-medium">@Model.LoadErrorMessage</p>
+            <a asp-page="/Dashboard/Profile/Index" class="mt-4 inline-block rounded-full bg-rose-600 px-6 py-2 text-sm font-semibold text-white transition hover:brightness-95">
+                Voltar ao Perfil
+            </a>
+        </div>
+    }
+</section>
+
+<partial name="_ValidationScriptsPartial" />
+
+@section Scripts {
+    <script>
+        // Componente Alpine para preview local de foto de perfil.
+        // O arquivo só é enviado ao backend quando o usuário confirma.
+        // Se cancelar, o preview é descartado e a foto original permanece intacta.
+        function photoUpload() {
+            return {
+                previewUrl: null,
+
+                onFileSelected(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    // Validação básica de tipo no client para evitar envio desnecessário.
+                    if (!file.type.startsWith('image/')) {
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // Gera preview local via FileReader — nenhum dado é enviado ao servidor aqui.
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.previewUrl = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                cancelPreview() {
+                    // Descarta o preview e limpa o input file.
+                    // Como nada foi enviado ao servidor, a foto original permanece inalterada.
+                    this.previewUrl = null;
+                    if (this.$refs.fileInput) {
+                        this.$refs.fileInput.value = '';
+                    }
+                }
+            };
+        }
+    </script>
+}
