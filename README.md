@@ -135,6 +135,8 @@ Area pessoal para concentrar dados basicos da conta e relacao do usuario com a a
 Capacidades previstas:
 
 - nome, email e username
+- celular com DDD
+- data de nascimento
 - foto de perfil
 - troca de senha
 - plano ativo
@@ -149,6 +151,7 @@ Status atual:
 - `PUT /api/profile/me/photo`
 - `DELETE /api/profile/me/photo`
 - validacao mais forte de formato de e-mail e username
+- suporte a celular com DDD e data de nascimento
 - `ActivePlan` agora ligado a um dominio real de planos
 - integracao com `login` e `/api/auth/me` para devolver dados de profile junto da sessao
 
@@ -178,6 +181,28 @@ Capacidades atuais:
 - eventos outdoor com confirmacao de participacao pelo aluno
 - integracao com gamificacao via `OutdoorEventParticipation`
 - bloqueio do modulo por feature opcional `EVENTS`
+- preparo para destaques internos de aniversariantes e vencedores da gamificacao
+
+Direcoes de produto ja consideradas para a proxima evolucao:
+
+- eventos internos de mural para destacar aniversariantes do dia ou do periodo
+- eventos internos de mural para divulgar vencedores da gamificacao
+- possibilidade de um destaque ser apenas um banner temporario, sem obrigar data e hora de realizacao
+- uso de imagem ilustrativa ou foto real enviada pela administracao
+- destaque desses eventos no app dos alunos
+
+### 5.1. Notificacoes do app
+
+O produto tambem passa a considerar oficialmente uma central de notificacoes para o aplicativo do aluno.
+
+Regras previstas:
+
+- o app exibira um icone de sino com indicacao de novas notificacoes
+- notificacoes poderao representar eventos, novas aulas, novos produtos, informes da academia e outros avisos institucionais
+- o aluno acessara uma lista de notificacoes com filtros por `lidas`, `nao lidas` e `todas`
+- ao abrir uma notificacao, o conteudo sera exibido em uma modal rolavel
+- uma notificacao aberta deve ser marcada como lida e sair da lista de pendencias
+- as notificacoes descritas nesta fase serao gerais, visiveis para todos os alunos com acesso ao app
 
 ## Arquitetura em resumo
 

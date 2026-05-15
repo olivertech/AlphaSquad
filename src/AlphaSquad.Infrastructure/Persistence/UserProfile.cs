@@ -28,6 +28,16 @@ public class UserProfile
     public string? Username { get; set; }
 
     /// <summary>
+    /// Celular do usuario com DDD para contatos eventuais da academia.
+    /// </summary>
+    public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// Data de nascimento usada para campanhas e destaque de aniversariantes.
+    /// </summary>
+    public DateTime? BirthDate { get; set; }
+
+    /// <summary>
     /// URL publica da foto de profile.
     /// E mantida para simplificar a leitura no app cliente.
     /// </summary>

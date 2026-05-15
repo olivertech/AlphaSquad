@@ -18,6 +18,13 @@ public class ProfileManageViewModel
     [EmailAddress(ErrorMessage = "E-mail inválido.")]
     public string Email { get; set; } = string.Empty;
 
+    [Display(Name = "Celular")]
+    [RegularExpression(@"^[0-9()\-\s+]{10,20}$", ErrorMessage = "Informe um celular válido com DDD.")]
+    public string? PhoneNumber { get; set; }
+
+    [Display(Name = "Data de nascimento")]
+    public string? BirthDate { get; set; }
+
     public string CurrentPassword { get; set; } = string.Empty;
     
     [StringLength(100, MinimumLength = 6, ErrorMessage = "A nova senha deve ter pelo menos 6 caracteres.")]
@@ -48,6 +55,8 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
             {
                 Input.Name = response.Name ?? string.Empty;
                 Input.Email = response.Email ?? string.Empty;
+                Input.PhoneNumber = response.PhoneNumber;
+                Input.BirthDate = response.BirthDate;
                 Input.PhotoUrl = response.ProfilePhotoUrl;
             }
         }
@@ -94,8 +103,12 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
 
         try
         {
-            await profileService.PUTApiProfileMeAsync(new UpdateProfileRequestDto { Name = Input.Name.Trim() }, cancellationToken);
-            await profileService.PUTApiProfileMeEmailAsync(new UpdateProfileEmailRequestDto { Email = Input.Email.Trim() }, cancellationToken);
+            await profileService.PUTApiProfileMeAsync(new UpdateProfileRequestDto
+            {
+                Name = Input.Name.Trim(),
+                PhoneNumber = Input.PhoneNumber?.Trim(),
+                BirthDate = Input.BirthDate?.Trim()
+            }, cancellationToken);
 
             ShowSuccessToast("Perfil atualizado com sucesso!");
             return RedirectToPage("/Dashboard/Profile/Index");

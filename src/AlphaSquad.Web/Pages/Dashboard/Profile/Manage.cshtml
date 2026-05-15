@@ -131,7 +131,7 @@
                 <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
                     <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
                         <h2 class="text-xl font-semibold tenant-text">Dados Pessoais</h2>
-                        <p class="mt-1 text-sm leading-6 text-slate-500">Mantenha seu nome e e-mail atualizados.</p>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">Mantenha nome, e-mail, celular e data de nascimento atualizados.</p>
                     </div>
                     <form method="post" asp-page-handler="Update" class="p-6 sm:px-8 py-6 space-y-6">
                         <div class="grid gap-5 md:grid-cols-2">
@@ -142,8 +142,19 @@
                             </label>
                             <label class="form-control">
                                 <span class="mb-2 text-sm font-medium text-slate-700">E-mail</span>
-                                <input asp-for="Input.Email" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                                <input asp-for="Input.Email" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-500" readonly />
+                                <span class="mt-2 text-xs text-slate-500">O e-mail fica visível aqui, mas a troca segura será tratada em um fluxo próprio.</span>
                                 <span asp-validation-for="Input.Email" class="mt-2 text-sm text-rose-600"></span>
+                            </label>
+                            <label class="form-control">
+                                <span class="mb-2 text-sm font-medium text-slate-700">Celular com DDD</span>
+                                <input asp-for="Input.PhoneNumber" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="(11) 99999-9999" />
+                                <span asp-validation-for="Input.PhoneNumber" class="mt-2 text-sm text-rose-600"></span>
+                            </label>
+                            <label class="form-control">
+                                <span class="mb-2 text-sm font-medium text-slate-700">Data de nascimento</span>
+                                <input asp-for="Input.BirthDate" type="date" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                                <span asp-validation-for="Input.BirthDate" class="mt-2 text-sm text-rose-600"></span>
                             </label>
                         </div>
                         <div class="flex justify-end border-t border-slate-100 pt-6">

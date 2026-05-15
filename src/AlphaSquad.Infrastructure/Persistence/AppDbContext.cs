@@ -364,6 +364,8 @@ public class AppDbContext : DbContext
             entity.Property(x => x.TenantId).HasColumnName("tenant_id");
             entity.Property(x => x.UserId).HasColumnName("user_id");
             entity.Property(x => x.Username).HasColumnName("username").HasMaxLength(50);
+            entity.Property(x => x.PhoneNumber).HasColumnName("phone_number").HasMaxLength(20);
+            entity.Property(x => x.BirthDate).HasColumnName("birth_date").HasColumnType("date");
             entity.Property(x => x.ProfilePhotoUrl).HasColumnName("profile_photo_url");
             entity.Property(x => x.ProfileMediaId).HasColumnName("profile_media_id");
             entity.Property(x => x.ActivePlan).HasColumnName("active_plan").HasMaxLength(150);

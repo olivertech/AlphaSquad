@@ -12,6 +12,8 @@ public class ProfileViewModel
 {
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? BirthDate { get; set; }
     public string? PhotoUrl { get; set; }
     public string Initials => string.IsNullOrWhiteSpace(Name) ? "??" : new string(Name.ToUpper().Take(2).ToArray());
 }
@@ -46,6 +48,8 @@ public sealed class IndexModel(IProfileService profileService) : AdminDashboardP
             {
                 Name = response.Name ?? "Usuário",
                 Email = response.Email ?? string.Empty,
+                PhoneNumber = response.PhoneNumber,
+                BirthDate = response.BirthDate,
                 PhotoUrl = response.ProfilePhotoUrl
             };
         }

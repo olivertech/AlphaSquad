@@ -9,6 +9,8 @@ public record ProfileResponse(
     string Name,
     string Email,
     string? Username,
+    string? PhoneNumber,
+    string? BirthDate,
     UserRole Role,
     bool IsActive,
     string? ProfilePhotoUrl,
@@ -24,7 +26,9 @@ public record ProfileResponse(
 /// </summary>
 public record UpdateProfileRequest(
     string Name,
-    string? Username
+    string? Username,
+    string? PhoneNumber,
+    string? BirthDate
 );
 
 /// <summary>

@@ -74,6 +74,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Permitir troca de e-mail com validacoes proprias
 - [x] Permitir upload e troca de foto de perfil
 - [x] Permitir definicao de `username`
+- [x] Permitir cadastro de celular com DDD e data de nascimento
 - [x] Expor plano ativo do usuario a partir de um dominio real de planos
 - [x] Integrar area de profile com troca de senha ja existente
 
@@ -126,6 +127,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Integrar participacao outdoor com `OutdoorEventParticipation`
 - [x] Evoluir o contrato para infinite scroll padronizado
 - [ ] Preparar confirmacao administrativa de presenca se a operacao exigir validacao manual
+- [ ] Evoluir o mural para destaques internos de aniversariantes e vencedores da gamificacao
 
 ## Fase 8: Social Network
 
@@ -164,6 +166,8 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Padronizar contratos `page-based` com `PagedResponse<T>` nos principais endpoints de listagem
 - [ ] Padronizar metadados de cards para app mobile
 - [ ] Estruturar notificacoes futuras
+- [ ] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas
+- [ ] Exibir notificacoes do app em modal rolavel com marcacao automatica como lida
 - [ ] Definir padrao de imagens, thumbnails e tamanhos
 
 ## Fase 11: Multi-language V2

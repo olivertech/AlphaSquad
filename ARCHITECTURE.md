@@ -558,6 +558,8 @@ Capacidades previstas:
 - foto de perfil
 - username
 - dados basicos
+- celular com DDD
+- data de nascimento
 - plano ativo
 - troca de senha
 
@@ -575,6 +577,7 @@ Estado atual:
 
 - leitura do proprio profile
 - atualizacao de nome e username
+- atualizacao de celular com DDD e data de nascimento
 - troca de e-mail com validacao de senha atual e unicidade por tenant
 - upload e remocao de foto de profile
 - validacao mais forte de e-mail e username
@@ -631,6 +634,7 @@ Capacidades atuais:
 - eventos outdoor com participacao do aluno
 - integracao da participacao outdoor com gamificacao
 - feature opcional `EVENTS` por tenant
+- preparo para publicacoes internas de mural, como aniversariantes e vencedores da gamificacao
 
 Entidades atuais:
 
@@ -645,6 +649,25 @@ Consideracoes arquiteturais:
 - participacao outdoor dispara `OutdoorEventParticipation` apenas para usuarios `Student`
 - a ausencia da feature `EVENTS` bloqueia o modulo para o tenant atual
 - reaproveitamento do padrao de feed e paginação
+
+### Notificacoes do app
+
+O AlphaSquad passa a considerar oficialmente uma central de notificacoes para os alunos no aplicativo mobile.
+
+Regras previstas:
+
+- o app exibira um sino com indicacao de novas notificacoes
+- notificacoes podem representar eventos, novas aulas, novos produtos, informes da academia e destaques institucionais
+- o aluno podera listar notificacoes por `lidas`, `nao lidas` e `todas`
+- ao abrir uma notificacao, o conteudo sera exibido em uma modal rolavel
+- a leitura deve marcar a notificacao como lida e retirar o item da lista de pendencias
+- na primeira fase, essas notificacoes serao gerais para todos os alunos habilitados no app
+
+Direcao arquitetural recomendada:
+
+- separar publicacao institucional do controle de leitura por usuario
+- permitir que aniversariantes e vencedores da gamificacao gerem destaque no mural e notificacoes sem depender de um evento presencial
+- manter a base pronta para segmentacao futura, sem exigir personalizacao por publico neste primeiro recorte
 
 ## Multi-idioma em V2
 

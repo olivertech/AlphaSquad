@@ -28,6 +28,14 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         public double? ActivePlanPrice { get; set; }
         /// <summary>The createdAt property</summary>
         public DateTimeOffset? CreatedAt { get; set; }
+        /// <summary>The birthDate property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? BirthDate { get; set; }
+#nullable restore
+#else
+        public string BirthDate { get; set; }
+#endif
         /// <summary>The email property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -45,6 +53,14 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
 #nullable restore
 #else
         public string Name { get; set; }
+#endif
+        /// <summary>The phoneNumber property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? PhoneNumber { get; set; }
+#nullable restore
+#else
+        public string PhoneNumber { get; set; }
 #endif
         /// <summary>The profilePhotoUrl property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -88,10 +104,12 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
                 { "activePlanDurationDays", n => { ActivePlanDurationDays = n.GetIntValue(); } },
                 { "activePlanId", n => { ActivePlanId = n.GetGuidValue(); } },
                 { "activePlanPrice", n => { ActivePlanPrice = n.GetDoubleValue(); } },
+                { "birthDate", n => { BirthDate = n.GetStringValue(); } },
                 { "createdAt", n => { CreatedAt = n.GetDateTimeOffsetValue(); } },
                 { "email", n => { Email = n.GetStringValue(); } },
                 { "isActive", n => { IsActive = n.GetBoolValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
+                { "phoneNumber", n => { PhoneNumber = n.GetStringValue(); } },
                 { "profilePhotoUrl", n => { ProfilePhotoUrl = n.GetStringValue(); } },
                 { "role", n => { Role = n.GetIntValue(); } },
                 { "userId", n => { UserId = n.GetGuidValue(); } },
@@ -109,10 +127,12 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
             writer.WriteIntValue("activePlanDurationDays", ActivePlanDurationDays);
             writer.WriteGuidValue("activePlanId", ActivePlanId);
             writer.WriteDoubleValue("activePlanPrice", ActivePlanPrice);
+            writer.WriteStringValue("birthDate", BirthDate);
             writer.WriteDateTimeOffsetValue("createdAt", CreatedAt);
             writer.WriteStringValue("email", Email);
             writer.WriteBoolValue("isActive", IsActive);
             writer.WriteStringValue("name", Name);
+            writer.WriteStringValue("phoneNumber", PhoneNumber);
             writer.WriteStringValue("profilePhotoUrl", ProfilePhotoUrl);
             writer.WriteIntValue("role", Role);
             writer.WriteGuidValue("userId", UserId);

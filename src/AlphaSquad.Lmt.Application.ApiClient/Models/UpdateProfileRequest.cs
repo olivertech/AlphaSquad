@@ -12,6 +12,14 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
     public partial class UpdateProfileRequest : IParsable
     #pragma warning restore CS1591
     {
+        /// <summary>The birthDate property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? BirthDate { get; set; }
+#nullable restore
+#else
+        public string BirthDate { get; set; }
+#endif
         /// <summary>The name property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -27,6 +35,14 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
 #nullable restore
 #else
         public string Username { get; set; }
+#endif
+        /// <summary>The phoneNumber property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? PhoneNumber { get; set; }
+#nullable restore
+#else
+        public string PhoneNumber { get; set; }
 #endif
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
@@ -46,7 +62,9 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
+                { "birthDate", n => { BirthDate = n.GetStringValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
+                { "phoneNumber", n => { PhoneNumber = n.GetStringValue(); } },
                 { "username", n => { Username = n.GetStringValue(); } },
             };
         }
@@ -57,7 +75,9 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
+            writer.WriteStringValue("birthDate", BirthDate);
             writer.WriteStringValue("name", Name);
+            writer.WriteStringValue("phoneNumber", PhoneNumber);
             writer.WriteStringValue("username", Username);
         }
     }

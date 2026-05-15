@@ -58,7 +58,7 @@
                             <p class="text-lg text-slate-500">@Model.Profile.Email</p>
                         </div>
 
-                        <div class="grid gap-4 sm:grid-cols-2 max-w-2xl">
+                        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 max-w-5xl">
                             <article class="rounded-[1.5rem] border border-slate-200 p-4">
                                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Identificação</p>
                                 <p class="mt-2 text-base font-medium text-slate-900">@Model.Profile.Name</p>
@@ -66,6 +66,14 @@
                             <article class="rounded-[1.5rem] bg-slate-50 p-4">
                                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Contato</p>
                                 <p class="mt-2 text-base font-medium text-slate-900">@Model.Profile.Email</p>
+                            </article>
+                            <article class="rounded-[1.5rem] border border-slate-200 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Celular</p>
+                                <p class="mt-2 text-base font-medium text-slate-900">@(string.IsNullOrWhiteSpace(Model.Profile.PhoneNumber) ? "Não informado" : Model.Profile.PhoneNumber)</p>
+                            </article>
+                            <article class="rounded-[1.5rem] bg-slate-50 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Nascimento</p>
+                                <p class="mt-2 text-base font-medium text-slate-900">@(string.IsNullOrWhiteSpace(Model.Profile.BirthDate) ? "Não informado" : Model.Profile.BirthDate)</p>
                             </article>
                         </div>
 

@@ -2,6 +2,24 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-15] - Profile Contact Fields & Notification Planning
+
+### Added
+
+- Campos de `celular com DDD` e `data de nascimento` no dominio de `Profile`.
+- Atualizacao do dashboard de perfil para exibir e editar esses dados.
+
+### Changed
+
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` agora registram formalmente a preparacao do produto para:
+- destaques internos de aniversariantes no mural
+- divulgacao de vencedores da gamificacao
+- futura central de notificacoes do app com leitura por usuario, filtros por status e modal rolavel
+
+### Noted
+
+- A notificacao prevista nesta fase e geral para todos os alunos do app, sem segmentacao individual obrigatoria no primeiro recorte.
+
 ## [2026-05-15] - Dashboard Toast Standard
 
 ### Changed

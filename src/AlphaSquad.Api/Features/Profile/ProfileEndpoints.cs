@@ -85,14 +85,16 @@ public static class ProfileEndpoints
 
     /// <summary>
     /// Atualiza os dados basicos do profile.
-    /// Neste primeiro recorte, o proprio usuario pode editar nome e username.
+    /// Neste recorte, o proprio usuario pode editar nome, username, celular e data de nascimento.
     /// </summary>
     private static async Task<IResult> UpdateMeAsync(UpdateProfileRequest request, AppDbContext db, HttpContext context)
     {
         var tenantId = context.GetTenantId();
         var userId = GetUserId(context.User);
         var normalizedUsername = NormalizeUsername(request.Username);
-        var validation = ValidateProfileUpdateRequest(request.Name, normalizedUsername);
+        var normalizedPhoneNumber = NormalizePhoneNumber(request.PhoneNumber);
+        var normalizedBirthDate = NormalizeBirthDate(request.BirthDate);
+        var validation = ValidateProfileUpdateRequest(request.Name, normalizedUsername, normalizedPhoneNumber, normalizedBirthDate);
         if (validation is not null)
             return validation;
 
@@ -128,6 +130,8 @@ public static class ProfileEndpoints
         }
 
         profile.Username = normalizedUsername;
+        profile.PhoneNumber = normalizedPhoneNumber;
+        profile.BirthDate = normalizedBirthDate;
         profile.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
@@ -343,6 +347,11 @@ public static class ProfileEndpoints
                                     u.name,
                                     u.email,
                                     up.username,
+                                    up.phone_number AS PhoneNumber,
+                                    CASE
+                                        WHEN up.birth_date IS NULL THEN NULL
+                                        ELSE TO_CHAR(up.birth_date, 'YYYY-MM-DD')
+                                    END AS BirthDate,
                                     u.role,
                                     u.is_active AS IsActive,
                                     up.profile_photo_url AS ProfilePhotoUrl,
@@ -409,9 +418,9 @@ public static class ProfileEndpoints
     }
 
     /// <summary>
-    /// Valida nome e username do profile.
+    /// Valida nome, username, celular e data de nascimento do profile.
     /// </summary>
-    private static IResult? ValidateProfileUpdateRequest(string name, string? username)
+    private static IResult? ValidateProfileUpdateRequest(string name, string? username, string? phoneNumber, DateTime? birthDate)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Results.BadRequest("Name is required.");
@@ -431,7 +440,63 @@ public static class ProfileEndpoints
                 return Results.BadRequest("Username may contain only lowercase letters, numbers, dot and underscore.");
         }
 
+        if (!string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            var digits = GetPhoneDigits(phoneNumber);
+            if (digits.Length < 10 || digits.Length > 11)
+                return Results.BadRequest("Phone number must include area code and a valid Brazilian mobile or landline number.");
+        }
+
+        if (birthDate.HasValue)
+        {
+            if (birthDate.Value.Date > DateTime.UtcNow.Date)
+                return Results.BadRequest("Birth date cannot be in the future.");
+
+            if (birthDate.Value.Date < new DateTime(1900, 1, 1))
+                return Results.BadRequest("Birth date is invalid.");
+        }
+
         return null;
+    }
+
+    /// <summary>
+    /// Normaliza o celular do usuario para um formato legivel padrao com DDD.
+    /// </summary>
+    private static string? NormalizePhoneNumber(string? phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            return null;
+
+        var digits = GetPhoneDigits(phoneNumber);
+        if (digits.Length == 11)
+            return $"({digits[..2]}) {digits.Substring(2, 5)}-{digits.Substring(7, 4)}";
+
+        if (digits.Length == 10)
+            return $"({digits[..2]}) {digits.Substring(2, 4)}-{digits.Substring(6, 4)}";
+
+        return phoneNumber.Trim();
+    }
+
+    /// <summary>
+    /// Converte a data textual do frontend para uma data persistivel.
+    /// </summary>
+    private static DateTime? NormalizeBirthDate(string? birthDate)
+    {
+        if (string.IsNullOrWhiteSpace(birthDate))
+            return null;
+
+        if (!DateTime.TryParse(birthDate.Trim(), out var parsed))
+            return DateTime.MinValue;
+
+        return DateTime.SpecifyKind(parsed.Date, DateTimeKind.Utc);
+    }
+
+    /// <summary>
+    /// Extrai apenas os digitos do telefone para validacao e formatacao.
+    /// </summary>
+    private static string GetPhoneDigits(string phoneNumber)
+    {
+        return Regex.Replace(phoneNumber, "[^0-9]", string.Empty);
     }
 
     /// <summary>
