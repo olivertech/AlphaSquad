@@ -1,6 +1,7 @@
 namespace AlphaSquad.Api.Features.Profile;
 
 using System.Net.Mail;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -485,7 +486,8 @@ public static class ProfileEndpoints
         if (string.IsNullOrWhiteSpace(birthDate))
             return null;
 
-        if (!DateTime.TryParse(birthDate.Trim(), out var parsed))
+        var acceptedFormats = new[] { "dd/MM/yyyy", "yyyy-MM-dd" };
+        if (!DateTime.TryParseExact(birthDate.Trim(), acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
             return DateTime.MinValue;
 
         return DateTime.SpecifyKind(parsed.Date, DateTimeKind.Utc);

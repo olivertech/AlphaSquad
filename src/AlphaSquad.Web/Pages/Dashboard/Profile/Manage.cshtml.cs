@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using AlphaSquad.Lmt.Application.Contracts.Dtos;
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
 using AlphaSquad.Web.Security;
@@ -23,6 +24,7 @@ public class ProfileManageViewModel
     public string? PhoneNumber { get; set; }
 
     [Display(Name = "Data de nascimento")]
+    [RegularExpression(@"^\d{2}/\d{2}/\d{4}$", ErrorMessage = "Informe a data no formato dd/mm/aaaa.")]
     public string? BirthDate { get; set; }
 
     public string CurrentPassword { get; set; } = string.Empty;
@@ -56,7 +58,7 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
                 Input.Name = response.Name ?? string.Empty;
                 Input.Email = response.Email ?? string.Empty;
                 Input.PhoneNumber = response.PhoneNumber;
-                Input.BirthDate = response.BirthDate;
+                Input.BirthDate = FormatBirthDateForDisplay(response.BirthDate);
                 Input.PhotoUrl = response.ProfilePhotoUrl;
             }
         }
@@ -95,6 +97,11 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
         var result = PageOrLogin();
         if (result is not PageResult) return result;
 
+        // O card de dados pessoais nao deve depender das validacoes do card de senha.
+        ModelState.Remove($"{nameof(Input)}.{nameof(Input.CurrentPassword)}");
+        ModelState.Remove($"{nameof(Input)}.{nameof(Input.NewPassword)}");
+        ModelState.Remove($"{nameof(Input)}.{nameof(Input.ConfirmPassword)}");
+
         if (!ModelState.IsValid) 
         {
             await LoadProfileDataAsync(cancellationToken);
@@ -110,7 +117,7 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
                 BirthDate = Input.BirthDate?.Trim()
             }, cancellationToken);
 
-            ShowSuccessToast("Perfil atualizado com sucesso!");
+            ShowSuccessToast("Perfil atualizado com sucesso!", persist: true);
             return RedirectToPage("/Dashboard/Profile/Index");
         }
         catch
@@ -126,10 +133,42 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
         var result = PageOrLogin();
         if (result is not PageResult) return result;
 
-        if (string.IsNullOrWhiteSpace(Input.NewPassword) || Input.NewPassword != Input.ConfirmPassword)
+        // O card de senha nao deve depender das validacoes do card de dados pessoais.
+        ModelState.Remove($"{nameof(Input)}.{nameof(Input.Name)}");
+        ModelState.Remove($"{nameof(Input)}.{nameof(Input.Email)}");
+        ModelState.Remove($"{nameof(Input)}.{nameof(Input.PhoneNumber)}");
+        ModelState.Remove($"{nameof(Input)}.{nameof(Input.BirthDate)}");
+
+        if (string.IsNullOrWhiteSpace(Input.CurrentPassword))
         {
-            ModelState.AddModelError(string.Empty, "As senhas novas não coincidem ou estão vazias.");
             await LoadProfileDataAsync(cancellationToken);
+            ShowWarningToast("Informe sua senha atual para confirmar a alteração.");
+            return Page();
+        }
+
+        if (string.IsNullOrWhiteSpace(Input.NewPassword))
+        {
+            await LoadProfileDataAsync(cancellationToken);
+            ShowWarningToast("Informe a nova senha.");
+            return Page();
+        }
+
+        if (Input.NewPassword != Input.ConfirmPassword)
+        {
+            await LoadProfileDataAsync(cancellationToken);
+            ShowWarningToast("A confirmação da nova senha não confere.");
+            return Page();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await LoadProfileDataAsync(cancellationToken);
+            var validationMessage = ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage)
+                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+            ShowWarningToast(validationMessage ?? "Revise os dados informados para a nova senha.");
             return Page();
         }
 
@@ -144,18 +183,18 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
             var response = await profileService.PUTApiProfileMePasswordAsync(request, cancellationToken);
             if (!string.IsNullOrEmpty(response))
             {
-                ShowSuccessToast("Senha alterada com sucesso!");
+                ShowSuccessToast("Senha alterada com sucesso!", persist: true);
                 return RedirectToPage();
             }
             
             await LoadProfileDataAsync(cancellationToken);
-            ShowErrorToast("Falha ao alterar senha. Verifique as credenciais.");
+            ShowErrorToast("Não foi possível alterar a senha. Verifique os dados informados e tente novamente.");
             return Page();
         }
-        catch
+        catch (Exception exception)
         {
             await LoadProfileDataAsync(cancellationToken);
-            ShowErrorToast("Ocorreu um erro ao processar a alteração de senha.");
+            ShowErrorToast(BuildFriendlyPasswordErrorMessage(exception));
             return Page();
         }
     }
@@ -194,7 +233,7 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
                     HttpContext.Session.SetDashboardSession(session);
                 }
 
-                ShowSuccessToast("Foto atualizada com sucesso!");
+                ShowSuccessToast("Foto atualizada com sucesso!", persist: true);
                 return RedirectToPage();
             }
             
@@ -226,7 +265,7 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
                 HttpContext.Session.SetDashboardSession(session);
             }
 
-            ShowSuccessToast("Foto removida com sucesso!");
+            ShowSuccessToast("Foto removida com sucesso!", persist: true);
         }
         catch
         {
@@ -234,5 +273,50 @@ public sealed class ManageModel(IProfileService profileService) : AdminDashboard
         }
 
         return RedirectToPage();
+    }
+
+    /// <summary>
+    /// Converte a data textual retornada pela API para o formato amigavel do dashboard.
+    /// </summary>
+    private static string? FormatBirthDateForDisplay(string? birthDate)
+    {
+        if (string.IsNullOrWhiteSpace(birthDate))
+            return null;
+
+        var acceptedFormats = new[] { "yyyy-MM-dd", "dd/MM/yyyy" };
+        if (!DateTime.TryParseExact(birthDate, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            return birthDate;
+
+        return parsed.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Traduz os erros tecnicos da API de profile para mensagens claras no dashboard.
+    /// </summary>
+    private static string BuildFriendlyPasswordErrorMessage(Exception exception)
+    {
+        var fullMessage = $"{exception.Message} {exception.InnerException?.Message}".Trim();
+        if (string.IsNullOrWhiteSpace(fullMessage))
+            return "Ocorreu um erro ao processar a alteração de senha.";
+
+        if (fullMessage.Contains("Current password is incorrect", StringComparison.OrdinalIgnoreCase))
+            return "A senha atual informada está incorreta.";
+
+        if (fullMessage.Contains("New password must be different", StringComparison.OrdinalIgnoreCase))
+            return "A nova senha precisa ser diferente da senha atual.";
+
+        if (fullMessage.Contains("at least 6 characters", StringComparison.OrdinalIgnoreCase))
+            return "A nova senha deve ter pelo menos 6 caracteres.";
+
+        if (fullMessage.Contains("Current and new passwords are required", StringComparison.OrdinalIgnoreCase))
+            return "Informe sua senha atual e a nova senha para concluir a alteração.";
+
+        if (fullMessage.Contains("400", StringComparison.OrdinalIgnoreCase))
+            return "Não foi possível alterar a senha porque algum dado enviado é inválido.";
+
+        if (fullMessage.Contains("401", StringComparison.OrdinalIgnoreCase) || fullMessage.Contains("unauthorized", StringComparison.OrdinalIgnoreCase))
+            return "Sua sessão não é mais válida. Entre novamente e tente alterar a senha.";
+
+        return "Ocorreu um erro ao processar a alteração de senha. Tente novamente em instantes.";
     }
 }

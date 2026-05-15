@@ -2,6 +2,7 @@
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Globalization;
 
 namespace AlphaSquad.Web.Pages.Dashboard.Profile;
 
@@ -49,7 +50,7 @@ public sealed class IndexModel(IProfileService profileService) : AdminDashboardP
                 Name = response.Name ?? "Usuário",
                 Email = response.Email ?? string.Empty,
                 PhoneNumber = response.PhoneNumber,
-                BirthDate = response.BirthDate,
+                BirthDate = FormatBirthDateForDisplay(response.BirthDate),
                 PhotoUrl = response.ProfilePhotoUrl
             };
         }
@@ -60,5 +61,20 @@ public sealed class IndexModel(IProfileService profileService) : AdminDashboardP
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Padroniza a data de nascimento para exibicao visual no formato brasileiro.
+    /// </summary>
+    private static string? FormatBirthDateForDisplay(string? birthDate)
+    {
+        if (string.IsNullOrWhiteSpace(birthDate))
+            return null;
+
+        var acceptedFormats = new[] { "yyyy-MM-dd", "dd/MM/yyyy" };
+        if (!DateTime.TryParseExact(birthDate, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            return birthDate;
+
+        return parsed.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
     }
 }

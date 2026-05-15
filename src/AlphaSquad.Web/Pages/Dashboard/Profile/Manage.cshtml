@@ -148,12 +148,12 @@
                             </label>
                             <label class="form-control">
                                 <span class="mb-2 text-sm font-medium text-slate-700">Celular com DDD</span>
-                                <input asp-for="Input.PhoneNumber" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="(11) 99999-9999" />
+                                <input asp-for="Input.PhoneNumber" inputmode="numeric" maxlength="15" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="(11) 99999-9999" />
                                 <span asp-validation-for="Input.PhoneNumber" class="mt-2 text-sm text-rose-600"></span>
                             </label>
                             <label class="form-control">
                                 <span class="mb-2 text-sm font-medium text-slate-700">Data de nascimento</span>
-                                <input asp-for="Input.BirthDate" type="date" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                                <input asp-for="Input.BirthDate" inputmode="numeric" maxlength="10" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="dd/mm/aaaa" />
                                 <span asp-validation-for="Input.BirthDate" class="mt-2 text-sm text-rose-600"></span>
                             </label>
                         </div>
@@ -250,5 +250,54 @@
                 }
             };
         }
+
+        // Aplica mascara amigavel de celular brasileiro com DDD no campo de profile.
+        function formatPhoneNumber(value) {
+            const digits = value.replace(/\D/g, '').slice(0, 11);
+
+            if (digits.length <= 2) {
+                return digits.length ? `(${digits}` : '';
+            }
+
+            if (digits.length <= 6) {
+                return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+            }
+
+            if (digits.length <= 10) {
+                return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+            }
+
+            return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const phoneInput = document.getElementById('Input_PhoneNumber');
+            const birthDateInput = document.getElementById('Input_BirthDate');
+            if (!phoneInput) {
+                return;
+            }
+
+            phoneInput.value = formatPhoneNumber(phoneInput.value ?? '');
+            phoneInput.addEventListener('input', (event) => {
+                event.target.value = formatPhoneNumber(event.target.value ?? '');
+            });
+
+            if (birthDateInput) {
+                birthDateInput.addEventListener('input', (event) => {
+                    const digits = (event.target.value ?? '').replace(/\D/g, '').slice(0, 8);
+                    if (digits.length <= 2) {
+                        event.target.value = digits;
+                        return;
+                    }
+
+                    if (digits.length <= 4) {
+                        event.target.value = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+                        return;
+                    }
+
+                    event.target.value = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                });
+            }
+        });
     </script>
 }
