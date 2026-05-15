@@ -1,113 +1,122 @@
-﻿@page "{id:guid}"
+@page "{id:guid}"
 @model AlphaSquad.Web.Pages.Dashboard.Events.EnrollmentModel
 @{
-    ViewData["Title"] = "Inscrições no Evento";
+    ViewData["Title"] = "Inscrições do evento";
 }
 
 <section class="space-y-6">
     <nav class="breadcrumbs px-1 text-sm text-slate-500">
         <ul>
             <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>Operação</li>
             <li><a asp-page="/Dashboard/Events/Index" class="hover:text-slate-700">Eventos</a></li>
             <li class="font-medium tenant-text">Inscrições</li>
         </ul>
     </nav>
 
     <div class="space-y-2 px-1">
-        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Inscrições</h1>
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Inscrições do evento</h1>
         <p class="max-w-3xl text-sm leading-7 text-slate-500">
-            Gerencie a lista de alunos e professores participantes do evento: <span class="font-bold text-slate-900">@Model.Enrollment.EventTitle</span>.
+            Matricule alunos no evento <span class="font-semibold text-slate-900">@Model.Enrollment.EventTitle</span>, acompanhe presenças confirmadas e remova inscrições quando necessário.
         </p>
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-        @* Coluna 1: Usuários Disponíveis *@
-        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
-            <div class="border-b border-slate-200 px-6 py-5 sm:px-8 flex justify-between items-center">
-                <h2 class="text-xl font-semibold tenant-text">Disponíveis</h2>
-                <span class="badge badge-ghost text-xs">@Model.Enrollment.AvailableUsers.Count</span>
-            </div>
+    <div class="grid gap-6 xl:grid-cols-2">
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <div>
+                        <h2 class="text-xl font-semibold tenant-text">Alunos disponíveis</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Selecione quem ainda deve ser matriculado neste evento.
+                        </p>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">@Model.Enrollment.AvailableStudents.Count</span>
+                </div>
 
-            <div class="max-h-[60vh] overflow-y-auto p-6 space-y-3">
-                @if (Model.Enrollment.AvailableUsers.Any())
-                {
-                    @foreach (var user in Model.Enrollment.AvailableUsers)
+                <div class="max-h-[36rem] space-y-3 overflow-y-auto px-6 py-6 sm:px-8">
+                    @if (Model.Enrollment.AvailableStudents.Any())
                     {
-                        <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-slate-300 transition bg-slate-50/50">
-                            <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
-                                    @user.Name.Substring(0, Math.Min(2, user.Name.Length)).ToUpper()
+                        @foreach (var student in Model.Enrollment.AvailableStudents)
+                        {
+                            <article class="flex items-center justify-between gap-4 rounded-[1.25rem] border border-slate-200 px-4 py-4">
+                                <div class="min-w-0">
+                                    <p class="truncate text-base font-semibold text-slate-900">@student.Name</p>
+                                    <p class="truncate text-sm text-slate-500">@student.Email</p>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-900">@user.Name</p>
-                                    <p class="text-xs text-slate-500">@user.Email</p>
-                                </div>
-                            </div>
-                            <form method="post" asp-page-handler="Enroll" asp-route-eventId="@Model.Enrollment.EventId" asp-route-userId="@user.Id">
-                                <button type="submit" class="btn btn-sm btn-ghost text-emerald-600 hover:bg-emerald-50 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </button>
-                            </form>
+                                <form method="post" asp-page-handler="Enroll" asp-route-eventId="@Model.Enrollment.EventId" asp-route-userId="@student.Id">
+                                    <button type="submit"
+                                            class="rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                                            style="background: var(--tenant-primary);"
+                                            @(Model.Enrollment.EventIsCompleted ? "disabled" : null)>
+                                        Matricular
+                                    </button>
+                                </form>
+                            </article>
+                        }
+                    }
+                    else
+                    {
+                        <div class="rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                            Não há mais alunos disponíveis para matrícula.
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="text-center py-10">
-                        <p class="text-sm text-slate-400">Nenhum usuário disponível para inscrição.</p>
+                </div>
+            </section>
+
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <div>
+                        <h2 class="text-xl font-semibold tenant-text">Alunos matriculados</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Acompanhe quem já está inscrito e quem confirmou presença pelo check-in do aplicativo.
+                        </p>
                     </div>
-                }
-            </div>
-        </section>
+                    <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">@Model.Enrollment.EnrolledStudents.Count</span>
+                </div>
 
-        @* Coluna 2: Usuários Inscritos *@
-        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
-            <div class="border-b border-slate-200 px-6 py-5 sm:px-8 flex justify-between items-center">
-                <h2 class="text-xl font-semibold tenant-text">Inscritos</h2>
-                <span class="badge badge-success text-white text-xs">@Model.Enrollment.EnrolledUsers.Count</span>
-            </div>
-
-            <div class="max-h-[60vh] overflow-y-auto p-6 space-y-3">
-                @if (Model.Enrollment.EnrolledUsers.Any())
-                {
-                    @foreach (var user in Model.Enrollment.EnrolledUsers)
+                <div class="max-h-[36rem] space-y-3 overflow-y-auto px-6 py-6 sm:px-8">
+                    @if (Model.Enrollment.EnrolledStudents.Any())
                     {
-                        <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-100 bg-white shadow-sm">
-                            <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
-                                    @user.Name.Substring(0, Math.Min(2, user.Name.Length)).ToUpper()
+                        @foreach (var student in Model.Enrollment.EnrolledStudents)
+                        {
+                            <article class="flex items-center justify-between gap-4 rounded-[1.25rem] border border-slate-200 px-4 py-4">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <p class="truncate text-base font-semibold text-slate-900">@student.Name</p>
+                                        <span class="rounded-full px-3 py-1 text-[11px] font-semibold @(student.IsPresent ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700")">
+                                            @(student.IsPresent ? "Presente" : "Matriculado")
+                                        </span>
+                                    </div>
+                                    <p class="truncate text-sm text-slate-500">@student.Email</p>
+                                    <p class="mt-1 text-xs text-slate-400">
+                                        Matrícula feita em @(student.ParticipatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")
+                                    </p>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-900">@user.Name</p>
-                                    <p class="text-xs text-slate-500">@user.Email</p>
-                                </div>
-                            </div>
-                            <form method="post" asp-page-handler="Remove" asp-route-eventId="@Model.Enrollment.EventId" asp-route-userId="@user.Id">
-                                <button type="submit" class="btn btn-sm btn-ghost text-rose-500 hover:bg-rose-50 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </form>
+                                <form method="post" asp-page-handler="Remove" asp-route-eventId="@Model.Enrollment.EventId" asp-route-userId="@student.Id">
+                                    <button type="submit"
+                                            class="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                                            onclick="return confirm('Deseja remover este aluno do evento?');"
+                                            @(Model.Enrollment.EventIsCompleted ? "disabled" : null)>
+                                        Remover
+                                    </button>
+                                </form>
+                            </article>
+                        }
+                    }
+                    else
+                    {
+                        <div class="rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                            Ainda não há alunos matriculados neste evento.
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="text-center py-10">
-                        <p class="text-sm text-slate-400">Ninguém inscrito neste evento ainda.</p>
-                    </div>
-                }
-            </div>
-        </section>
-    </div>
+                </div>
+            </section>
+        </div>
 
     <div class="flex justify-end">
-        <a asp-page="/Dashboard/Events/Index" 
+        <a asp-page="/Dashboard/Events/Index"
            class="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
-            Voltar ao Mural
+            Voltar ao mural
         </a>
     </div>
 </section>

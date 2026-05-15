@@ -2,6 +2,17 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-15] - Dashboard Toast Standard
+
+### Changed
+
+- Documentado em `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` que o dashboard administrativo deve usar `toast` como padrao oficial de feedback visual.
+- Mensagens inline deixam de ser o padrao recomendado para sucesso, erro, alerta e informacao nas telas do frontend web.
+
+### Noted
+
+- O posicionamento padrao dos `toasts` fica no topo direito da area de conteudo, alinhado com a linha do breadcrumb e logo abaixo do header principal.
+
 ## [2026-05-09] - Tenant Legal Content
 
 ### Added

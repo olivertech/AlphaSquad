@@ -652,6 +652,8 @@ public class AppDbContext : DbContext
             entity.Property(x => x.IsOutdoorEvent).HasColumnName("is_outdoor_event");
             entity.Property(x => x.AllowParticipation).HasColumnName("allow_participation");
             entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.CheckInPassword).HasColumnName("check_in_password").HasMaxLength(20).IsRequired();
+            entity.Property(x => x.IsCompleted).HasColumnName("is_completed");
             entity.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
@@ -687,6 +689,7 @@ public class AppDbContext : DbContext
             entity.Property(x => x.AcademyEventId).HasColumnName("academy_event_id");
             entity.Property(x => x.UserId).HasColumnName("user_id");
             entity.Property(x => x.ParticipatedAt).HasColumnName("participated_at");
+            entity.Property(x => x.IsPresent).HasColumnName("is_present");
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.AcademyEventId);
             entity.HasIndex(x => x.UserId);

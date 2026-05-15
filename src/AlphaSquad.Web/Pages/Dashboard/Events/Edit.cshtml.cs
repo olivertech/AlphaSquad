@@ -1,123 +1,166 @@
-﻿using AlphaSquad.Lmt.Application.Contracts.Dtos;
+using AlphaSquad.Lmt.Application.Contracts.Dtos;
 using AlphaSquad.Lmt.Application.Contracts.Interfaces;
+using AlphaSquad.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
 
 namespace AlphaSquad.Web.Pages.Dashboard.Events;
 
 /// <summary>
-/// ViewModel para edição de eventos.
+/// Tela de edição e operação de um evento.
+/// Além dos dados básicos, ela expõe a senha do check-in e o estado de conclusão.
 /// </summary>
-public class EventEditInputModel
-{
-    [Required(ErrorMessage = "O título é obrigatório.")]
-    public string Title { get; set; } = string.Empty;
-
-    public string? Description { get; set; }
-    public DateTimeOffset? StartsAt { get; set; }
-    public DateTimeOffset? EndsAt { get; set; }
-    public string? Location { get; set; }
-    public Guid? MediaId { get; set; }
-}
-
 public sealed class EditModel(IEventsService eventsService) : AdminDashboardPageModelBase
 {
     [BindProperty]
-    public EventEditInputModel Input { get; set; } = new();
-    public Guid EventId { get; private set; }
-    public string? CurrentMediaUrl { get; private set; }
+    public EventFormInputModel Input { get; set; } = new();
+
+    public bool CanComplete { get; private set; }
     public bool CanDeletePhysically { get; private set; }
+    public string? CheckInPassword { get; private set; }
+    public string? CurrentMediaUrl { get; private set; }
+    public Guid EventId { get; private set; }
+    public bool IsCompleted { get; private set; }
     public string? LoadErrorMessage { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken, bool created = false)
     {
         var result = PageOrLogin();
-        if (result is not PageResult) return result;
+        if (result is not PageResult)
+            return result;
 
         EventId = id;
-        try
-        {
-            var response = await eventsService.GETApiEventsByIdAsync(id, cancellationToken);
-            if (response == null) return RedirectToPage("/Dashboard/Events/Index");
+        await LoadEventAsync(id, cancellationToken);
 
-            Input = new EventEditInputModel
-            {
-                Title = response.Title ?? string.Empty,
-                Description = response.Description,
-                StartsAt = response.StartsAt,
-                EndsAt = response.EndsAt,
-                Location = response.Location,
-                MediaId = response.MediaId
-            };
-            CurrentMediaUrl = response.MediaUrl;
-            
-            // Regra: Deleção física permitida apenas se o evento ainda não começou.
-            CanDeletePhysically = response.StartsAt > DateTimeOffset.Now;
-        }
-        catch
+        if (!string.IsNullOrWhiteSpace(LoadErrorMessage))
         {
-            LoadErrorMessage = "Erro ao carregar os dados do evento.";
-            ShowErrorToast(LoadErrorMessage);
+            ShowWarningToast(LoadErrorMessage, persist: true);
+            return RedirectToPage("/Dashboard/Events/Index");
         }
 
-        return result;
+        if (created && string.IsNullOrWhiteSpace(LoadErrorMessage))
+            ShowSuccessToast("Evento criado com sucesso. Use a senha abaixo para orientar o check-in no dia da ação.");
+
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(Guid id, CancellationToken cancellationToken)
     {
         var result = PageOrLogin();
-        if (result is not PageResult) return result;
+        if (result is not PageResult)
+            return result;
 
         EventId = id;
-        if (!ModelState.IsValid) return Page();
+        if (!ModelState.IsValid)
+        {
+            await LoadEventAsync(id, cancellationToken, preserveInput: true);
+            return Page();
+        }
 
         try
         {
             var request = new UpdateAcademyEventRequestDto
             {
-                Title = Input.Title.Trim(),
+                AllowParticipation = Input.AllowParticipation,
                 Description = Input.Description,
-                StartsAt = Input.StartsAt,
                 EndsAt = Input.EndsAt,
+                IsActive = Input.IsActive,
+                IsOutdoorEvent = Input.IsOutdoorEvent,
                 Location = Input.Location,
-                MediaId = Input.MediaId
+                MediaId = Input.MediaId,
+                StartsAt = Input.StartsAt,
+                Title = Input.Title.Trim()
             };
 
-            var response = await eventsService.PUTApiEventsByIdAsync(id, request, cancellationToken);
-            if (response != null)
-            {
-                ShowSuccessToast("Evento atualizado com sucesso!");
-                return RedirectToPage("/Dashboard/Events/Index");
-            }
-            ShowErrorToast("Erro ao salvar as alterações.");
+            await eventsService.PUTApiEventsByIdAsync(id, request, cancellationToken);
+            ShowSuccessToast("Evento atualizado com sucesso.", persist: true);
+            return RedirectToPage(new { id });
         }
         catch
         {
-            ShowErrorToast("Erro inesperado ao atualizar o evento.");
+            ShowErrorToast("Não foi possível salvar as alterações do evento.");
+            await LoadEventAsync(id, cancellationToken, preserveInput: true);
+            return Page();
         }
-
-        return Page();
     }
 
     public async Task<IActionResult> OnPostDeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var result = PageOrLogin();
-        if (result is not PageResult) return result;
+        if (result is not PageResult)
+            return result;
 
         try
         {
-            // Aqui a API deve validar a regra de negócio: 
-            // Se StartsAt < Now -> Deleta Lógico (Inativa).
-            // Se StartsAt > Now -> Deleta Físico.
             await eventsService.DELETEApiEventsByIdAsync(id, cancellationToken);
-            ShowSuccessToast("Evento removido com sucesso!");
+            ShowSuccessToast("Evento removido com sucesso.", persist: true);
+            return RedirectToPage("/Dashboard/Events/Index");
         }
         catch
         {
-            ShowErrorToast("Erro ao remover o evento.");
+            ShowErrorToast("Não foi possível remover o evento agora.", persist: true);
+            return RedirectToPage(new { id });
         }
+    }
 
-        return RedirectToPage("/Dashboard/Events/Index");
+    public async Task<IActionResult> OnPostCompleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var result = PageOrLogin();
+        if (result is not PageResult)
+            return result;
+
+        try
+        {
+            var response = await eventsService.POSTApiEventsByIdCompleteAsync(id, cancellationToken);
+            var awardedCount = response?.AwardedParticipantsCount ?? 0;
+            ShowSuccessToast($"Evento concluído com sucesso. {awardedCount} aluno(s) receberam pontos.", persist: true);
+            return RedirectToPage(new { id });
+        }
+        catch
+        {
+            ShowErrorToast("Não foi possível concluir o evento agora.", persist: true);
+            return RedirectToPage(new { id });
+        }
+    }
+
+    private async Task LoadEventAsync(Guid id, CancellationToken cancellationToken, bool preserveInput = false)
+    {
+        try
+        {
+            var response = await eventsService.GETApiEventsByIdAsync(id, cancellationToken);
+            if (response?.Id is not Guid)
+            {
+                LoadErrorMessage = "Não foi possível encontrar o evento solicitado.";
+                return;
+            }
+
+            if (!preserveInput)
+            {
+                Input = new EventFormInputModel
+                {
+                    AllowParticipation = response.AllowParticipation == true,
+                    Description = response.Description,
+                    EndsAt = response.EndsAt,
+                    IsActive = response.IsActive == true,
+                    IsOutdoorEvent = response.IsOutdoorEvent == true,
+                    Location = response.Location,
+                    MediaId = response.MediaId,
+                    StartsAt = response.StartsAt,
+                    Title = response.Title ?? string.Empty
+                };
+            }
+
+            CurrentMediaUrl = response.MediaUrl;
+            CheckInPassword = response.CheckInPassword;
+            IsCompleted = response.IsCompleted == true;
+
+            var hasStarted = response.StartsAt.HasValue && response.StartsAt.Value <= DateTimeOffset.Now;
+            CanDeletePhysically = !hasStarted;
+            CanComplete = response.IsActive == true && !IsCompleted && hasStarted;
+        }
+        catch
+        {
+            LoadErrorMessage = "Não foi possível carregar os dados do evento agora.";
+        }
     }
 }

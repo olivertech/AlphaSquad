@@ -203,6 +203,22 @@ Uso atual:
 - `page-based`: `Store`, `Events`, `Social`, `Classes`, `Checkins` e `Media`
 - `cursor-based`: `Store`, `Events` e `Social`
 
+## Padrao de feedback visual
+
+No frontend administrativo do AlphaSquad, todo feedback de operacao deve seguir um unico padrao visual.
+
+- avisos de sucesso, erro, alerta e informacao devem ser exibidos por `toast`
+- mensagens inline dentro do conteudo da tela nao devem mais ser usadas como padrao de UX
+- os toasts devem aparecer no topo direito da area de conteudo
+- a posicao padrao fica alinhada horizontalmente com a linha do breadcrumb, logo abaixo do header principal
+- esse comportamento vale para operacoes de `insert`, `update`, `delete`, carregamentos invalidos e bloqueios operacionais relevantes
+
+Objetivo desse padrao:
+
+- reduzir poluicao visual nas telas
+- manter consistencia entre os modulos do dashboard
+- dar retorno mais claro e rapido para operacoes administrativas
+
 ## Estrutura da solution
 
 ```text
@@ -503,6 +519,7 @@ Por isso, todo novo codigo deve:
 - trazer comentarios simples e objetivos em classes e metodos novos
 - explicar regras de negocio importantes sem excesso de texto
 - ajudar futuros profissionais a entender a feature pelo proprio codigo
+- respeitar os padroes visuais oficiais do dashboard, incluindo feedback por `toast` em vez de mensagens inline
 
 ## Seed inicial
 

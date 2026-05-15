@@ -31,6 +31,25 @@ public record UpdateAcademyEventRequest(
 );
 
 /// <summary>
+/// DTO usado pelo app para confirmar presenca no evento informando a senha divulgada pela academia.
+/// </summary>
+public record EventCheckInRequest(
+    string Password
+);
+
+/// <summary>
+/// DTO de resposta para o encerramento administrativo de um evento.
+/// Ele informa quantos alunos presentes receberam pontos quando o gestor concluiu o evento.
+/// </summary>
+public record CompleteAcademyEventResponse(
+    Guid EventId,
+    string EventTitle,
+    int AwardedParticipantsCount,
+    bool IsCompleted,
+    bool IsActive
+);
+
+/// <summary>
 /// DTO de resposta para listagem e detalhe do mural de eventos.
 /// </summary>
 public record AcademyEventResponse(
@@ -45,6 +64,8 @@ public record AcademyEventResponse(
     bool IsOutdoorEvent,
     bool AllowParticipation,
     bool IsActive,
+    string? CheckInPassword,
+    bool IsCompleted,
     Guid CreatedByUserId,
     string CreatedByUserName,
     int ParticipantCount,
@@ -62,5 +83,7 @@ public record AcademyEventParticipationResponse(
     string EventTitle,
     Guid UserId,
     string UserName,
+    string? UserEmail,
+    bool IsPresent,
     DateTime ParticipatedAt
 );

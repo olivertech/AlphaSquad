@@ -5,7 +5,9 @@ public sealed class AcademyEventParticipationResponseDto
     public Guid? AcademyEventId { get; set; }
     public string? EventTitle { get; set; }
     public Guid? Id { get; set; }
+    public bool? IsPresent { get; set; }
     public DateTimeOffset? ParticipatedAt { get; set; }
+    public string? UserEmail { get; set; }
     public Guid? UserId { get; set; }
     public string? UserName { get; set; }
 }

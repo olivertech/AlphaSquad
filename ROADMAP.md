@@ -188,6 +188,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 - [ ] Garantir isolamento multi-tenant em todos os modulos
 - [x] Padronizar paginacao nos principais modulos com contratos compartilhados
+- [x] Padronizar feedback visual do dashboard com `toast` em vez de mensagens inline
 - [ ] Aumentar cobertura de testes
 - [x] Preparar configuracao base por ambiente para deploy real
 - [ ] Manter comentarios didaticos nas novas features

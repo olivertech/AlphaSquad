@@ -77,6 +77,29 @@ O modulo de `Events` e o primeiro a explicitar esse padrao duplo:
 
 Esse mesmo padrao ja foi replicado em `Store` e `Social`.
 
+### Padrao de feedback no dashboard
+
+O frontend administrativo adota um padrao unico de retorno visual ao usuario.
+
+- feedbacks de sucesso, erro, alerta e informacao devem usar `toast`
+- mensagens inline no corpo da pagina deixam de ser o padrao oficial
+- os toasts devem ser renderizados no topo direito da area de conteudo
+- a referencia visual e a mesma linha do breadcrumb, logo abaixo do header principal
+
+Esse padrao deve ser aplicado em:
+
+- criacao
+- edicao
+- exclusao
+- conclusao de fluxos administrativos
+- falhas de carregamento que exijam redirecionamento ou interrupcao da experiencia
+
+Objetivo arquitetural:
+
+- manter consistencia de UX entre modulos
+- desacoplar feedback visual do layout principal da tela
+- evitar que estados operacionais "quebrem" o espacamento e a leitura do conteudo
+
 ### Foco didatico e documentacao em codigo
 
 Este projeto tambem tem um objetivo didatico e deve poder ser consultado futuramente por outros profissionais.
@@ -87,6 +110,7 @@ Por isso, todo novo codigo deve seguir estas diretrizes:
 - comentarios devem ajudar leitura e manutencao, sem virar texto excessivo
 - regras de negocio, integracoes relevantes e pontos de isolamento multi-tenant devem ser comentados
 - a documentacao em codigo deve evoluir junto com as features, e nao ser tratada como etapa opcional
+- o dashboard web tambem deve respeitar os padroes de UX documentados, especialmente o uso de `toast` como canal principal de feedback
 
 ## Estrutura da solution
 

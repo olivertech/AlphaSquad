@@ -72,14 +72,36 @@ public static class EventEndpoints
 
         group.MapPost("/{id:guid}/participate", ParticipateAsync)
             .WithName("ParticipateInEvent")
-            .WithSummary("Confirma a participacao do aluno em um evento outdoor.")
-            .WithDescription("Cria o registro de participacao do aluno em um evento outdoor habilitado e dispara a pontuacao correspondente na gamificacao.")
+            .WithSummary("Matricula o aluno em um evento outdoor.")
+            .WithDescription("Cria o registro de matricula do aluno em um evento outdoor habilitado, sem distribuir pontos nesse momento.")
             .Produces<AcademyEventParticipationResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status409Conflict);
+
+        group.MapPost("/{id:guid}/checkin", CheckInAsync)
+            .WithName("CheckInInEvent")
+            .WithSummary("Confirma a presença do aluno em um evento outdoor.")
+            .WithDescription("Recebe a senha do evento, valida a matrícula do aluno e marca a presença para futura pontuação na conclusão administrativa.")
+            .Produces<AcademyEventParticipationResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
+
+        group.MapPost("/{id:guid}/complete", CompleteEventAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("CompleteEvent")
+            .WithSummary("Conclui um evento e distribui a pontuação dos presentes.")
+            .WithDescription("Encerra o evento, inativa o registro e distribui os pontos de gamificação para os alunos que fizeram check-in com a senha.")
+            .Produces<CompleteAcademyEventResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/{id:guid}/participants", GetParticipantsAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOnly)
@@ -159,6 +181,8 @@ public static class EventEndpoints
                                          e.is_outdoor_event AS IsOutdoorEvent,
                                          e.allow_participation AS AllowParticipation,
                                          e.is_active AS IsActive,
+                                         CASE WHEN @CanManage = true THEN e.check_in_password ELSE NULL END AS CheckInPassword,
+                                         e.is_completed AS IsCompleted,
                                          e.created_by_user_id AS CreatedByUserId,
                                          creator.name AS CreatedByUserName,
                                          COALESCE(participants.participant_count, 0) AS ParticipantCount,
@@ -196,6 +220,7 @@ public static class EventEndpoints
         {
             TenantId = tenantId,
             CurrentUserId = currentUserId,
+            CanManage = canManageEvents,
             IsActive = effectiveIsActive,
             OnlyOutdoor = onlyOutdoor,
             Limit = pageSize,
@@ -243,6 +268,8 @@ public static class EventEndpoints
                                     e.is_outdoor_event AS IsOutdoorEvent,
                                     e.allow_participation AS AllowParticipation,
                                     e.is_active AS IsActive,
+                                    CASE WHEN @CanManage = true THEN e.check_in_password ELSE NULL END AS CheckInPassword,
+                                    e.is_completed AS IsCompleted,
                                     e.created_by_user_id AS CreatedByUserId,
                                     creator.name AS CreatedByUserName,
                                     COALESCE(participants.participant_count, 0) AS ParticipantCount,
@@ -344,6 +371,8 @@ public static class EventEndpoints
                                     e.is_outdoor_event AS IsOutdoorEvent,
                                     e.allow_participation AS AllowParticipation,
                                     e.is_active AS IsActive,
+                                    CASE WHEN @CanManage = true THEN e.check_in_password ELSE NULL END AS CheckInPassword,
+                                    e.is_completed AS IsCompleted,
                                     e.created_by_user_id AS CreatedByUserId,
                                     creator.name AS CreatedByUserName,
                                     COALESCE(participants.participant_count, 0) AS ParticipantCount,
@@ -403,11 +432,13 @@ public static class EventEndpoints
 
         var tenantId = context.GetTenantId();
         var createdByUserId = GetUserId(context.User);
+        var startsAtUtc = NormalizeToUtc(request.StartsAt);
+        var endsAtUtc = NormalizeToUtc(request.EndsAt);
 
         var validationResult = await ValidateRequestAsync(request.Title,
                                                           request.MediaId,
-                                                          request.StartsAt,
-                                                          request.EndsAt,
+                                                          startsAtUtc,
+                                                          endsAtUtc,
                                                           request.IsOutdoorEvent,
                                                           request.AllowParticipation,
                                                           tenantId,
@@ -424,11 +455,13 @@ public static class EventEndpoints
             Description = NormalizeOptional(request.Description),
             MediaId = request.MediaId,
             Location = NormalizeOptional(request.Location),
-            StartsAt = request.StartsAt,
-            EndsAt = request.EndsAt,
+            StartsAt = startsAtUtc,
+            EndsAt = endsAtUtc,
             IsOutdoorEvent = request.IsOutdoorEvent,
             AllowParticipation = request.AllowParticipation,
             IsActive = request.IsActive,
+            CheckInPassword = GenerateCheckInPassword(),
+            IsCompleted = false,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow
         };
@@ -456,14 +489,16 @@ public static class EventEndpoints
         var tenantId = context.GetTenantId();
         var currentUserId = GetUserId(context.User);
         var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+        var startsAtUtc = NormalizeToUtc(request.StartsAt);
+        var endsAtUtc = NormalizeToUtc(request.EndsAt);
 
         if (academyEvent is null)
             return Results.NotFound();
 
         var validationResult = await ValidateRequestAsync(request.Title,
                                                           request.MediaId,
-                                                          request.StartsAt,
-                                                          request.EndsAt,
+                                                          startsAtUtc,
+                                                          endsAtUtc,
                                                           request.IsOutdoorEvent,
                                                           request.AllowParticipation,
                                                           tenantId,
@@ -472,12 +507,15 @@ public static class EventEndpoints
         if (validationResult is not null)
             return validationResult;
 
+        if (academyEvent.IsCompleted && request.IsActive)
+            return Results.BadRequest("Completed events cannot be reactivated.");
+
         academyEvent.Title = request.Title.Trim();
         academyEvent.Description = NormalizeOptional(request.Description);
         academyEvent.MediaId = request.MediaId;
         academyEvent.Location = NormalizeOptional(request.Location);
-        academyEvent.StartsAt = request.StartsAt;
-        academyEvent.EndsAt = request.EndsAt;
+        academyEvent.StartsAt = startsAtUtc;
+        academyEvent.EndsAt = endsAtUtc;
         academyEvent.IsOutdoorEvent = request.IsOutdoorEvent;
         academyEvent.AllowParticipation = request.AllowParticipation;
         academyEvent.IsActive = request.IsActive;
@@ -509,6 +547,9 @@ public static class EventEndpoints
         if (academyEvent is null)
             return Results.NotFound();
 
+        if (academyEvent.StartsAt.HasValue && academyEvent.StartsAt.Value <= DateTime.UtcNow)
+            return Results.BadRequest("Started events must be completed instead of being removed.");
+
         if (academyEvent.Participations.Count > 0)
             db.AcademyEventParticipations.RemoveRange(academyEvent.Participations);
 
@@ -519,13 +560,12 @@ public static class EventEndpoints
     }
 
     /// <summary>
-    /// Confirma a participacao do aluno em um evento outdoor apto a pontuar.
-    /// O evento precisa estar ativo, habilitar participacao e ja ter iniciado quando existir agenda.
+    /// Matricula o aluno em um evento outdoor apto a receber confirmacao de presenca.
+    /// O check-in por senha e a pontuacao ficam para etapas posteriores do fluxo.
     /// </summary>
     private static async Task<IResult> ParticipateAsync(Guid id,
                                                         AppDbContext db,
                                                         IFeatureAccessService featureAccessService,
-                                                        IGamificationService gamificationService,
                                                         HttpContext context)
     {
         var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
@@ -553,16 +593,13 @@ public static class EventEndpoints
         if (academyEvent is null)
             return Results.NotFound();
 
-        if (academyEvent.StartsAt.HasValue && academyEvent.StartsAt.Value > now)
-            return Results.BadRequest("Participation can only be confirmed after the event starts.");
-
         var alreadyParticipating = await db.AcademyEventParticipations.AnyAsync(x =>
             x.TenantId == tenantId &&
             x.AcademyEventId == academyEvent.Id &&
             x.UserId == userId);
 
         if (alreadyParticipating)
-            return Results.Conflict("User has already confirmed participation in this event.");
+            return Results.Conflict("User is already enrolled in this event.");
 
         var participation = new AcademyEventParticipation
         {
@@ -570,20 +607,12 @@ public static class EventEndpoints
             TenantId = tenantId,
             AcademyEventId = academyEvent.Id,
             UserId = userId,
-            ParticipatedAt = now
+            ParticipatedAt = now,
+            IsPresent = false
         };
 
         db.AcademyEventParticipations.Add(participation);
         await db.SaveChangesAsync();
-
-        await gamificationService.AwardEventAsync(
-            tenantId,
-            userId,
-            GamificationEventType.OutdoorEventParticipation,
-            "academy_event",
-            academyEvent.Id,
-            participation.ParticipatedAt,
-            "Outdoor event participation processed successfully.");
 
         return Results.Created($"/api/events/{academyEvent.Id}/participate", new AcademyEventParticipationResponse(
             participation.Id,
@@ -591,7 +620,148 @@ public static class EventEndpoints
             academyEvent.Title,
             appUser.Id,
             appUser.Name,
+            appUser.Email,
+            participation.IsPresent,
             participation.ParticipatedAt
+        ));
+    }
+
+    /// <summary>
+    /// Confirma a presenca do aluno em um evento outdoor usando a senha divulgada pela academia.
+    /// A pontuacao continua pendente ate a conclusao administrativa do evento.
+    /// </summary>
+    private static async Task<IResult> CheckInAsync(Guid id,
+                                                    EventCheckInRequest request,
+                                                    AppDbContext db,
+                                                    IFeatureAccessService featureAccessService,
+                                                    HttpContext context)
+    {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+            return Results.BadRequest("Event password is required.");
+
+        var tenantId = context.GetTenantId();
+        var userId = GetUserId(context.User);
+        var now = DateTime.UtcNow;
+
+        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == userId && x.TenantId == tenantId && x.IsActive);
+        if (user is null)
+            return Results.Unauthorized();
+
+        if (user.Role != UserRole.Student)
+            return Results.Forbid();
+
+        var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x =>
+            x.Id == id &&
+            x.TenantId == tenantId &&
+            x.IsActive &&
+            !x.IsCompleted &&
+            x.IsOutdoorEvent &&
+            x.AllowParticipation);
+
+        if (academyEvent is null)
+            return Results.NotFound();
+
+        if (academyEvent.StartsAt.HasValue && academyEvent.StartsAt.Value > now)
+            return Results.BadRequest("Check-in is only available after the event starts.");
+
+        if (!string.Equals(academyEvent.CheckInPassword, request.Password.Trim(), StringComparison.OrdinalIgnoreCase))
+            return Results.BadRequest("Invalid event password.");
+
+        var participation = await db.AcademyEventParticipations.FirstOrDefaultAsync(x =>
+            x.TenantId == tenantId &&
+            x.AcademyEventId == academyEvent.Id &&
+            x.UserId == userId);
+
+        if (participation is null)
+            return Results.BadRequest("User is not enrolled in this event.");
+
+        if (participation.IsPresent)
+            return Results.Conflict("Presence has already been confirmed for this user.");
+
+        participation.IsPresent = true;
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new AcademyEventParticipationResponse(
+            participation.Id,
+            academyEvent.Id,
+            academyEvent.Title,
+            user.Id,
+            user.Name,
+            user.Email,
+            participation.IsPresent,
+            participation.ParticipatedAt
+        ));
+    }
+
+    /// <summary>
+    /// Conclui o evento, inativa o registro e distribui os pontos de gamificacao para os presentes.
+    /// </summary>
+    private static async Task<IResult> CompleteEventAsync(Guid id,
+                                                          AppDbContext db,
+                                                          IFeatureAccessService featureAccessService,
+                                                          IGamificationService gamificationService,
+                                                          HttpContext context)
+    {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
+        var tenantId = context.GetTenantId();
+        var completedAt = DateTime.UtcNow;
+
+        var academyEvent = await db.AcademyEvents
+            .Include(x => x.Participations)
+            .ThenInclude(x => x.User)
+            .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+
+        if (academyEvent is null)
+            return Results.NotFound();
+
+        if (academyEvent.IsCompleted)
+            return Results.BadRequest("Event has already been completed.");
+
+        if (!academyEvent.IsActive)
+            return Results.BadRequest("Only active events can be completed.");
+
+        if (academyEvent.StartsAt.HasValue && academyEvent.StartsAt.Value > completedAt)
+            return Results.BadRequest("The event can only be completed after it starts.");
+
+        var awardedParticipantsCount = 0;
+
+        if (academyEvent.IsOutdoorEvent && academyEvent.AllowParticipation)
+        {
+            foreach (var participation in academyEvent.Participations.Where(x => x.IsPresent))
+            {
+                var awarded = await gamificationService.AwardEventAsync(
+                    tenantId,
+                    participation.UserId,
+                    GamificationEventType.OutdoorEventParticipation,
+                    "academy_event_completion",
+                    participation.Id,
+                    completedAt,
+                    "Outdoor event presence confirmed by administrator.");
+
+                if (awarded)
+                    awardedParticipantsCount++;
+            }
+        }
+
+        academyEvent.IsCompleted = true;
+        academyEvent.IsActive = false;
+        academyEvent.UpdatedAt = completedAt;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new CompleteAcademyEventResponse(
+            academyEvent.Id,
+            academyEvent.Title,
+            awardedParticipantsCount,
+            academyEvent.IsCompleted,
+            academyEvent.IsActive
         ));
     }
 
@@ -602,6 +772,10 @@ public static class EventEndpoints
     private static async Task<AcademyEventResponse> BuildResponseAsync(Guid eventId, Guid tenantId, Guid currentUserId, AppDbContext db)
     {
         var connection = db.Database.GetDbConnection();
+        var canManageEvents = await db.Users
+            .Where(x => x.Id == currentUserId && x.TenantId == tenantId && x.IsActive)
+            .Select(x => x.Role == UserRole.Admin || x.Role == UserRole.Teacher)
+            .FirstOrDefaultAsync();
 
         const string sql = @"SELECT e.id,
                                     e.title,
@@ -614,6 +788,8 @@ public static class EventEndpoints
                                     e.is_outdoor_event AS IsOutdoorEvent,
                                     e.allow_participation AS AllowParticipation,
                                     e.is_active AS IsActive,
+                                    CASE WHEN @CanManage = true THEN e.check_in_password ELSE NULL END AS CheckInPassword,
+                                    e.is_completed AS IsCompleted,
                                     e.created_by_user_id AS CreatedByUserId,
                                     creator.name AS CreatedByUserName,
                                     COALESCE(participants.participant_count, 0) AS ParticipantCount,
@@ -648,7 +824,8 @@ public static class EventEndpoints
         {
             EventId = eventId,
             TenantId = tenantId,
-            CurrentUserId = currentUserId
+            CurrentUserId = currentUserId,
+            CanManage = canManageEvents
         }))!;
     }
 
@@ -732,6 +909,37 @@ public static class EventEndpoints
     }
 
     /// <summary>
+    /// Converte datas locais ou sem fuso para UTC antes da persistencia em colunas timestamptz.
+    /// Isso evita inconsistencias entre o dashboard web e o PostgreSQL.
+    /// </summary>
+    private static DateTime? NormalizeToUtc(DateTime? value)
+    {
+        if (!value.HasValue)
+            return null;
+
+        return value.Value.Kind switch
+        {
+            DateTimeKind.Utc => value.Value,
+            DateTimeKind.Local => value.Value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value.Value, DateTimeKind.Local).ToUniversalTime()
+        };
+    }
+
+    /// <summary>
+    /// Gera uma senha curta e amigavel para uso no check-in do evento.
+    /// A senha pode ser divulgada pelo administrador no dia da acao.
+    /// </summary>
+    private static string GenerateCheckInPassword()
+    {
+        const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        return string.Create(6, alphabet, static (buffer, source) =>
+        {
+            for (var index = 0; index < buffer.Length; index++)
+                buffer[index] = source[Random.Shared.Next(source.Length)];
+        });
+    }
+
+    /// <summary>
     /// Converte a linha interna do feed no contrato publico usado pelo app.
     /// O campo auxiliar de ordenacao nao faz parte da resposta final.
     /// </summary>
@@ -749,6 +957,8 @@ public static class EventEndpoints
             row.IsOutdoorEvent,
             row.AllowParticipation,
             row.IsActive,
+            row.CheckInPassword,
+            row.IsCompleted,
             row.CreatedByUserId,
             row.CreatedByUserName,
             row.ParticipantCount,
@@ -807,8 +1017,15 @@ public static class EventEndpoints
     /// <summary>
     /// Lista os usuários inscritos em um evento específico.
     /// </summary>
-    private static async Task<IResult> GetParticipantsAsync(Guid id, AppDbContext db, HttpContext context)
+    private static async Task<IResult> GetParticipantsAsync(Guid id,
+                                                            AppDbContext db,
+                                                            IFeatureAccessService featureAccessService,
+                                                            HttpContext context)
     {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
         var tenantId = context.GetTenantId();
         
         var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
@@ -824,6 +1041,8 @@ public static class EventEndpoints
                 academyEvent.Title,
                 p.UserId,
                 p.User!.Name,
+                p.User.Email,
+                p.IsPresent,
                 p.ParticipatedAt))
             .ToListAsync();
 
@@ -833,15 +1052,33 @@ public static class EventEndpoints
     /// <summary>
     /// Permite que um gestor matricule um aluno manualmente em um evento.
     /// </summary>
-    private static async Task<IResult> AddParticipantAdminAsync(Guid id, Guid userId, AppDbContext db, HttpContext context)
+    private static async Task<IResult> AddParticipantAdminAsync(Guid id,
+                                                                Guid userId,
+                                                                AppDbContext db,
+                                                                IFeatureAccessService featureAccessService,
+                                                                HttpContext context)
     {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
         var tenantId = context.GetTenantId();
 
-        var user = await db.Users.FirstOrDefaultAsync(x => x.Id == userId && x.TenantId == tenantId && x.IsActive);
+        var user = await db.Users.FirstOrDefaultAsync(x =>
+            x.Id == userId &&
+            x.TenantId == tenantId &&
+            x.IsActive &&
+            x.Role == UserRole.Student);
         if (user is null)
-            return Results.BadRequest("User not found or inactive.");
+            return Results.BadRequest("Student not found or inactive.");
 
-        var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
+        var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x =>
+            x.Id == id &&
+            x.TenantId == tenantId &&
+            x.IsActive &&
+            !x.IsCompleted &&
+            x.IsOutdoorEvent &&
+            x.AllowParticipation);
         if (academyEvent is null)
             return Results.NotFound();
 
@@ -857,7 +1094,8 @@ public static class EventEndpoints
             TenantId = tenantId,
             AcademyEventId = id,
             UserId = userId,
-            ParticipatedAt = DateTime.UtcNow
+            ParticipatedAt = DateTime.UtcNow,
+            IsPresent = false
         };
 
         db.AcademyEventParticipations.Add(participation);
@@ -869,6 +1107,8 @@ public static class EventEndpoints
             academyEvent.Title,
             user.Id,
             user.Name,
+            user.Email,
+            participation.IsPresent,
             participation.ParticipatedAt
         ));
     }
@@ -876,8 +1116,16 @@ public static class EventEndpoints
     /// <summary>
     /// Permite que um gestor cancele a matrícula de um aluno manualmente.
     /// </summary>
-    private static async Task<IResult> RemoveParticipantAdminAsync(Guid id, Guid userId, AppDbContext db, HttpContext context)
+    private static async Task<IResult> RemoveParticipantAdminAsync(Guid id,
+                                                                   Guid userId,
+                                                                   AppDbContext db,
+                                                                   IFeatureAccessService featureAccessService,
+                                                                   HttpContext context)
     {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
         var tenantId = context.GetTenantId();
 
         var participation = await db.AcademyEventParticipations.FirstOrDefaultAsync(x => 
@@ -908,6 +1156,8 @@ public static class EventEndpoints
         bool IsOutdoorEvent,
         bool AllowParticipation,
         bool IsActive,
+        string? CheckInPassword,
+        bool IsCompleted,
         Guid CreatedByUserId,
         string CreatedByUserName,
         int ParticipantCount,
