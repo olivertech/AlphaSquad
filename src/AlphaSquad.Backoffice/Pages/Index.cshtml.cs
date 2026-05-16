@@ -7,8 +7,6 @@ public sealed class IndexModel : PageModel
 {
     public IActionResult OnGet()
     {
-        return User.Identity?.IsAuthenticated == true
-            ? RedirectToPage("/Backoffice/Index")
-            : RedirectToPage("/Account/Login");
+        return RedirectToPage("/Account/Login");
     }
 }

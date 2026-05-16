@@ -161,6 +161,7 @@ app.MapGamificationEndpoints();
 app.MapLegalEndpoints();
 app.MapConfigurationEndpoints();
 app.MapPlatformAuthEndpoints();
+app.MapPlatformProfileEndpoints();
 app.MapPlatformTenantEndpoints();
 
 app.Run();

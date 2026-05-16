@@ -22,8 +22,22 @@ public static class BackofficeTenantCatalog
         new() { Code = FeatureCodes.Media, Label = "Midias", Description = "Gerenciamento de imagens e arquivos da academia." }
     ];
 
-    public static IReadOnlyList<BackofficeFeatureOptionViewModel> ResolveFeatures(IEnumerable<string> featureCodes) =>
-        FeatureOptions
-            .Where(option => featureCodes.Contains(option.Code, StringComparer.OrdinalIgnoreCase))
+    public static IReadOnlyList<BackofficeFeatureOptionViewModel> ResolveFeatures(IEnumerable<string> featureCodes)
+    {
+        var normalizedCodes = featureCodes
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        return normalizedCodes
+            .Select(code =>
+                FeatureOptions.FirstOrDefault(option => string.Equals(option.Code, code, StringComparison.OrdinalIgnoreCase))
+                ?? new BackofficeFeatureOptionViewModel
+                {
+                    Code = code,
+                    Label = code,
+                    Description = "Feature cadastrada no banco de dados da plataforma."
+                })
+            .ToList();
+    }
 }

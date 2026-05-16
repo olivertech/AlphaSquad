@@ -16,12 +16,6 @@ public sealed class DetailsModel(IBackofficeTenantWorkspaceService tenantWorkspa
         if (result is not PageResult)
             return result;
 
-        if (created == true)
-            ShowSuccessToast("Academia criada e pronta para iniciar operacao.", title: "Onboarding concluido");
-
-        if (updated == true)
-            ShowSuccessToast("Academia atualizada com sucesso.", title: "Dados salvos");
-
         var tenant = await tenantWorkspaceService.GetAsync(id, cancellationToken);
         if (tenant is null)
         {
@@ -35,15 +29,19 @@ public sealed class DetailsModel(IBackofficeTenantWorkspaceService tenantWorkspa
             Name = tenant.Name,
             Slug = tenant.Slug,
             IsActive = tenant.IsActive,
-            StatusLabel = tenant.IsActive ? "Ativa" : "Inativa",
+            StatusLabel = tenant.IsActive ? "Academia Ativa" : "Academia Inativa",
             LogoUrl = tenant.LogoUrl,
             PrimaryColor = tenant.PrimaryColor,
             SecondaryColor = tenant.SecondaryColor,
-            Features = BackofficeTenantCatalog.ResolveFeatures(tenant.FeatureCodes),
+            Features = tenant.Features.Count > 0
+                ? tenant.Features
+                : BackofficeTenantCatalog.ResolveFeatures(tenant.FeatureCodes),
             PrimaryAdminName = tenant.PrimaryAdminName,
             PrimaryAdminEmail = tenant.PrimaryAdminEmail,
-            TemporaryPassword = tenant.TemporaryPassword,
-            MustChangePassword = tenant.MustChangePassword,
+            TemporaryPassword = TempData["Backoffice.NewTenantTemporaryPassword"]?.ToString() ?? string.Empty,
+            MustChangePassword = bool.TryParse(TempData["Backoffice.NewTenantMustChangePassword"]?.ToString(), out var mustChangePassword)
+                ? mustChangePassword
+                : tenant.MustChangePassword,
             CreatedAt = tenant.CreatedAt
         };
 

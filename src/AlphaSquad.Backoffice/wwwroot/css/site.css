@@ -58,6 +58,16 @@ body {
   box-shadow: inset 3px 0 0 0 var(--tenant-primary);
 }
 
+.backoffice-status-pill-active {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.backoffice-status-pill-inactive {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 .dashboard-menu-item-open {
   background: rgba(255, 255, 255, 0.08);
   color: var(--tenant-primary);

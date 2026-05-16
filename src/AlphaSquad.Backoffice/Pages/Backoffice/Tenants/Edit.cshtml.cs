@@ -4,7 +4,7 @@ using AlphaSquad.Backoffice.Services;
 namespace AlphaSquad.Backoffice.Pages.Backoffice.Tenants;
 
 /// <summary>
-/// Ajusta dados basicos da academia enquanto a API master ainda nao foi aberta.
+/// Ajusta dados basicos da academia usando o backend master real.
 /// </summary>
 public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceService) : BackofficePageModelBase
 {
@@ -14,8 +14,11 @@ public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceS
     [BindProperty]
     public IFormFile? LogoFile { get; set; }
 
+    [BindProperty]
+    public string? CurrentLogoUrl { get; set; }
+
     public Guid TenantId { get; private set; }
-    public IReadOnlyList<BackofficeFeatureOptionViewModel> FeatureOptions => BackofficeTenantCatalog.FeatureOptions;
+    public IReadOnlyList<BackofficeFeatureOptionViewModel> FeatureOptions { get; private set; } = [];
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -23,6 +26,7 @@ public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceS
         if (result is not PageResult)
             return result;
 
+        FeatureOptions = await tenantWorkspaceService.GetFeatureCatalogAsync(cancellationToken);
         var tenant = await tenantWorkspaceService.GetAsync(id, cancellationToken);
         if (tenant is null)
         {
@@ -31,6 +35,7 @@ public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceS
         }
 
         TenantId = tenant.Id;
+        CurrentLogoUrl = tenant.LogoUrl;
         Input = new BackofficeTenantFormInputModel
         {
             Name = tenant.Name,
@@ -53,14 +58,14 @@ public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceS
             return result;
 
         TenantId = id;
+        FeatureOptions = await tenantWorkspaceService.GetFeatureCatalogAsync(cancellationToken);
+        CurrentLogoUrl ??= string.Empty;
 
         if (!ModelState.IsValid)
             return Page();
 
         try
         {
-            var logoUrl = await ConvertLogoToDataUrlAsync(LogoFile, cancellationToken);
-
             var tenant = await tenantWorkspaceService.UpdateAsync(id, new BackofficeTenantUpdateCommand
             {
                 Name = Input.Name,
@@ -69,7 +74,9 @@ public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceS
                 SecondaryColor = NormalizeColor(Input.SecondaryColor),
                 IsActive = Input.IsActive,
                 FeatureCodes = Input.FeatureCodes,
-                LogoUrl = logoUrl
+                AdminName = Input.AdminName,
+                AdminEmail = Input.AdminEmail,
+                LogoUrl = null
             }, cancellationToken);
 
             if (tenant is null)
@@ -78,10 +85,13 @@ public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceS
                 return RedirectToPage("/Backoffice/Tenants/Index");
             }
 
+            if (LogoFile is not null && LogoFile.Length > 0)
+                tenant = await tenantWorkspaceService.UploadLogoAsync(id, LogoFile, cancellationToken);
+
             ShowSuccessToast("Academia atualizada com sucesso.", persist: true, title: "Dados salvos");
             return RedirectToPage("/Backoffice/Tenants/Details", new { id = tenant.Id, updated = true });
         }
-        catch (InvalidOperationException ex)
+        catch (BackofficeApiException ex)
         {
             ShowWarningToast(ex.Message, title: "Nao foi possivel salvar");
             return Page();
@@ -97,17 +107,5 @@ public sealed class EditModel(IBackofficeTenantWorkspaceService tenantWorkspaceS
     {
         var normalized = color.Trim();
         return normalized.StartsWith('#') ? normalized : $"#{normalized}";
-    }
-
-    private static async Task<string?> ConvertLogoToDataUrlAsync(IFormFile? file, CancellationToken cancellationToken)
-    {
-        if (file is null || file.Length == 0)
-            return null;
-
-        await using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream, cancellationToken);
-        var bytes = memoryStream.ToArray();
-
-        return $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}";
     }
 }

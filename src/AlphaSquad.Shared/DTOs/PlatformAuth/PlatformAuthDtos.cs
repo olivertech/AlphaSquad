@@ -21,7 +21,8 @@ public record PlatformAuthenticatedUserResponse(
     string Name,
     string Email,
     string Role,
-    bool MustChangePassword
+    bool MustChangePassword,
+    string? ProfilePhotoUrl
 );
 
 public record PlatformAuthenticatedSessionResponse(
@@ -29,7 +30,8 @@ public record PlatformAuthenticatedSessionResponse(
     string Name,
     string Email,
     string Role,
-    bool MustChangePassword
+    bool MustChangePassword,
+    string? ProfilePhotoUrl
 );
 
 public record PlatformChangePasswordRequest(

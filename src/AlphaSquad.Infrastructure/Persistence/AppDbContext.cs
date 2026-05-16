@@ -75,6 +75,8 @@ public class AppDbContext : DbContext
             entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
             entity.Property(x => x.Email).HasColumnName("email").HasColumnType("citext").HasMaxLength(150).IsRequired();
             entity.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
+            entity.Property(x => x.ProfilePhotoUrl).HasColumnName("profile_photo_url");
+            entity.Property(x => x.ProfilePhotoStorageKey).HasColumnName("profile_photo_storage_key");
             entity.Property(x => x.Role).HasColumnName("role").HasMaxLength(50).IsRequired();
             entity.Property(x => x.IsActive).HasColumnName("is_active");
             entity.Property(x => x.MustChangePassword).HasColumnName("must_change_password");

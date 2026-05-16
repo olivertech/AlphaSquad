@@ -9,6 +9,10 @@
       {
         "Path": "src\\AlphaSquad.Api\\AlphaSquad.Api.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "src\\AlphaSquad.Backoffice\\AlphaSquad.Backoffice.csproj",
+        "Action": "Start"
       }
     ]
   }

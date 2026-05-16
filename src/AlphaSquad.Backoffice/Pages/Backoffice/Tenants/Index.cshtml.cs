@@ -21,12 +21,6 @@ public sealed class IndexModel(IBackofficeTenantWorkspaceService tenantWorkspace
         if (result is not PageResult)
             return result;
 
-        if (created == true)
-            ShowSuccessToast("Academia criada com sucesso.", title: "Onboarding iniciado");
-
-        if (updated == true)
-            ShowSuccessToast("Academia atualizada com sucesso.", title: "Dados salvos");
-
         var tenants = await tenantWorkspaceService.ListAsync(cancellationToken);
         Tenants = tenants.Select(MapTenant).ToList();
 
@@ -51,7 +45,7 @@ public sealed class IndexModel(IBackofficeTenantWorkspaceService tenantWorkspace
             LogoUrl = item.LogoUrl,
             PrimaryAdminName = item.PrimaryAdminName,
             PrimaryAdminEmail = item.PrimaryAdminEmail,
-            FeatureCount = item.FeatureCodes.Count,
+            FeatureCount = item.FeatureCount,
             CreatedAt = item.CreatedAt
         };
 }

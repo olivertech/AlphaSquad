@@ -113,7 +113,8 @@ public static class PlatformAuthEndpoints
             platformUser.Name,
             platformUser.Email,
             platformUser.Role,
-            platformUser.MustChangePassword));
+            platformUser.MustChangePassword,
+            platformUser.ProfilePhotoUrl));
     }
 
     /// <summary>
@@ -232,7 +233,8 @@ public static class PlatformAuthEndpoints
             user.Name,
             user.Email,
             user.Role,
-            user.MustChangePassword);
+            user.MustChangePassword,
+            user.ProfilePhotoUrl);
     }
 
     private static Guid GetPlatformUserId(ClaimsPrincipal user)

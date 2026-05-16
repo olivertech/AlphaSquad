@@ -1,26 +1,27 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using AlphaSquad.Backoffice.Security;
+using AlphaSquad.Backoffice.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.Extensions.Options;
 
 namespace AlphaSquad.Backoffice.Pages.Account;
 
 /// <summary>
-/// Centraliza o login do sponsor no backoffice enquanto a autenticacao master do backend ainda nao foi criada.
+/// Centraliza o login do sponsor no backoffice usando a API master da AlphaSquad.
 /// </summary>
-public sealed class LoginModel(IOptions<BackofficeBootstrapOptions> bootstrapOptions) : PageModel
+public sealed class LoginModel(IBackofficeAuthService authService) : PageModel
 {
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
     public string? ErrorMessage { get; private set; }
 
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync()
     {
-        if (User.Identity?.IsAuthenticated == true)
-            return RedirectToPage("/Backoffice/Index");
+        // O backoffice deve sempre abrir em estado deslogado quando acessado pela rota de login.
+        HttpContext.Session.ClearBackofficeSession();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
         if (TempData.TryGetValue(nameof(ErrorMessage), out var value))
             ErrorMessage = value?.ToString();
@@ -28,54 +29,63 @@ public sealed class LoginModel(IOptions<BackofficeBootstrapOptions> bootstrapOpt
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync()
+    public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return Page();
 
-        var options = bootstrapOptions.Value;
-        var normalizedEmail = Input.Email?.Trim().ToLowerInvariant();
+        try
+        {
+            var response = await authService.LoginAsync(Input.Email?.Trim() ?? string.Empty, Input.Password ?? string.Empty, cancellationToken);
 
-        if (!string.Equals(normalizedEmail, options.Email.Trim().ToLowerInvariant(), StringComparison.Ordinal) ||
-            !string.Equals(Input.Password, options.Password, StringComparison.Ordinal))
+            var sessionState = new BackofficeSessionState
+            {
+                AccessToken = response.AccessToken,
+                RefreshToken = response.RefreshToken,
+                UserId = response.User.Id,
+                Name = response.User.Name,
+                Email = response.User.Email,
+                Role = response.User.Role,
+                MustChangePassword = response.User.MustChangePassword,
+                ProfilePhotoUrl = response.User.ProfilePhotoUrl,
+                ExpiresAtUtc = new DateTimeOffset(DateTime.SpecifyKind(response.ExpiresAt, DateTimeKind.Utc))
+            };
+
+            HttpContext.Session.SetBackofficeSession(sessionState);
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, sessionState.UserId!.Value.ToString()),
+                new(ClaimTypes.Name, sessionState.Name ?? string.Empty),
+                new(ClaimTypes.Email, sessionState.Email ?? string.Empty),
+                new(ClaimTypes.Role, sessionState.Role ?? BackofficeRoles.Owner)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = false,
+                    AllowRefresh = true,
+                    ExpiresUtc = sessionState.ExpiresAtUtc
+                });
+
+            return RedirectToPage("/Backoffice/Index");
+        }
+        catch (BackofficeApiException exception) when (exception.StatusCode is 400 or 401)
         {
             ErrorMessage = "Nao foi possivel autenticar com as credenciais informadas.";
             return Page();
         }
-
-        var sessionState = new BackofficeSessionState
+        catch
         {
-            UserId = Guid.NewGuid(),
-            Name = options.Name,
-            Email = options.Email,
-            Role = BackofficeRoles.Owner,
-            ExpiresAtUtc = DateTimeOffset.UtcNow.AddHours(8)
-        };
-
-        HttpContext.Session.SetBackofficeSession(sessionState);
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, sessionState.UserId.Value.ToString()),
-            new(ClaimTypes.Name, options.Name),
-            new(ClaimTypes.Email, options.Email),
-            new(ClaimTypes.Role, BackofficeRoles.Owner)
-        };
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal,
-            new AuthenticationProperties
-            {
-                IsPersistent = true,
-                AllowRefresh = true,
-                ExpiresUtc = sessionState.ExpiresAtUtc
-            });
-
-        return RedirectToPage("/Backoffice/Index");
+            ErrorMessage = "Nao foi possivel conectar o backoffice a API master agora.";
+            return Page();
+        }
     }
 
     public sealed class InputModel

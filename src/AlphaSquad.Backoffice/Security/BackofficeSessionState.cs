@@ -7,9 +7,12 @@ namespace AlphaSquad.Backoffice.Security;
 public sealed class BackofficeSessionState
 {
     public string? AccessToken { get; set; }
+    public string? RefreshToken { get; set; }
     public Guid? UserId { get; set; }
     public string? Name { get; set; }
     public string? Email { get; set; }
     public string? Role { get; set; }
+    public bool MustChangePassword { get; set; }
+    public string? ProfilePhotoUrl { get; set; }
     public DateTimeOffset? ExpiresAtUtc { get; set; }
 }

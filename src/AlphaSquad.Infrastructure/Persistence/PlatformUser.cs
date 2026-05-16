@@ -10,6 +10,8 @@ public class PlatformUser
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? ProfilePhotoUrl { get; set; }
+    public string? ProfilePhotoStorageKey { get; set; }
     public string Role { get; set; } = PlatformRoles.Owner;
     public bool IsActive { get; set; } = true;
     public bool MustChangePassword { get; set; }

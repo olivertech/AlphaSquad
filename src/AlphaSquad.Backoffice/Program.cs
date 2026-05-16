@@ -1,16 +1,12 @@
 using AlphaSquad.Backoffice.Navigation;
 using AlphaSquad.Backoffice.Security;
 using AlphaSquad.Backoffice.Services;
-using AlphaSquad.Lmt.Application.Contracts.Interfaces;
-using AlphaSquad.Lmt.Application.Http.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var apiBaseUrl = builder.Configuration["Apis:AlphaSquad:BaseUrl"]
                  ?? throw new InvalidOperationException("The API base URL was not configured.");
-
-builder.Services.Configure<BackofficeBootstrapOptions>(builder.Configuration.GetSection("BackofficeBootstrap"));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
@@ -42,10 +38,14 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
-builder.Services.AddScoped<IAccessTokenAccessor, AccessTokenAccessor>();
 builder.Services.AddScoped<IBackofficeNavigationService, BackofficeNavigationService>();
-builder.Services.AddSingleton<IBackofficeTenantWorkspaceService, BackofficeTenantWorkspaceService>();
-builder.Services.AddGeneratedApi(apiBaseUrl);
+builder.Services.AddHttpClient<BackofficePlatformApiClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
+builder.Services.AddScoped<IBackofficeAuthService>(sp => sp.GetRequiredService<BackofficePlatformApiClient>());
+builder.Services.AddScoped<IBackofficeTenantWorkspaceService>(sp => sp.GetRequiredService<BackofficePlatformApiClient>());
+builder.Services.AddScoped<IBackofficeOwnerProfileService>(sp => sp.GetRequiredService<BackofficePlatformApiClient>());
 
 builder.Services.AddRazorPages(options =>
 {

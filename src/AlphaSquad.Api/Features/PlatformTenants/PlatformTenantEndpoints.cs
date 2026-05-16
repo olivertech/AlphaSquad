@@ -43,6 +43,15 @@ public static class PlatformTenantEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status409Conflict);
 
+        group.MapPut("/{id:guid}/logo", UpdateLogoAsync)
+            .DisableAntiforgery()
+            .Accepts<IFormFile>("multipart/form-data")
+            .WithName("UpdatePlatformTenantLogo")
+            .WithSummary("Atualiza a logo da academia pelo contexto master.")
+            .Produces<PlatformTenantDetailsResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound);
+
         group.MapPost("/{id:guid}/reset-admin-password", ResetPrimaryAdminPasswordAsync)
             .WithName("ResetPlatformTenantPrimaryAdminPassword")
             .WithSummary("Gera uma nova senha provisória para o admin principal da academia.")
@@ -257,7 +266,8 @@ public static class PlatformTenantEndpoints
 
         tenant.Name = request.Name.Trim();
         tenant.Slug = normalizedSlug;
-        tenant.LogoUrl = NormalizeOptionalText(request.LogoUrl);
+        if (request.LogoUrl is not null)
+            tenant.LogoUrl = NormalizeOptionalText(request.LogoUrl);
         tenant.PrimaryColor = NormalizeColor(request.PrimaryColor);
         tenant.SecondaryColor = NormalizeColor(request.SecondaryColor);
         tenant.IsActive = request.IsActive;
@@ -280,6 +290,64 @@ public static class PlatformTenantEndpoints
         await db.SaveChangesAsync();
 
         var response = await BuildTenantDetailsResponseAsync(id, db);
+        return Results.Ok(response!);
+    }
+
+    /// <summary>
+    /// Atualiza a logo da academia usando o mesmo storage do tenant, mas sob controle do owner.
+    /// A operacao preserva o vinculo com TenantMedia para manter a limpeza correta do arquivo anterior.
+    /// </summary>
+    private static async Task<IResult> UpdateLogoAsync(Guid id,
+                                                       IFormFile file,
+                                                       AppDbContext db,
+                                                       IObjectStorageService storage)
+    {
+        if (file == null || file.Length == 0)
+            return Results.BadRequest("Logo file is required.");
+
+        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == id);
+        if (tenant is null)
+            return Results.NotFound();
+
+        if (tenant.LogoMediaId.HasValue)
+        {
+            var oldLogo = await db.TenantMedias.FirstOrDefaultAsync(x => x.Id == tenant.LogoMediaId && x.TenantId == tenant.Id);
+            if (oldLogo != null)
+            {
+                await storage.DeleteAsync(oldLogo.StorageKey);
+                db.TenantMedias.Remove(oldLogo);
+            }
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (string.IsNullOrWhiteSpace(extension))
+            extension = ".png";
+
+        var normalizedFileName = $"logo_{tenant.Id}{extension.ToLowerInvariant()}";
+        var path = $"tenants/{tenant.Slug}/logos";
+
+        using var stream = file.OpenReadStream();
+        var uploadResult = await storage.UploadAsync(stream, normalizedFileName, file.ContentType, path);
+
+        var logoMedia = new TenantMedia
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenant.Id,
+            FileName = normalizedFileName,
+            ContentType = file.ContentType,
+            StorageKey = uploadResult.Key,
+            Url = uploadResult.Url,
+            Size = file.Length,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.TenantMedias.Add(logoMedia);
+        tenant.LogoUrl = uploadResult.Url;
+        tenant.LogoMediaId = logoMedia.Id;
+
+        await db.SaveChangesAsync();
+
+        var response = await BuildTenantDetailsResponseAsync(tenant.Id, db);
         return Results.Ok(response!);
     }
 

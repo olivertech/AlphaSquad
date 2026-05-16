@@ -32,6 +32,7 @@
         var workspaceName = "AlphaSquad";
         var userName = session?.Name ?? User.Identity?.Name ?? "Sponsor";
         var role = session?.Role ?? string.Empty;
+        var profilePhotoUrl = session?.ProfilePhotoUrl;
         var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
         var menuSections = NavigationService.Build();
         var userInitials = string.Concat(
@@ -50,20 +51,20 @@
              class="fixed inset-0 z-30 bg-slate-950/50 lg:hidden"
              @@click="sidebarOpen = false"></div>
 
-        <aside class="fixed inset-y-0 left-0 z-40 flex bg-[#111827] text-slate-200 transition-all duration-300"
-               x-bind:class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', sidebarCompact ? 'lg:w-24' : 'lg:w-72']">
+        <aside class="fixed inset-y-0 left-0 z-40 flex overflow-hidden bg-[#111827] text-slate-200 transition-all duration-300"
+               x-bind:class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', sidebarCompact ? 'lg:w-24' : 'lg:w-80']">
             <div class="flex w-full flex-col">
-                <div class="flex h-24 items-center gap-4 border-b border-white/10 px-6" x-bind:class="sidebarCompact ? 'justify-center px-3' : ''">
+                <div class="flex h-20 items-center gap-3 border-b border-white/10 px-4" x-bind:class="sidebarCompact ? 'justify-center px-3' : ''">
                     <a asp-page="/Backoffice/Index"
-                       class="flex items-center gap-3"
+                       class="flex w-full min-w-0 items-center gap-3 overflow-hidden"
                        x-bind:class="sidebarCompact ? 'justify-center' : ''">
                         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/10">
                             <span class="text-xl font-bold">A</span>
                         </div>
 
-                        <div x-show="!sidebarCompact" x-transition.opacity class="min-w-0">
-                            <p class="truncate text-sm font-semibold text-white">@workspaceName</p>
-                            <p class="truncate text-xs uppercase tracking-[0.22em] text-slate-400">Backoffice da plataforma</p>
+                        <div x-show="!sidebarCompact" x-transition.opacity class="min-w-0 overflow-hidden">
+                            <p class="truncate text-[1.05rem] font-semibold text-white">@workspaceName</p>
+                            <p class="truncate text-[10px] uppercase tracking-[0.18em] text-slate-400">Backoffice da plataforma</p>
                         </div>
                     </a>
                 </div>
@@ -99,7 +100,7 @@
         </aside>
 
         <div class="min-h-screen transition-all duration-300"
-             x-bind:class="sidebarCompact ? 'lg:pl-24' : 'lg:pl-72'">
+             x-bind:class="sidebarCompact ? 'lg:pl-24' : 'lg:pl-80'">
             <header class="sticky top-0 z-20 shadow-sm" style="background: linear-gradient(90deg, #111827 0%, #1f2937 55%, #7c3aed 100%);">
                 <div class="flex h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                     <div class="flex items-center gap-3">
@@ -130,11 +131,18 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a asp-page="/Backoffice/Index"
+                        <a asp-page="/Backoffice/Profile/Index"
                            class="hidden items-center gap-3 rounded-full bg-white/10 px-3 py-2 text-white/90 transition hover:bg-white/15 sm:flex">
-                            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-sm font-semibold text-white">
-                                <span>@userInitials</span>
-                            </div>
+                            @if (!string.IsNullOrWhiteSpace(profilePhotoUrl))
+                            {
+                                <img src="@profilePhotoUrl" alt="Foto do owner" class="h-11 w-11 rounded-full object-cover ring-2 ring-white/15" />
+                            }
+                            else
+                            {
+                                <div class="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-sm font-semibold text-white">
+                                    <span>@userInitials</span>
+                                </div>
+                            }
 
                             <div class="min-w-0 text-left">
                                 <p class="truncate text-sm font-semibold text-white">@userName</p>

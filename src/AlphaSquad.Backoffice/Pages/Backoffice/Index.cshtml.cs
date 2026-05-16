@@ -29,7 +29,7 @@ public sealed class IndexModel(IBackofficeTenantWorkspaceService tenantWorkspace
         TotalTenants = mapped.Count;
         ActiveTenants = mapped.Count(item => item.IsActive);
         PendingPasswordChanges = tenants.Count(item => item.MustChangePassword);
-        TotalContractedModules = tenants.Sum(item => item.FeatureCodes.Count);
+        TotalContractedModules = tenants.Sum(item => item.FeatureCount);
         RecentTenants = mapped.Take(6).ToList();
 
         return Page();
@@ -48,7 +48,7 @@ public sealed class IndexModel(IBackofficeTenantWorkspaceService tenantWorkspace
             LogoUrl = item.LogoUrl,
             PrimaryAdminName = item.PrimaryAdminName,
             PrimaryAdminEmail = item.PrimaryAdminEmail,
-            FeatureCount = item.FeatureCodes.Count,
+            FeatureCount = item.FeatureCount,
             CreatedAt = item.CreatedAt
         };
 }
