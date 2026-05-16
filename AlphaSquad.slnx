@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/0-AlphaSquad.Backoffice/">
+    <Project Path="src/AlphaSquad.Backoffice/AlphaSquad.Backoffice.csproj" />
+  </Folder>
   <Folder Name="/0-AlphaSquad.Web/">
     <Project Path="src/AlphaSquad.Web/AlphaSquad.Web.csproj" />
   </Folder>

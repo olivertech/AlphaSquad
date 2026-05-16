@@ -1,0 +1,181 @@
+@using AlphaSquad.Backoffice.Navigation
+@using AlphaSquad.Backoffice.Security
+@inject IBackofficeNavigationService NavigationService
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AlphaSquad Backoffice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.24/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui"]
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/AlphaSquad.Backoffice.styles.css" asp-append-version="true" />
+</head>
+<body class="font-sans text-slate-900">
+    @{
+        var session = Context.Session.GetBackofficeSession();
+        var workspaceName = "AlphaSquad";
+        var userName = session?.Name ?? User.Identity?.Name ?? "Sponsor";
+        var role = session?.Role ?? string.Empty;
+        var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+        var menuSections = NavigationService.Build();
+        var userInitials = string.Concat(
+            (userName ?? "A")
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Take(2)
+                .Select(part => char.ToUpperInvariant(part[0])));
+    }
+
+    <div x-data="dashboardShell()"
+         x-init="init()"
+         class="min-h-screen bg-[#eef2f6]"
+         style="--tenant-primary:#111827; --tenant-secondary:#7c3aed;">
+        <div x-show="sidebarOpen"
+             x-transition.opacity
+             class="fixed inset-0 z-30 bg-slate-950/50 lg:hidden"
+             @@click="sidebarOpen = false"></div>
+
+        <aside class="fixed inset-y-0 left-0 z-40 flex bg-[#111827] text-slate-200 transition-all duration-300"
+               x-bind:class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', sidebarCompact ? 'lg:w-24' : 'lg:w-72']">
+            <div class="flex w-full flex-col">
+                <div class="flex h-24 items-center gap-4 border-b border-white/10 px-6" x-bind:class="sidebarCompact ? 'justify-center px-3' : ''">
+                    <a asp-page="/Backoffice/Index"
+                       class="flex items-center gap-3"
+                       x-bind:class="sidebarCompact ? 'justify-center' : ''">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/10">
+                            <span class="text-xl font-bold">A</span>
+                        </div>
+
+                        <div x-show="!sidebarCompact" x-transition.opacity class="min-w-0">
+                            <p class="truncate text-sm font-semibold text-white">@workspaceName</p>
+                            <p class="truncate text-xs uppercase tracking-[0.22em] text-slate-400">Backoffice da plataforma</p>
+                        </div>
+                    </a>
+                </div>
+
+                <nav class="flex-1 overflow-y-auto px-3 py-5">
+                    @foreach (var menuSection in menuSections)
+                    {
+                        <div class="mb-5">
+                            <p x-show="!sidebarCompact" x-transition.opacity class="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                                @menuSection.Title
+                            </p>
+
+                            <ul class="mt-2 space-y-1">
+                                @foreach (var item in menuSection.Items)
+                                {
+                                    var isActive = item.Matches(currentPage);
+                                    <li>
+                                        <a asp-page="@item.PagePath"
+                                           class="dashboard-menu-item @(isActive ? "dashboard-menu-item-active" : "text-slate-300 hover:bg-white/5 hover:text-white")"
+                                           x-bind:class="sidebarCompact ? 'justify-center dashboard-menu-item-compact' : ''">
+                                            <span class="dashboard-menu-icon">
+                                                <partial name="_MenuIcon" model="item.IconKey" />
+                                            </span>
+                                            <span x-show="!sidebarCompact" x-transition.opacity>@item.Label</span>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </nav>
+            </div>
+        </aside>
+
+        <div class="min-h-screen transition-all duration-300"
+             x-bind:class="sidebarCompact ? 'lg:pl-24' : 'lg:pl-72'">
+            <header class="sticky top-0 z-20 shadow-sm" style="background: linear-gradient(90deg, #111827 0%, #1f2937 55%, #7c3aed 100%);">
+                <div class="flex h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center gap-3">
+                        <button type="button"
+                                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/15 lg:hidden"
+                                @@click="sidebarOpen = true">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                        </button>
+
+                        <button type="button"
+                                class="hidden h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/15 lg:flex"
+                                @@click="sidebarCompact = !sidebarCompact; persistSidebarCompact()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15M4.5 12h15M4.5 17.25h15" />
+                            </svg>
+                        </button>
+
+                        <label class="hidden items-center gap-3 rounded-full bg-white px-4 py-3 shadow-sm sm:flex">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m0 0A7.65 7.65 0 1 0 5.85 5.85a7.65 7.65 0 0 0 10.8 10.8Z" />
+                            </svg>
+                            <input type="text"
+                                   class="w-56 border-none bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
+                                   placeholder="Pesquisar no backoffice" />
+                        </label>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <a asp-page="/Backoffice/Index"
+                           class="hidden items-center gap-3 rounded-full bg-white/10 px-3 py-2 text-white/90 transition hover:bg-white/15 sm:flex">
+                            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-sm font-semibold text-white">
+                                <span>@userInitials</span>
+                            </div>
+
+                            <div class="min-w-0 text-left">
+                                <p class="truncate text-sm font-semibold text-white">@userName</p>
+                                <p class="text-xs uppercase tracking-[0.2em] text-white/70">@role</p>
+                            </div>
+                        </a>
+
+                        <form method="post" asp-page="/Account/Logout">
+                            <button type="submit" class="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                                Sair
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <main class="relative px-4 py-6 sm:px-6 lg:px-8">
+                <partial name="_ToastHost" />
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function dashboardShell() {
+            return {
+                sidebarOpen: false,
+                sidebarCompact: false,
+                storageKeys: {
+                    compact: "alphasquad.backoffice.sidebar.compact"
+                },
+                init() {
+                    this.sidebarCompact = localStorage.getItem(this.storageKeys.compact) === "true";
+                },
+                persistSidebarCompact() {
+                    localStorage.setItem(this.storageKeys.compact, this.sidebarCompact ? "true" : "false");
+                }
+            };
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿namespace AlphaSquad.Infrastructure.Persistence;
+namespace AlphaSquad.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +10,9 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<PlatformUser> PlatformUsers => Set<PlatformUser>();
     public DbSet<AppUser> Users => Set<AppUser>();
+    public DbSet<PlatformRefreshToken> PlatformRefreshTokens => Set<PlatformRefreshToken>();
     public DbSet<TenantMedia> TenantMedias => Set<TenantMedia>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Feature> Features => Set<Feature>();
@@ -65,6 +67,21 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<PlatformUser>(entity =>
+        {
+            entity.ToTable("platform_users");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Email).HasColumnName("email").HasColumnType("citext").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
+            entity.Property(x => x.Role).HasColumnName("role").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.MustChangePassword).HasColumnName("must_change_password");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.HasIndex(x => x.Email).IsUnique();
+        });
+
         modelBuilder.Entity<AppUser>(entity =>
         {
             entity.ToTable("users");
@@ -76,6 +93,7 @@ public class AppDbContext : DbContext
             entity.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
             entity.Property(x => x.Role).HasColumnName("role").HasConversion<int>().IsRequired();
             entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.MustChangePassword).HasColumnName("must_change_password");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.HasIndex(x => new { x.TenantId, x.Email }).IsUnique();
 
@@ -83,6 +101,24 @@ public class AppDbContext : DbContext
                 .WithMany(x => x.Users)
                 .HasForeignKey(x => x.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PlatformRefreshToken>(entity =>
+        {
+            entity.ToTable("platform_refresh_tokens");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Token).HasColumnName("token").IsRequired();
+            entity.Property(x => x.PlatformUserId).HasColumnName("platform_user_id");
+            entity.Property(x => x.ExpiryDate).HasColumnName("expiry_date");
+            entity.Property(x => x.IsUsed).HasColumnName("is_used");
+            entity.Property(x => x.IsRevoked).HasColumnName("is_revoked");
+            entity.HasIndex(x => x.Token).IsUnique();
+
+            entity.HasOne(x => x.PlatformUser)
+                .WithMany(x => x.RefreshTokens)
+                .HasForeignKey(x => x.PlatformUserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<TenantMedia>(entity =>

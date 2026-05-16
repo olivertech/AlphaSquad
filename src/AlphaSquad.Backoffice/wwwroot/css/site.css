@@ -1,0 +1,197 @@
+:root {
+  color-scheme: light;
+  --tenant-primary: #14b8a6;
+  --tenant-secondary: #475569;
+}
+
+@font-face {
+  font-family: "Material Symbols Rounded";
+  src: url("/fonts/GoogleMaterialSymbolsRounded.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 700;
+}
+
+html {
+  font-size: 16px;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: #eef2f6;
+}
+
+::selection {
+  background: rgba(16, 185, 129, 0.18);
+  color: #0f172a;
+}
+
+.menu a {
+  transition: all 0.2s ease;
+}
+
+.dashboard-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 1rem;
+  padding: 0.875rem 0.95rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.dashboard-menu-item-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.75rem;
+  min-height: 3.75rem;
+  margin-inline: auto;
+  padding: 0;
+  gap: 0;
+}
+
+.dashboard-menu-item-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 0 var(--tenant-primary);
+}
+
+.dashboard-menu-item-open {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--tenant-primary);
+  box-shadow: inset 3px 0 0 0 var(--tenant-primary);
+}
+
+.dashboard-menu-icon {
+  display: inline-flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.material-symbols-rounded {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+.dashboard-material-icon {
+  font-size: 1.55rem;
+  vertical-align: middle;
+}
+
+.dashboard-submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.95rem;
+  color: #b9c1cc;
+  font-size: 0.92rem;
+  transition: all 0.2s ease;
+}
+
+.dashboard-submenu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.dashboard-submenu-item-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 0 var(--tenant-primary);
+}
+
+.dashboard-submenu-icon {
+  display: inline-flex;
+  height: 1.35rem;
+  width: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.dashboard-submenu-icon .dashboard-material-icon {
+  font-size: 1.15rem;
+}
+
+.dashboard-compact-submenu-item {
+  position: relative;
+  display: flex;
+  height: 2.35rem;
+  width: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  margin-inline: auto;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.dashboard-compact-submenu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.dashboard-compact-submenu-item-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--tenant-primary);
+}
+
+.dashboard-compact-submenu-list {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 0.4rem;
+  padding-block: 0.15rem 0.25rem;
+}
+
+.dashboard-compact-submenu-item .dashboard-menu-icon {
+  height: 1.3rem;
+  width: 1.3rem;
+}
+
+.dashboard-compact-submenu-item .dashboard-material-icon {
+  font-size: 1.12rem;
+}
+
+
+.tenant-text {
+  color: var(--tenant-primary);
+}
+
+.tenant-soft-bg {
+  background: color-mix(in srgb, var(--tenant-secondary) 12%, white);
+}
+
+.tenant-soft-border {
+  border-color: color-mix(in srgb, var(--tenant-secondary) 18%, white);
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+}

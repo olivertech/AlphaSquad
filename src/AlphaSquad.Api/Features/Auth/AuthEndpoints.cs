@@ -1,4 +1,4 @@
-﻿namespace AlphaSquad.Api.Features.Auth;
+namespace AlphaSquad.Api.Features.Auth;
 
 public static class AuthEndpoints
 {
@@ -83,6 +83,7 @@ public static class AuthEndpoints
             authenticatedUser.ActivePlan,
             authenticatedUser.ActivePlanPrice,
             authenticatedUser.ActivePlanDurationDays,
+            authenticatedUser.MustChangePassword,
             Guid.Parse(tenantId),
             user.FindFirstValue("tenant_slug") ?? string.Empty
         ));
@@ -232,6 +233,7 @@ public static class AuthEndpoints
             return Results.BadRequest("Current password is incorrect.");
 
         appUser.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        appUser.MustChangePassword = false;
         
         var tokens = await db.RefreshTokens.Where(x => x.UserId == userId && !x.IsRevoked).ToListAsync();
         foreach (var token in tokens)
@@ -283,7 +285,8 @@ public static class AuthEndpoints
                                     active_plan.membership_plan_id AS ActivePlanId,
                                     active_plan.name AS ActivePlan,
                                     active_plan.price AS ActivePlanPrice,
-                                    active_plan.duration_days AS ActivePlanDurationDays
+                                    active_plan.duration_days AS ActivePlanDurationDays,
+                                    u.must_change_password AS MustChangePassword
                              FROM users u
                              LEFT JOIN user_profiles up
                                ON up.user_id = u.id

@@ -2,6 +2,32 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-16] - Backoffice Backend Foundation
+
+### Added
+
+- Entidade `PlatformUser` para representar o sponsor e futuros operadores globais da AlphaSquad.
+- Entidade `PlatformRefreshToken` para separar a sessao do backoffice do fluxo multi-tenant das academias.
+- Endpoints `/api/platform-auth/login`, `/me`, `/refresh`, `/change-password` e `/logout`.
+- Endpoints `/api/platform-tenants` para listagem, detalhe, criacao, atualizacao e reset de senha provisoria do admin principal.
+- Seed bootstrap do sponsor da plataforma a partir da configuracao `PlatformBootstrap`.
+
+### Changed
+
+- `AppUser` passou a ter `MustChangePassword`, habilitando provisao segura do admin inicial da academia.
+- O onboarding master da academia agora cria:
+- tenant
+- features contratadas
+- admin inicial
+- senha provisoria
+- obrigatoriedade de troca de senha no primeiro acesso
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para registrar a separacao entre contexto tenant e contexto master da AlphaSquad.
+
+### Noted
+
+- A camada master foi implementada sem alterar o modelo de autenticacao das academias.
+- O dashboard das academias continua isolado; o backoffice master usa claims e refresh tokens proprios.
+
 ## [2026-05-15] - Profile Contact Fields & Notification Planning
 
 ### Added

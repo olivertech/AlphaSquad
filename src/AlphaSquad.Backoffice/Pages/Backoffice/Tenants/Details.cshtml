@@ -1,0 +1,141 @@
+@page "{id:guid}"
+@model AlphaSquad.Backoffice.Pages.Backoffice.Tenants.DetailsModel
+@{
+    ViewData["Title"] = "Detalhes da academia";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Backoffice/Index" class="hover:text-slate-700">Backoffice</a></li>
+            <li><a asp-page="/Backoffice/Tenants/Index" class="hover:text-slate-700">Academias</a></li>
+            <li class="font-medium text-slate-900">Detalhes</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950">@Model.Tenant?.Name</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Revise o pacote liberado, o branding e a credencial provisoria do administrador inicial desta academia.
+        </p>
+    </div>
+
+    @if (Model.Tenant is not null)
+    {
+        <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                    <h2 class="text-xl font-semibold tenant-text">Identidade da academia</h2>
+                    <p class="mt-1 text-sm leading-6 text-slate-500">
+                        Dados principais usados no ecossistema da AlphaSquad para esta operacao.
+                    </p>
+                </div>
+
+                <div class="space-y-6 px-6 py-6 sm:px-8">
+                    <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
+                        @if (!string.IsNullOrWhiteSpace(Model.Tenant.LogoUrl))
+                        {
+                            <img src="@Model.Tenant.LogoUrl" alt="Logo da academia" class="h-24 w-24 rounded-[1.5rem] object-cover ring-1 ring-slate-200" />
+                        }
+                        else
+                        {
+                            <div class="flex h-24 w-24 items-center justify-center rounded-[1.5rem] text-2xl font-bold text-white ring-1 ring-slate-200"
+                                 style="background:@Model.Tenant.PrimaryColor;">
+                                @Model.Tenant.Name[..1].ToUpperInvariant()
+                            </div>
+                        }
+
+                        <div class="grid gap-4 sm:flex-1 md:grid-cols-2">
+                            <div class="tenant-soft-bg rounded-[1.5rem] border tenant-soft-border px-4 py-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Slug</p>
+                                <p class="mt-3 text-base font-semibold text-slate-900">@Model.Tenant.Slug</p>
+                            </div>
+                            <div class="tenant-soft-bg rounded-[1.5rem] border tenant-soft-border px-4 py-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Status</p>
+                                <p class="mt-3 text-base font-semibold text-slate-900">@Model.Tenant.StatusLabel</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Cor primaria</p>
+                            <div class="mt-3 flex items-center gap-3">
+                                <span class="h-8 w-8 rounded-full ring-1 ring-slate-200" style="background:@Model.Tenant.PrimaryColor;"></span>
+                                <span class="text-sm font-medium text-slate-900">@Model.Tenant.PrimaryColor</span>
+                            </div>
+                        </div>
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Cor secundaria</p>
+                            <div class="mt-3 flex items-center gap-3">
+                                <span class="h-8 w-8 rounded-full ring-1 ring-slate-200" style="background:@Model.Tenant.SecondaryColor;"></span>
+                                <span class="text-sm font-medium text-slate-900">@Model.Tenant.SecondaryColor</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Modulos liberados</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @foreach (var feature in Model.Tenant.Features)
+                            {
+                                <span class="rounded-full tenant-soft-bg px-4 py-2 text-sm font-semibold text-slate-700">
+                                    @feature.Label
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="space-y-6">
+                <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                    <div class="border-b border-slate-200 px-6 py-5">
+                        <h2 class="text-xl font-semibold tenant-text">Administrador inicial</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Pessoa responsavel por abrir a operacao da academia no dashboard.
+                        </p>
+                    </div>
+                    <div class="space-y-4 px-6 py-6">
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Nome</p>
+                            <p class="mt-3 text-base font-semibold text-slate-900">@Model.Tenant.PrimaryAdminName</p>
+                        </div>
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">E-mail</p>
+                            <p class="mt-3 text-base font-semibold text-slate-900">@Model.Tenant.PrimaryAdminEmail</p>
+                        </div>
+                        <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-4 py-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Senha provisoria</p>
+                            <p class="mt-3 text-xl font-semibold text-amber-900">@Model.Tenant.TemporaryPassword</p>
+                            <p class="mt-2 text-sm leading-6 text-amber-800">
+                                Troca obrigatoria no primeiro acesso: @(Model.Tenant.MustChangePassword ? "Sim" : "Nao")
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                    <div class="border-b border-slate-200 px-6 py-5">
+                        <h2 class="text-xl font-semibold tenant-text">Acoes do sponsor</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Ajustes rapidos para concluir ou revisar o onboarding desta academia.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 px-6 py-6">
+                        <a asp-page="/Backoffice/Tenants/Edit"
+                           asp-route-id="@Model.Tenant.Id"
+                           class="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                           style="background: var(--tenant-primary);">
+                            Editar academia
+                        </a>
+                        <a asp-page="/Backoffice/Tenants/Index"
+                           class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                            Voltar para a base
+                        </a>
+                    </div>
+                </section>
+            </section>
+        </div>
+    }
+</section>

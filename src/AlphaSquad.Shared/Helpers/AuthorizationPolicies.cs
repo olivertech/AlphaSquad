@@ -15,4 +15,10 @@ public static class AuthorizationPolicies
     /// Policy para operacoes de gestao que podem ser executadas por administradores e professores.
     /// </summary>
     public const string AdminOrTeacher = "AdminOrTeacher";
+
+    /// <summary>
+    /// Policy exclusiva do backoffice master da AlphaSquad.
+    /// Ela protege os endpoints globais de plataforma, separados do mundo tenant.
+    /// </summary>
+    public const string PlatformOwnerOnly = "PlatformOwnerOnly";
 }

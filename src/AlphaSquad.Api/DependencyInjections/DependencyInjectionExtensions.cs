@@ -1,4 +1,4 @@
-﻿namespace AlphaSquad.Api.DependencyInjections;
+namespace AlphaSquad.Api.DependencyInjections;
 
 public static class DependencyInjectionExtensions
 {
@@ -12,6 +12,7 @@ public static class DependencyInjectionExtensions
     {
         services.AddScoped<IRedisCacheService, RedisCacheService>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPlatformJwtService, PlatformJwtService>();
         services.AddScoped<IBCryptPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IFeatureAccessService, FeatureAccessService>();
         services.AddScoped<IGamificationService, GamificationService>();

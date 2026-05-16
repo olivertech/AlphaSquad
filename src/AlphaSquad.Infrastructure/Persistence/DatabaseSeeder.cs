@@ -1,4 +1,4 @@
-﻿using AlphaSquad.Infrastructure.Auth;
+using AlphaSquad.Infrastructure.Auth;
 using AlphaSquad.Shared.Enums;
 using AlphaSquad.Shared.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -9,16 +9,21 @@ public class DatabaseSeeder
 {
     private readonly AppDbContext _db;
     private readonly IBCryptPasswordHasher _passwordHasher;
+    private readonly PlatformBootstrapOptions _platformBootstrapOptions;
 
-    public DatabaseSeeder(AppDbContext db, IBCryptPasswordHasher passwordHasher)
+    public DatabaseSeeder(AppDbContext db,
+                          IBCryptPasswordHasher passwordHasher,
+                          IOptions<PlatformBootstrapOptions> platformBootstrapOptions)
     {
         _db = db;
         _passwordHasher = passwordHasher;
+        _platformBootstrapOptions = platformBootstrapOptions.Value;
     }
 
     public async Task SeedAsync()
     {
         await _db.Database.MigrateAsync();
+        await SeedPlatformOwnerAsync();
 
         var tenantSlug = "alpha-demo";
 
@@ -59,6 +64,7 @@ public class DatabaseSeeder
                 PasswordHash = _passwordHasher.Hash("123"),
                 Role = UserRole.Admin,
                 IsActive = true,
+                MustChangePassword = false,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -74,6 +80,35 @@ public class DatabaseSeeder
 
         // Seed de regras base da gamificacao para o tenant demo
         await SeedGamificationRulesAsync(tenant);
+    }
+
+    private async Task SeedPlatformOwnerAsync()
+    {
+        var ownerEmail = string.IsNullOrWhiteSpace(_platformBootstrapOptions.Email)
+            ? "owner@alphasquad.app"
+            : _platformBootstrapOptions.Email.Trim().ToLowerInvariant();
+
+        var ownerExists = await _db.PlatformUsers.AnyAsync(x => x.Email == ownerEmail);
+        if (ownerExists)
+            return;
+
+        _db.PlatformUsers.Add(new PlatformUser
+        {
+            Id = Guid.NewGuid(),
+            Name = string.IsNullOrWhiteSpace(_platformBootstrapOptions.Name)
+                ? "Equipe AlphaSquad"
+                : _platformBootstrapOptions.Name.Trim(),
+            Email = ownerEmail,
+            PasswordHash = _passwordHasher.Hash(string.IsNullOrWhiteSpace(_platformBootstrapOptions.Password)
+                ? "AlphaSquad123!"
+                : _platformBootstrapOptions.Password),
+            Role = PlatformRoles.Owner,
+            IsActive = true,
+            MustChangePassword = false,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _db.SaveChangesAsync();
     }
 
     private async Task SeedFeaturesAsync(Tenant tenant)

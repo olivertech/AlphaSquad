@@ -1,4 +1,4 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDependencies();
@@ -48,6 +48,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Configura as opÃ§Ãµes de JWT a partir da configuracao central da aplicacao.
 // Na V1, os valores podem vir de appsettings, user-secrets ou variaveis de ambiente.
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<PlatformBootstrapOptions>(builder.Configuration.GetSection("PlatformBootstrap"));
 
 //var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
 builder.Services
@@ -115,6 +116,10 @@ builder.Services.AddAuthorization(options =>
     // Policy base para operacoes gerenciais compartilhadas entre administradores e professores.
     options.AddPolicy(AuthorizationPolicies.AdminOrTeacher, policy =>
         policy.RequireRole(nameof(UserRole.Admin), nameof(UserRole.Teacher)));
+
+    // Policy exclusiva do backoffice master, separando a gestao da AlphaSquad do contexto das academias.
+    options.AddPolicy(AuthorizationPolicies.PlatformOwnerOnly, policy =>
+        policy.RequireClaim("platform_scope", PlatformClaimValues.Owner));
 });
 
 var app = builder.Build();
@@ -155,5 +160,7 @@ app.MapEventEndpoints();
 app.MapGamificationEndpoints();
 app.MapLegalEndpoints();
 app.MapConfigurationEndpoints();
+app.MapPlatformAuthEndpoints();
+app.MapPlatformTenantEndpoints();
 
 app.Run();

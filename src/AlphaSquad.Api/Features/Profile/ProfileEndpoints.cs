@@ -210,6 +210,7 @@ public static class ProfileEndpoints
             return Results.BadRequest("New password must be different from current password.");
 
         user.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        user.MustChangePassword = false;
 
         var tokens = await db.RefreshTokens
             .Where(x => x.UserId == userId && !x.IsRevoked)
@@ -338,7 +339,7 @@ public static class ProfileEndpoints
     }
 
     /// <summary>
-    /// Recarrega a projeção completa do profile usada pelo app.
+    /// Recarrega a projeÃ§Ã£o completa do profile usada pelo app.
     /// </summary>
     private static async Task<ProfileResponse?> BuildResponseAsync(Guid userId, Guid tenantId, AppDbContext db)
     {

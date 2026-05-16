@@ -1,4 +1,4 @@
-﻿namespace AlphaSquad.Shared.DTOs.Auth;
+namespace AlphaSquad.Shared.DTOs.Auth;
 
 public record LoginRequest(
     string TenantSlug, 
@@ -28,7 +28,8 @@ public record AuthenticatedUserResponse(
     Guid? ActivePlanId,
     string? ActivePlan,
     decimal? ActivePlanPrice,
-    int? ActivePlanDurationDays
+    int? ActivePlanDurationDays,
+    bool MustChangePassword
 );
 
 public record AuthenticatedSessionResponse(
@@ -42,6 +43,7 @@ public record AuthenticatedSessionResponse(
     string? ActivePlan,
     decimal? ActivePlanPrice,
     int? ActivePlanDurationDays,
+    bool MustChangePassword,
     Guid TenantId,
     string TenantSlug
 );

@@ -3,6 +3,7 @@ global using AlphaSquad.Shared.Enums;
 global using AlphaSquad.Infrastructure.Persistence;
 global using AlphaSquad.Infrastructure.Storage;
 global using AlphaSquad.Shared.Contracts;
+global using AlphaSquad.Shared.Helpers;
 // System namespaces
 global using System;
 global using System.Collections.Generic;

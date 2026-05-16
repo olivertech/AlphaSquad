@@ -1,0 +1,12 @@
+@model string
+
+@{
+    var iconName = Model switch
+    {
+        "dashboard" => "space_dashboard",
+        "academy" => "apartment",
+        _ => "add_circle"
+    };
+}
+
+<span class="material-symbols-rounded dashboard-material-icon" aria-hidden="true">@iconName</span>

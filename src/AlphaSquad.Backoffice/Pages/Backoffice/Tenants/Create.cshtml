@@ -1,0 +1,138 @@
+@page
+@model AlphaSquad.Backoffice.Pages.Backoffice.Tenants.CreateModel
+@{
+    ViewData["Title"] = "Nova academia";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Backoffice/Index" class="hover:text-slate-700">Backoffice</a></li>
+            <li><a asp-page="/Backoffice/Tenants/Index" class="hover:text-slate-700">Academias</a></li>
+            <li class="font-medium text-slate-900">Nova academia</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Novo onboarding de academia</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Prepare uma nova academia com identidade visual, modulos contratados e administrador inicial pronto para o primeiro acesso.
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                <h2 class="text-xl font-semibold tenant-text">Dados da academia</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Defina nome, slug, status inicial e o branding basico usado no ecossistema.
+                </p>
+            </div>
+
+            <div class="grid gap-5 px-6 py-6 md:grid-cols-2 sm:px-8">
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Nome da academia</span>
+                    <input asp-for="Input.Name" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <span asp-validation-for="Input.Name" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Slug</span>
+                    <input asp-for="Input.Slug" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="academia-exemplo" />
+                    <span asp-validation-for="Input.Slug" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Cor primaria</span>
+                    <input asp-for="Input.PrimaryColor" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <span asp-validation-for="Input.PrimaryColor" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Cor secundaria</span>
+                    <input asp-for="Input.SecondaryColor" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <span asp-validation-for="Input.SecondaryColor" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+
+                <label class="form-control md:col-span-2">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Logo da academia</span>
+                    <input asp-for="LogoFile" type="file" accept="image/*" class="file-input file-input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <p class="mt-2 text-xs leading-5 text-slate-500">A imagem fica armazenada em memoria nesta fase e sera integrada ao storage quando a API master existir.</p>
+                </label>
+
+                <label class="form-control md:col-span-2">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Status inicial</span>
+                    <label class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                        <input asp-for="Input.IsActive" type="checkbox" class="toggle toggle-sm" />
+                        Liberar esta academia como ativa logo apos o onboarding.
+                    </label>
+                </label>
+            </div>
+        </section>
+
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                <h2 class="text-xl font-semibold tenant-text">Modulos contratados</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Escolha quais modulos serao liberados para a academia logo na entrega inicial.
+                </p>
+            </div>
+
+            <div class="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3 sm:px-8">
+                @foreach (var feature in Model.FeatureOptions)
+                {
+                    <label class="flex items-start gap-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-300 hover:bg-slate-100">
+                        <input type="checkbox"
+                               name="Input.FeatureCodes"
+                               value="@feature.Code"
+                               checked="@Model.Input.FeatureCodes.Contains(feature.Code, StringComparer.OrdinalIgnoreCase)"
+                               class="checkbox checkbox-sm mt-1" />
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-900">@feature.Label</span>
+                            <span class="mt-1 block text-sm leading-6 text-slate-500">@feature.Description</span>
+                        </span>
+                    </label>
+                }
+            </div>
+        </section>
+
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                <h2 class="text-xl font-semibold tenant-text">Administrador inicial</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Informe quem sera o responsavel inicial pela operacao da academia no dashboard.
+                </p>
+            </div>
+
+            <div class="grid gap-5 px-6 py-6 md:grid-cols-2 sm:px-8">
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Nome do administrador</span>
+                    <input asp-for="Input.AdminName" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <span asp-validation-for="Input.AdminName" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">E-mail do administrador</span>
+                    <input asp-for="Input.AdminEmail" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <span asp-validation-for="Input.AdminEmail" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+            </div>
+        </section>
+
+        <div class="flex flex-wrap gap-3">
+            <button type="submit"
+                    class="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                    style="background: var(--tenant-primary);">
+                Criar academia
+            </button>
+            <a asp-page="/Backoffice/Tenants/Index"
+               class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

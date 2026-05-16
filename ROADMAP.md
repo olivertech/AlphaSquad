@@ -36,7 +36,27 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Corrigir relacionamento de refresh tokens
 - [x] Tratar parse seguro de claims de usuario
 - [x] Adicionar policies e permissoes por role
+- [x] Criar autenticacao master separada para o backoffice da AlphaSquad
 - [ ] Centralizar tenant resolution em middleware
+
+## Fase 1.1: Platform Backoffice Foundation
+
+- [x] Modelar `PlatformUser`
+- [x] Modelar `PlatformRefreshToken`
+- [x] Criar seed bootstrap do sponsor da AlphaSquad
+- [x] Implementar `/api/platform-auth/login`
+- [x] Implementar `/api/platform-auth/me`
+- [x] Implementar `/api/platform-auth/refresh`
+- [x] Implementar `/api/platform-auth/change-password`
+- [x] Implementar `/api/platform-auth/logout`
+- [x] Implementar `PlatformOwnerOnly`
+- [x] Implementar `GET /api/platform-tenants`
+- [x] Implementar `GET /api/platform-tenants/{id}`
+- [x] Implementar `POST /api/platform-tenants`
+- [x] Implementar `PUT /api/platform-tenants/{id}`
+- [x] Implementar `POST /api/platform-tenants/{id}/reset-admin-password`
+- [x] Provisionar admin inicial da academia com senha provisoria
+- [x] Marcar o admin inicial com troca obrigatoria de senha no primeiro acesso
 
 ## Fase 2: Tenant, Media & Feature Access
 

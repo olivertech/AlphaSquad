@@ -117,6 +117,7 @@ Por isso, todo novo codigo deve seguir estas diretrizes:
 ```text
 src/
   AlphaSquad.Api
+  AlphaSquad.Backoffice
   AlphaSquad.Infrastructure
   AlphaSquad.Shared
 ```
@@ -130,6 +131,17 @@ Responsavel por:
 - definicao de endpoints
 - Swagger
 - composicao dos modulos
+- endpoints do contexto tenant
+- endpoints do contexto master da plataforma
+
+### AlphaSquad.Backoffice
+
+Responsavel por:
+
+- dashboard master da AlphaSquad
+- autenticacao visual separada do dashboard das academias
+- onboarding de novas academias
+- futura operacao global do sponsor
 
 ### AlphaSquad.Infrastructure
 
@@ -179,6 +191,25 @@ Toda feature nova deve aplicar isolamento por tenant em:
 
 O isolamento hoje depende principalmente da disciplina nos endpoints e queries. Ainda nao existe um middleware central de tenant ou uma camada mais automatica de enforcement.
 
+## Contexto master da plataforma
+
+O AlphaSquad agora possui um segundo contexto de autenticacao e autorizacao, separado do mundo tenant.
+
+Esse contexto existe para o sponsor operar o negocio AlphaSquad sem se comportar como usuario de uma academia.
+
+### Principios do contexto master
+
+- nao reutilizar `AppUser` para o sponsor
+- nao reutilizar `tenant_id` no token master
+- nao misturar policies de tenant com policies de plataforma
+- nao depender do dashboard da academia para criar ou configurar novas academias
+
+### Modelagem atual
+
+- `PlatformUser`: usuario global da AlphaSquad
+- `PlatformRefreshToken`: refresh token proprio do backoffice
+- `AppUser.MustChangePassword`: suporte a senha provisoria do admin inicial da academia
+
 ## Seguranca e controle de acesso
 
 O AlphaSquad foi desenhado para ser um produto white-label com varias camadas de seguranca, adequadas a um ambiente onde cada academia precisa confiar que seus dados, usuarios e operacoes ficam isolados de outras academias.
@@ -192,6 +223,12 @@ A autenticacao protege os recursos privados por meio de:
 - refresh token persistido no banco
 - rotacao de refresh token
 - revogacao de sessao em logout e troca de senha
+
+No contexto master, a plataforma repete essa estrategia com objetos proprios:
+
+- `PlatformUser`
+- `PlatformRefreshToken`
+- claims sem `tenant_id`
 
 ### Camada 2: Isolamento multi-tenant
 
@@ -215,6 +252,7 @@ Policies base atualmente registradas:
 
 - `AdminOnly`
 - `AdminOrTeacher`
+- `PlatformOwnerOnly`
 
 ### Matriz atual de acesso
 
@@ -233,6 +271,8 @@ Visao resumida do estado atual:
 - `Classes`: aulas especiais podem gerar pontuacao de gamificacao no booking do aluno
 - `Events`: leitura para autenticados quando a feature `EVENTS` estiver habilitada; escrita restrita a `Admin`
 - `Gamification`: dashboard pessoal para alunos autenticados; regras e fechamento mensal restritos a perfis de gestao
+- `Platform Auth`: autenticacao do sponsor restrita ao contexto master
+- `Platform Tenants`: onboarding e gestao global de academias restritos ao sponsor
 
 ### Regra adicional de acesso por plano
 
@@ -292,6 +332,14 @@ O backend usa dois tokens:
 3. API gera refresh token aleatorio e persiste no banco
 4. No refresh, o token anterior e marcado como usado
 5. Um novo refresh token e emitido
+
+### Fluxo master da plataforma
+
+1. Sponsor autentica via `/api/platform-auth/login`
+2. API gera access token com claims de plataforma
+3. API gera refresh token do backoffice e persiste em `platform_refresh_tokens`
+4. O token master nao leva `tenant_id`
+5. O sponsor acessa `/api/platform-tenants/*` para operar a base de academias
 
 ### Salvaguardas implementadas
 

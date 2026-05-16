@@ -3,8 +3,8 @@ namespace AlphaSquad.Infrastructure.Persistence;
 using System.Collections.Generic;
 
 /// <summary>
-/// Representa um usu·rio do sistema. 
-/// Cada usu·rio est· vinculado obrigatoriamente a um Tenant (Academia).
+/// Representa um usu√°rio do sistema. 
+/// Cada usu√°rio est√° vinculado obrigatoriamente a um Tenant (Academia).
 /// </summary>
 public class AppUser
 {
@@ -15,15 +15,16 @@ public class AppUser
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool MustChangePassword { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     /// <summary>
-    /// NavegaÁ„o para o Tenant ao qual este usu·rio pertence.
+    /// Navega√ß√£o para o Tenant ao qual este usu√°rio pertence.
     /// </summary>
     public Tenant Tenant { get; set; } = null!;
 
     /// <summary>
-    /// ColeÁ„o de Refresh Tokens associados a este usu·rio.
+    /// Cole√ß√£o de Refresh Tokens associados a este usu√°rio.
     /// </summary>
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 }

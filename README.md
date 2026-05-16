@@ -17,6 +17,11 @@ A proposta do produto e permitir que cada academia tenha seu proprio aplicativo 
 
 O backend atual ja possui uma base funcional consistente para autenticacao, gestao de tenant, usuarios, midia e modulos operacionais da academia.
 
+O produto agora tambem passa a contar com a base inicial do contexto master da AlphaSquad, separando:
+
+- operacao da academia (`tenant`)
+- operacao global da plataforma (`backoffice`)
+
 ### Modulos consolidados
 
 - Autenticacao com JWT
@@ -44,6 +49,8 @@ O backend atual ja possui uma base funcional consistente para autenticacao, gest
 - Mural de eventos com feed do tenant e participacao outdoor
 - Base inicial da gamificacao com regras, eventos, saldo e ranking mensal
 - Swagger com descricoes curtas nos endpoints principais
+- Base de autenticacao master da AlphaSquad para o backoffice
+- Base de gestao global de academias com provisionamento de admin inicial e senha provisoria
 
 ### Modulos em consolidacao
 
@@ -215,6 +222,39 @@ Regras previstas:
 - Redis para cache distribuido
 - Cloudflare R2 para storage de arquivos
 - Stripe planejado para pagamentos
+
+## Backoffice master da AlphaSquad
+
+O ecossistema passa a conviver com dois contextos distintos:
+
+- `tenant`: operacao diaria de cada academia
+- `platform`: operacao global da AlphaSquad como dona do produto
+
+No backend, isso significa:
+
+- autenticacao separada em `/api/platform-auth/*`
+- gestao global de academias em `/api/platform-tenants/*`
+- usuario master proprio (`PlatformUser`)
+- refresh token proprio do sponsor (`PlatformRefreshToken`)
+- sem reuso de `tenant_id` no token do backoffice
+
+Capacidades iniciais da camada master:
+
+- login do sponsor
+- sessao atual do sponsor
+- refresh token do sponsor
+- troca de senha do sponsor
+- logout do sponsor
+- listagem de academias
+- detalhe de academia
+- criacao de academia com:
+- branding
+- features contratadas
+- admin inicial
+- senha provisoria
+- troca obrigatoria de senha no primeiro acesso do admin da academia
+- atualizacao de academia
+- regeneracao de senha provisoria do admin principal
 
 ## Padroes de listagem
 

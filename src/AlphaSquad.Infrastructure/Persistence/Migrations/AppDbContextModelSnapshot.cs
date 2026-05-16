@@ -172,6 +172,10 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("boolean")
+                        .HasColumnName("must_change_password");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -661,6 +665,94 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("monthly_student_rankings", (string)null);
+                });
+
+            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.PlatformRefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expiry_date");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_revoked");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_used");
+
+                    b.Property<Guid>("PlatformUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("platform_user_id");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlatformUserId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("platform_refresh_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.PlatformUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("citext")
+                        .HasColumnName("email");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("boolean")
+                        .HasColumnName("must_change_password");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("password_hash");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("role");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("platform_users", (string)null);
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.PointsLedger", b =>
@@ -1775,6 +1867,17 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.PlatformRefreshToken", b =>
+                {
+                    b.HasOne("AlphaSquad.Infrastructure.Persistence.PlatformUser", "PlatformUser")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("PlatformUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlatformUser");
+                });
+
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.PointsLedger", b =>
                 {
                     b.HasOne("AlphaSquad.Infrastructure.Persistence.Tenant", "Tenant")
@@ -2194,6 +2297,11 @@ namespace AlphaSquad.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.MembershipPlan", b =>
                 {
                     b.Navigation("UserMemberships");
+                });
+
+            modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.PlatformUser", b =>
+                {
+                    b.Navigation("RefreshTokens");
                 });
 
             modelBuilder.Entity("AlphaSquad.Infrastructure.Persistence.Product", b =>

@@ -1,4 +1,4 @@
-﻿// App namespaces
+// App namespaces
 global using AlphaSquad.Infrastructure.Persistence;
 global using AlphaSquad.Shared.Contracts;
 global using AlphaSquad.Shared.DTOs.Auth;
@@ -28,6 +28,8 @@ global using AlphaSquad.Shared.DTOs.Gamification;
 global using AlphaSquad.Shared.DTOs.Events;
 global using AlphaSquad.Shared.DTOs.Legal;
 global using AlphaSquad.Shared.DTOs.Configurations;
+global using AlphaSquad.Shared.DTOs.PlatformAuth;
+global using AlphaSquad.Shared.DTOs.PlatformTenants;
 global using AlphaSquad.Api.Features.Classes;
 global using AlphaSquad.Api.Features.Exercises;
 global using AlphaSquad.Api.Features.Workouts;
@@ -40,6 +42,8 @@ global using AlphaSquad.Api.Features.Gamification;
 global using AlphaSquad.Api.Features.Events;
 global using AlphaSquad.Api.Features.Legal;
 global using AlphaSquad.Api.Features.Configurations;
+global using AlphaSquad.Api.Features.PlatformAuth;
+global using AlphaSquad.Api.Features.PlatformTenants;
 global using AlphaSquad.Infrastructure.Features;
 global using AlphaSquad.Infrastructure.Gamification;
 // System namespaces
