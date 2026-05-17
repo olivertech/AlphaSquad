@@ -414,8 +414,14 @@ public static class PlatformTenantEndpoints
             .Join(db.Features,
                 link => link.FeatureId,
                 feature => feature.Id,
-                (link, feature) => new PlatformFeatureCatalogItemResponse(feature.Id, feature.Name, feature.Description))
-            .OrderBy(x => x.Id)
+                (link, feature) => new
+                {
+                    feature.Id,
+                    feature.Name,
+                    feature.Description
+                })
+            .OrderBy(x => x.Name)
+            .Select(x => new PlatformFeatureCatalogItemResponse(x.Id, x.Name, x.Description))
             .ToListAsync();
 
         return new PlatformTenantDetailsResponse(
