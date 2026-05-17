@@ -15,9 +15,9 @@ A proposta do produto e permitir que cada academia tenha seu proprio aplicativo 
 
 ## Momento atual do projeto
 
-O backend atual ja possui uma base funcional consistente para autenticacao, gestao de tenant, usuarios, midia e modulos operacionais da academia.
+O backend atual ja possui uma base funcional consistente para autenticacao, gestao de tenant, usuarios, midia, modulos operacionais da academia e contexto master da plataforma.
 
-O produto agora tambem passa a contar com a base inicial do contexto master da AlphaSquad, separando:
+O produto agora tambem passa a contar com dois frontends web separados e com a base do contexto master da AlphaSquad, separando:
 
 - operacao da academia (`tenant`)
 - operacao global da plataforma (`backoffice`)
@@ -48,9 +48,10 @@ O produto agora tambem passa a contar com a base inicial do contexto master da A
 - Rede social interna com post, feed, likes e comentarios simples
 - Mural de eventos com feed do tenant e participacao outdoor
 - Base inicial da gamificacao com regras, eventos, saldo e ranking mensal
+- Endpoints master de autenticacao, perfil do owner e gestao global de academias
+- Backoffice web separado para operacao da AlphaSquad
 - Swagger com descricoes curtas nos endpoints principais
-- Base de autenticacao master da AlphaSquad para o backoffice
-- Base de gestao global de academias com provisionamento de admin inicial e senha provisoria
+- Base de gestao global de academias com provisionamento de admin inicial, senha provisoria e upload de logo
 
 ### Modulos em consolidacao
 
@@ -245,6 +246,7 @@ Capacidades iniciais da camada master:
 - refresh token do sponsor
 - troca de senha do sponsor
 - logout do sponsor
+- perfil do sponsor com nome, foto e troca de senha
 - listagem de academias
 - detalhe de academia
 - criacao de academia com:
@@ -254,7 +256,15 @@ Capacidades iniciais da camada master:
 - senha provisoria
 - troca obrigatoria de senha no primeiro acesso do admin da academia
 - atualizacao de academia
+- upload e troca da logo da academia
 - regeneracao de senha provisoria do admin principal
+
+Comportamento atual da senha provisoria:
+
+- a senha do admin inicial e gerada automaticamente pelo backend
+- o sponsor nao informa essa senha na tela de criacao
+- a senha provisoria fica disponivel na resposta da criacao e na tela de detalhes da academia
+- o admin inicial precisa trocar a senha no primeiro acesso
 
 ## Padroes de listagem
 
@@ -291,7 +301,12 @@ AlphaSquad/
 |
 +-- src/
 |   +-- AlphaSquad.Api
+|   +-- AlphaSquad.Backoffice
+|   +-- AlphaSquad.Web
 |   +-- AlphaSquad.Infrastructure
+|   +-- AlphaSquad.Lmt.Application.ApiClient
+|   +-- AlphaSquad.Lmt.Application.Contracts
+|   +-- AlphaSquad.Lmt.Application.Http
 |   +-- AlphaSquad.Shared
 |
 +-- AlphaSquad.slnx
@@ -522,6 +537,36 @@ Observacao:
 - `PUT /api/events/{id}`
 - `DELETE /api/events/{id}`
 - `POST /api/events/{id}/participate`
+- `POST /api/events/{id}/checkin`
+- `POST /api/events/{id}/complete`
+- `GET /api/events/{id}/participants`
+- `POST /api/events/{id}/participants/{userId}`
+- `DELETE /api/events/{id}/participants/{userId}`
+
+### Platform Auth
+
+- `POST /api/platform-auth/login`
+- `GET /api/platform-auth/me`
+- `POST /api/platform-auth/refresh`
+- `POST /api/platform-auth/change-password`
+- `POST /api/platform-auth/logout`
+
+### Platform Profile
+
+- `GET /api/platform-profile/me`
+- `PUT /api/platform-profile/me`
+- `PUT /api/platform-profile/me/photo`
+- `DELETE /api/platform-profile/me/photo`
+
+### Platform Tenants
+
+- `GET /api/platform-tenants/features/catalog`
+- `GET /api/platform-tenants`
+- `GET /api/platform-tenants/{id}`
+- `POST /api/platform-tenants`
+- `PUT /api/platform-tenants/{id}`
+- `PUT /api/platform-tenants/{id}/logo`
+- `POST /api/platform-tenants/{id}/reset-admin-password`
 
 Proxima etapa prevista da loja:
 
@@ -541,6 +586,7 @@ Entidades ja presentes no projeto:
 - `Feature`
 - `TenantFeature`
 - `TenantLegalContent`
+- `Configuration`
 - `Exercise`
 - `Workout`
 - `WorkoutExercise`
@@ -564,6 +610,8 @@ Entidades ja presentes no projeto:
 - `UserGamificationEvent`
 - `PointsLedger`
 - `MonthlyStudentRanking`
+- `PlatformUser`
+- `PlatformRefreshToken`
 
 Entidades estrategicas previstas para as proximas fases:
 
@@ -592,6 +640,7 @@ Ao subir a aplicacao, o projeto aplica migrations e garante a existencia de:
 
 - tenant demo `alpha-demo`
 - usuario admin `admin@alphasquad.app`
+- sponsor bootstrap `owner@alphasquad.app`
 - features base vinculadas ao tenant demo
 - planos base `Basic`, `Advanced` e `Premium` para o tenant demo
 - regras base de gamificacao para o tenant demo

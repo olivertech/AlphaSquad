@@ -21,6 +21,7 @@ Os endpoints sao organizados por feature em `src/AlphaSquad.Api/Features`, reduz
 Features identificadas hoje:
 
 - `Auth`
+- `Configurations`
 - `Tenants`
 - `Media`
 - `Users`
@@ -35,6 +36,9 @@ Features identificadas hoje:
 - `Social`
 - `Events`
 - `Gamification`
+- `PlatformAuth`
+- `PlatformProfile`
+- `PlatformTenants`
 
 Features estrategicas planejadas:
 
@@ -118,6 +122,10 @@ Por isso, todo novo codigo deve seguir estas diretrizes:
 src/
   AlphaSquad.Api
   AlphaSquad.Backoffice
+  AlphaSquad.Web
+  AlphaSquad.Lmt.Application.ApiClient
+  AlphaSquad.Lmt.Application.Contracts
+  AlphaSquad.Lmt.Application.Http
   AlphaSquad.Infrastructure
   AlphaSquad.Shared
 ```
@@ -141,7 +149,26 @@ Responsavel por:
 - dashboard master da AlphaSquad
 - autenticacao visual separada do dashboard das academias
 - onboarding de novas academias
-- futura operacao global do sponsor
+- operacao global do sponsor
+- gestao do perfil do owner
+- consumo da API master da plataforma
+
+### AlphaSquad.Web
+
+Responsavel por:
+
+- dashboard operacional da academia
+- consumo da API tenant por meio da camada LMT
+- modulos administrativos da academia
+- area de profile do usuario autenticado
+
+### AlphaSquad.Lmt.Application.*
+
+Responsavel por:
+
+- cliente HTTP gerado e adaptado para consumo da API
+- contratos de DTOs e interfaces para os dashboards
+- fachada de servicos usada pelo frontend web
 
 ### AlphaSquad.Infrastructure
 
@@ -360,7 +387,10 @@ O backend usa dois tokens:
 - `Tenant`
 - `AppUser`
 - `RefreshToken`
+- `PlatformUser`
+- `PlatformRefreshToken`
 - `TenantMedia`
+- `Configuration`
 - `Feature`
 - `TenantFeature`
 - `Exercise`
@@ -681,6 +711,10 @@ Capacidades atuais:
 - suporte a imagem via `TenantMedia`
 - eventos outdoor com participacao do aluno
 - integracao da participacao outdoor com gamificacao
+- senha de check-in por evento
+- confirmacao de presenca por senha no app
+- conclusao administrativa do evento com pontuacao em lote para os presentes
+- matricula e remocao administrativa de participantes no dashboard
 - feature opcional `EVENTS` por tenant
 - preparo para publicacoes internas de mural, como aniversariantes e vencedores da gamificacao
 
@@ -695,6 +729,9 @@ Consideracoes arquiteturais:
 - leitura ampla para usuarios do tenant
 - reaproveitamento do padrao de feed e paginacao
 - participacao outdoor dispara `OutdoorEventParticipation` apenas para usuarios `Student`
+- a pontuacao do evento acontece na conclusao administrativa do evento, e nao na matricula
+- `AcademyEvent` usa `CheckInPassword` e `IsCompleted`
+- `AcademyEventParticipation` usa `IsPresent`
 - a ausencia da feature `EVENTS` bloqueia o modulo para o tenant atual
 - reaproveitamento do padrao de feed e paginação
 
@@ -778,9 +815,8 @@ Na inicializacao da aplicacao:
 
 ### Em progresso
 
-- workouts e composicao treino-exercicio
-- autorizacao mais fina por role e permissao
-- endurecimento de isolamento multi-tenant
+- nenhuma frente estrutural critica do backend tenant segue bloqueando a operacao base da V1
+- o proximo salto relevante do backend esta nas capacidades futuras de notificacoes, billing e automacao institucional
 
 ### Planejado como core de produto
 
@@ -793,9 +829,10 @@ Na inicializacao da aplicacao:
 ## Pendencias tecnicas relevantes
 
 - middleware central de tenant
-- politica de autorizacao por role/permissao
 - cobertura automatizada de testes
-- padronizacao de paginacao para todos os modulos
-- endurecimento de configuracoes sensiveis por ambiente
-- padrao comum para feeds infinitos
-- padrao comum para integracoes externas e webhooks
+- ciclo financeiro mais rico de planos e cobranca estruturada
+- `PaymentTransaction`, Stripe e webhooks de pagamento
+- notificacoes gerais do app com leitura por usuario
+- eventos internos de mural para aniversariantes e vencedores da gamificacao
+- moderacao e governanca futura de social
+- auditoria e observabilidade mais profundas para o contexto master da plataforma

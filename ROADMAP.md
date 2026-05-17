@@ -58,6 +58,16 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Provisionar admin inicial da academia com senha provisoria
 - [x] Marcar o admin inicial com troca obrigatoria de senha no primeiro acesso
 
+## Fase 1.2: Platform Profile & Tenant Branding
+
+- [x] Implementar `GET /api/platform-profile/me`
+- [x] Implementar `PUT /api/platform-profile/me`
+- [x] Implementar `PUT /api/platform-profile/me/photo`
+- [x] Implementar `DELETE /api/platform-profile/me/photo`
+- [x] Permitir upload e troca da logo da academia no contexto master
+- [x] Expor a senha provisoria gerada na criacao da academia
+- [ ] Evoluir a camada master para auditoria operacional mais rica
+
 ## Fase 2: Tenant, Media & Feature Access
 
 - [x] Modelar `Feature` e `TenantFeature`
@@ -146,7 +156,10 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Tratar `Events` como modulo opcional por tenant
 - [x] Integrar participacao outdoor com `OutdoorEventParticipation`
 - [x] Evoluir o contrato para infinite scroll padronizado
-- [ ] Preparar confirmacao administrativa de presenca se a operacao exigir validacao manual
+- [x] Implementar senha de check-in por evento
+- [x] Implementar confirmacao de presenca do aluno por senha
+- [x] Implementar conclusao administrativa do evento com distribuicao de pontos
+- [x] Implementar matricula e remocao administrativa de participantes
 - [ ] Evoluir o mural para destaques internos de aniversariantes e vencedores da gamificacao
 
 ## Fase 8: Social Network
@@ -184,6 +197,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 - [x] Padronizar contratos de feed infinito para `Store`, `Events` e `Social`
 - [x] Padronizar contratos `page-based` com `PagedResponse<T>` nos principais endpoints de listagem
+- [x] Criar o projeto `AlphaSquad.Backoffice` separado do dashboard da academia
 - [ ] Padronizar metadados de cards para app mobile
 - [ ] Estruturar notificacoes futuras
 - [ ] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas

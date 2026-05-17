@@ -2,6 +2,39 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-17] - Documentation Alignment & Current Backend State
+
+### Changed
+
+- `README.md` atualizado para refletir a solution atual com `AlphaSquad.Web`, `AlphaSquad.Backoffice` e a camada `AlphaSquad.Lmt.Application.*`.
+- `README.md` atualizado com os endpoints master de `platform-auth`, `platform-profile` e `platform-tenants`.
+- `README.md` atualizado com o fluxo atual da senha provisoria gerada automaticamente para o admin inicial da academia.
+- `ARCHITECTURE.md` atualizado para registrar `PlatformAuth`, `PlatformProfile`, `PlatformTenants`, a camada LMT e o estado real do backoffice.
+- `ARCHITECTURE.md` atualizado com o fluxo final do modulo de `Events`, incluindo senha de check-in, presenca, conclusao administrativa e pontuacao em lote.
+- `ROADMAP.md` atualizado para marcar a fundacao master ja concluida e refletir as pendencias reais de backend.
+
+### Noted
+
+- A documentacao da raiz passa a tratar o contexto master da AlphaSquad como parte consolidada do produto.
+- As proximas pendencias estruturais do backend se concentram em notificacoes, billing e evolucoes institucionais do mural.
+
+## [2026-05-17] - Backoffice Web Integration With Master API
+
+### Added
+
+- Integracao do `AlphaSquad.Backoffice` com os endpoints reais de `platform-auth`, `platform-profile` e `platform-tenants`.
+- Perfil do owner do backoffice com nome, foto e troca de senha.
+- Upload e preview de logo da academia no backoffice.
+
+### Changed
+
+- O backoffice deixa de depender do fluxo bootstrap em memoria para listar, detalhar e editar academias.
+- O projeto passa a abrir na tela de login do backoffice, com autenticacao e sessao proprias.
+
+### Noted
+
+- O login do backoffice continua separado do dashboard das academias e nao reutiliza `tenant_id`.
+
 ## [2026-05-16] - Backoffice Backend Foundation
 
 ### Added
