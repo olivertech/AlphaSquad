@@ -1,3 +1,5 @@
+using AlphaSquad.Shared.Helpers;
+
 namespace AlphaSquad.Backoffice.Security;
 
 /// <summary>
@@ -6,5 +8,5 @@ namespace AlphaSquad.Backoffice.Security;
 /// </summary>
 public static class BackofficeRoles
 {
-    public const string Owner = "Owner";
+    public const string Owner = PlatformRoles.Owner;
 }

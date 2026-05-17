@@ -415,7 +415,7 @@ public static class PlatformTenantEndpoints
                 link => link.FeatureId,
                 feature => feature.Id,
                 (link, feature) => new PlatformFeatureCatalogItemResponse(feature.Id, feature.Name, feature.Description))
-            .OrderBy(x => x.Code)
+            .OrderBy(x => x.Id)
             .ToListAsync();
 
         return new PlatformTenantDetailsResponse(

@@ -15,13 +15,18 @@ public sealed class LoginModel(IBackofficeAuthService authService) : PageModel
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
+    [BindProperty(SupportsGet = true)]
+    public string? ReturnUrl { get; set; }
+
     public string? ErrorMessage { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync()
+    public async Task<IActionResult> OnGetAsync(string? returnUrl = null)
     {
         // O backoffice deve sempre abrir em estado deslogado quando acessado pela rota de login.
         HttpContext.Session.ClearBackofficeSession();
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        ReturnUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/Backoffice" : returnUrl;
 
         if (TempData.TryGetValue(nameof(ErrorMessage), out var value))
             ErrorMessage = value?.ToString();
@@ -58,21 +63,37 @@ public sealed class LoginModel(IBackofficeAuthService authService) : PageModel
                 new(ClaimTypes.NameIdentifier, sessionState.UserId!.Value.ToString()),
                 new(ClaimTypes.Name, sessionState.Name ?? string.Empty),
                 new(ClaimTypes.Email, sessionState.Email ?? string.Empty),
-                new(ClaimTypes.Role, sessionState.Role ?? BackofficeRoles.Owner)
+                new(ClaimTypes.Role, sessionState.Role ?? BackofficeRoles.Owner),
+                new("backoffice_must_change_password", sessionState.MustChangePassword.ToString())
             };
+
+            if (!string.IsNullOrWhiteSpace(sessionState.ProfilePhotoUrl))
+                claims.Add(new Claim("backoffice_profile_photo_url", sessionState.ProfilePhotoUrl));
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
+            var authenticationProperties = new AuthenticationProperties
+            {
+                IsPersistent = false,
+                AllowRefresh = true,
+                ExpiresUtc = sessionState.ExpiresAtUtc
+            };
+
+            authenticationProperties.StoreTokens(
+            [
+                new AuthenticationToken { Name = "access_token", Value = sessionState.AccessToken ?? string.Empty },
+                new AuthenticationToken { Name = "refresh_token", Value = sessionState.RefreshToken ?? string.Empty },
+                new AuthenticationToken { Name = "expires_at", Value = sessionState.ExpiresAtUtc?.ToString("O") ?? string.Empty }
+            ]);
+
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal,
-                new AuthenticationProperties
-                {
-                    IsPersistent = false,
-                    AllowRefresh = true,
-                    ExpiresUtc = sessionState.ExpiresAtUtc
-                });
+                authenticationProperties);
+
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                return LocalRedirect(ReturnUrl);
 
             return RedirectToPage("/Backoffice/Index");
         }
