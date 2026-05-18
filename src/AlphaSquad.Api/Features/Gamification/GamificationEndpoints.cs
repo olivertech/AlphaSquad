@@ -391,7 +391,11 @@ public static class GamificationEndpoints
     /// <summary>
     /// Fecha o ranking mensal com base nos eventos do periodo e registra os premios dos 3 primeiros.
     /// </summary>
-    private static async Task<IResult> CloseMonthlyRankingAsync(CloseMonthlyRankingRequest request, AppDbContext db, HttpContext context)
+    private static async Task<IResult> CloseMonthlyRankingAsync(CloseMonthlyRankingRequest request,
+                                                                AppDbContext db,
+                                                                INotificationService notificationService,
+                                                                HttpContext context,
+                                                                CancellationToken cancellationToken)
     {
         if (request.Year < 2020)
             return Results.BadRequest("Year is invalid.");
@@ -400,6 +404,7 @@ public static class GamificationEndpoints
             return Results.BadRequest("Month must be between 1 and 12.");
 
         var tenantId = context.GetTenantId();
+        var actorUserId = GetUserId(context.User);
         var monthStart = new DateTime(request.Year, request.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var currentMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var nextMonthStart = monthStart.AddMonths(1);
@@ -459,7 +464,18 @@ public static class GamificationEndpoints
             });
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
+
+        await UpsertGamificationWinnersHighlightAsync(
+            db,
+            notificationService,
+            tenantId,
+            actorUserId,
+            request.Year,
+            request.Month,
+            rankingRows,
+            cancellationToken);
+
         return Results.NoContent();
     }
 
@@ -511,6 +527,100 @@ public static class GamificationEndpoints
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static async Task UpsertGamificationWinnersHighlightAsync(AppDbContext db,
+                                                                      INotificationService notificationService,
+                                                                      Guid tenantId,
+                                                                      Guid actorUserId,
+                                                                      int year,
+                                                                      int month,
+                                                                      List<MonthlyRankingAggregationProjection> rankingRows,
+                                                                      CancellationToken cancellationToken)
+    {
+        var winnerIds = rankingRows
+            .Where(x => x.Position <= 3)
+            .OrderBy(x => x.Position)
+            .Select(x => x.UserId)
+            .ToList();
+
+        if (winnerIds.Count == 0)
+            return;
+
+        var winnerNames = await db.Users
+            .Where(x => x.TenantId == tenantId && winnerIds.Contains(x.Id))
+            .Select(x => new { x.Id, x.Name })
+            .ToListAsync(cancellationToken);
+
+        var orderedNames = winnerIds
+            .Join(winnerNames, id => id, user => user.Id, (id, user) => user.Name)
+            .ToList();
+
+        var title = $"Vencedores da gamificacao - {month:00}/{year}";
+        var description = orderedNames.Count switch
+        {
+            1 => $"Parabens a {orderedNames[0]}, vencedor da gamificacao de {month:00}/{year}.",
+            2 => $"Vencedores em destaque: {orderedNames[0]} e {orderedNames[1]} representaram a academia em {month:00}/{year}.",
+            _ => $"Vencedores da gamificacao de {month:00}/{year}: {string.Join(", ", orderedNames)}."
+        };
+
+        var generatedAt = DateTime.UtcNow;
+        var highlightEndsAt = generatedAt.AddDays(7);
+
+        var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x =>
+            x.TenantId == tenantId &&
+            x.EventType == AcademyEventType.GamificationWinnersHighlight &&
+            x.Title == title, cancellationToken);
+
+        if (academyEvent is null)
+        {
+            academyEvent = new AcademyEvent
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                Title = title,
+                Description = description,
+                EventType = AcademyEventType.GamificationWinnersHighlight,
+                IsHighlighted = true,
+                HighlightStartsAt = generatedAt,
+                HighlightEndsAt = highlightEndsAt,
+                IsOutdoorEvent = false,
+                AllowParticipation = false,
+                IsActive = true,
+                CheckInPassword = string.Empty,
+                IsCompleted = false,
+                CreatedByUserId = actorUserId,
+                CreatedAt = generatedAt
+            };
+
+            db.AcademyEvents.Add(academyEvent);
+        }
+        else
+        {
+            academyEvent.Description = description;
+            academyEvent.IsHighlighted = true;
+            academyEvent.HighlightStartsAt = generatedAt;
+            academyEvent.HighlightEndsAt = highlightEndsAt;
+            academyEvent.IsActive = true;
+            academyEvent.UpdatedAt = generatedAt;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await notificationService.PublishAsync(new PublishTenantNotificationCommand(
+            tenantId,
+            TenantNotificationType.GamificationWinnersHighlight,
+            TenantNotificationAudience.StudentsOnly,
+            academyEvent.Title,
+            academyEvent.Description,
+            academyEvent.Description ?? academyEvent.Title,
+            academyEvent.MediaId,
+            true,
+            "academy_event",
+            academyEvent.Id,
+            actorUserId,
+            academyEvent.HighlightStartsAt ?? academyEvent.CreatedAt,
+            academyEvent.HighlightEndsAt), cancellationToken);
     }
 
     /// <summary>

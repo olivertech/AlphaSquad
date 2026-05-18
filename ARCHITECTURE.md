@@ -716,7 +716,7 @@ Capacidades atuais:
 - conclusao administrativa do evento com pontuacao em lote para os presentes
 - matricula e remocao administrativa de participantes no dashboard
 - feature opcional `EVENTS` por tenant
-- preparo para publicacoes internas de mural, como aniversariantes e vencedores da gamificacao
+- suporte no backend para publicacoes internas de mural, como aniversariantes e vencedores da gamificacao
 
 Entidades atuais:
 

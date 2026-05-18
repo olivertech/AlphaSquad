@@ -16,7 +16,20 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 ### Noted
 
 - A documentacao da raiz passa a tratar o contexto master da AlphaSquad como parte consolidada do produto.
-- As proximas pendencias estruturais do backend se concentram em notificacoes, billing e evolucoes institucionais do mural.
+- As proximas pendencias estruturais do backend se concentram em middleware central de tenant, auditoria master e billing.
+
+## [2026-05-17] - Notifications And Institutional Events Backend
+
+### Added
+
+- Central de notificacoes do app com publicacao por tenant, leitura por usuario, filtros `all/read/unread`, contador de nao lidas e marcacao como lida.
+- Endpoints administrativos para CRUD de notificacoes institucionais do tenant.
+- Suporte no dominio de `Events` para `BirthdayHighlight` e `GamificationWinnersHighlight`.
+- Janelas temporarias de destaque com `HighlightStartsAt` e `HighlightEndsAt`.
+- Geradores administrativos de eventos institucionais para:
+- aniversariantes do dia
+- vencedores fechados da gamificacao mensal
+- Publicacao automatica de notificacoes do app quando esses destaques institucionais sao gerados.
 
 ## [2026-05-17] - Backoffice Web Integration With Master API
 

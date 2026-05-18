@@ -98,12 +98,30 @@ public sealed partial class ApiFacade
         return await client.GetFromJsonAsync<List<AcademyEventParticipationResponseDto>>($"api/events/{id}/participants", cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<BirthdayHighlightPreviewResponseDto?> GETApiEventsInstitutionalBirthdaysPreviewAsync(DateTimeOffset? referenceDate, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        var url = BuildEventsUrl("api/events/institutional/birthdays/preview", new Dictionary<string, string?>
+        {
+            ["referenceDate"] = referenceDate?.ToString("O")
+        });
+        return await client.GetFromJsonAsync<BirthdayHighlightPreviewResponseDto>(url, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdParticipantsByUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
         using var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
         var response = await client.PostAsync($"api/events/{id}/participants/{userId}", content: null, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<AcademyEventParticipationResponseDto>(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<AcademyEventResponseDto?> POSTApiEventsInstitutionalBirthdaysGenerateAsync(GenerateBirthdayHighlightEventRequestDto request, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        var response = await client.PostAsJsonAsync("api/events/institutional/birthdays/generate", request, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<AcademyEventResponseDto>(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DELETEApiEventsByIdParticipantsByUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)

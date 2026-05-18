@@ -31,6 +31,7 @@ global using AlphaSquad.Shared.DTOs.Configurations;
 global using AlphaSquad.Shared.DTOs.PlatformAuth;
 global using AlphaSquad.Shared.DTOs.PlatformProfile;
 global using AlphaSquad.Shared.DTOs.PlatformTenants;
+global using AlphaSquad.Shared.DTOs.Notifications;
 global using AlphaSquad.Api.Features.Classes;
 global using AlphaSquad.Api.Features.Exercises;
 global using AlphaSquad.Api.Features.Workouts;
@@ -46,8 +47,10 @@ global using AlphaSquad.Api.Features.Configurations;
 global using AlphaSquad.Api.Features.PlatformAuth;
 global using AlphaSquad.Api.Features.PlatformProfile;
 global using AlphaSquad.Api.Features.PlatformTenants;
+global using AlphaSquad.Api.Features.Notifications;
 global using AlphaSquad.Infrastructure.Features;
 global using AlphaSquad.Infrastructure.Gamification;
+global using AlphaSquad.Infrastructure.Notifications;
 // System namespaces
 global using System.Text;
 global using Microsoft.EntityFrameworkCore;

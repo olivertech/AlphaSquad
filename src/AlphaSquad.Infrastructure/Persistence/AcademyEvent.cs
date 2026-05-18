@@ -12,6 +12,7 @@ public class AcademyEvent
 
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public AcademyEventType EventType { get; set; } = AcademyEventType.Standard;
 
     public Guid? MediaId { get; set; }
     public TenantMedia? Media { get; set; }
@@ -31,6 +32,9 @@ public class AcademyEvent
     public bool AllowParticipation { get; set; }
 
     public bool IsActive { get; set; }
+    public bool IsHighlighted { get; set; }
+    public DateTime? HighlightStartsAt { get; set; }
+    public DateTime? HighlightEndsAt { get; set; }
 
     /// <summary>
     /// Senha aleatória gerada na criação do evento, usada para check-in.

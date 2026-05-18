@@ -10,7 +10,9 @@ public interface IEventsService
     Task<List<AcademyEventResponseDto>?> GETApiEventsAsync(bool? isActive, bool? onlyOutdoor, int? page, int? pageSize, CancellationToken cancellationToken = default);
     Task<AcademyEventResponseDto?> GETApiEventsByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<AcademyEventResponseDto>?> GETApiEventsFeedAsync(string cursor, int? limit, bool? onlyOutdoor, CancellationToken cancellationToken = default);
+    Task<BirthdayHighlightPreviewResponseDto?> GETApiEventsInstitutionalBirthdaysPreviewAsync(DateTimeOffset? referenceDate, CancellationToken cancellationToken = default);
     Task<AcademyEventResponseDto?> POSTApiEventsAsync(CreateAcademyEventRequestDto request, CancellationToken cancellationToken = default);
+    Task<AcademyEventResponseDto?> POSTApiEventsInstitutionalBirthdaysGenerateAsync(GenerateBirthdayHighlightEventRequestDto request, CancellationToken cancellationToken = default);
     Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdParticipateAsync(string id, CancellationToken cancellationToken = default);
     Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdCheckinAsync(Guid id, EventCheckInRequestDto request, CancellationToken cancellationToken = default);
     Task<CompleteAcademyEventResponseDto?> POSTApiEventsByIdCompleteAsync(Guid id, CancellationToken cancellationToken = default);

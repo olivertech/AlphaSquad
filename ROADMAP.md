@@ -160,7 +160,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Implementar confirmacao de presenca do aluno por senha
 - [x] Implementar conclusao administrativa do evento com distribuicao de pontos
 - [x] Implementar matricula e remocao administrativa de participantes
-- [ ] Evoluir o mural para destaques internos de aniversariantes e vencedores da gamificacao
+- [x] Evoluir o mural para destaques internos de aniversariantes e vencedores da gamificacao
 
 ## Fase 8: Social Network
 
@@ -199,8 +199,8 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Padronizar contratos `page-based` com `PagedResponse<T>` nos principais endpoints de listagem
 - [x] Criar o projeto `AlphaSquad.Backoffice` separado do dashboard da academia
 - [ ] Padronizar metadados de cards para app mobile
-- [ ] Estruturar notificacoes futuras
-- [ ] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas
+- [x] Estruturar notificacoes futuras
+- [x] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas
 - [ ] Exibir notificacoes do app em modal rolavel com marcacao automatica como lida
 - [ ] Definir padrao de imagens, thumbnails e tamanhos
 

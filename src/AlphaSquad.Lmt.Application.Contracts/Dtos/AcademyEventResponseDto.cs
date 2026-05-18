@@ -9,9 +9,13 @@ public sealed class AcademyEventResponseDto
     public string? CreatedByUserName { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? EndsAt { get; set; }
+    public int? EventType { get; set; }
+    public DateTimeOffset? HighlightEndsAt { get; set; }
+    public DateTimeOffset? HighlightStartsAt { get; set; }
     public Guid? Id { get; set; }
     public bool? IsActive { get; set; }
     public bool? IsCompleted { get; set; }
+    public bool? IsHighlighted { get; set; }
     public bool? IsOutdoorEvent { get; set; }
     public bool? IsUserParticipating { get; set; }
     public string? Location { get; set; }

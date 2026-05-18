@@ -36,9 +36,19 @@ public sealed class EventsService : IEventsService
         return _apiFacade.GETApiEventsFeedAsync(cursor, limit, onlyOutdoor, cancellationToken);
     }
 
+    public Task<BirthdayHighlightPreviewResponseDto?> GETApiEventsInstitutionalBirthdaysPreviewAsync(DateTimeOffset? referenceDate, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.GETApiEventsInstitutionalBirthdaysPreviewAsync(referenceDate, cancellationToken);
+    }
+
     public Task<AcademyEventResponseDto?> POSTApiEventsAsync(CreateAcademyEventRequestDto request, CancellationToken cancellationToken = default)
     {
         return _apiFacade.POSTApiEventsAsync(request, cancellationToken);
+    }
+
+    public Task<AcademyEventResponseDto?> POSTApiEventsInstitutionalBirthdaysGenerateAsync(GenerateBirthdayHighlightEventRequestDto request, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.POSTApiEventsInstitutionalBirthdaysGenerateAsync(request, cancellationToken);
     }
 
     public Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdCheckinAsync(Guid id, EventCheckInRequestDto request, CancellationToken cancellationToken = default)

@@ -53,6 +53,7 @@ public interface IApiFacade
     Task<AcademyEventResponseDto?> GETApiEventsByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<List<AcademyEventParticipationResponseDto>?> GETApiEventsByIdParticipantsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<BirthdayHighlightPreviewResponseDto?> GETApiEventsInstitutionalBirthdaysPreviewAsync(DateTimeOffset? referenceDate, CancellationToken cancellationToken = default);
 
     Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdParticipantsByUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
 
@@ -137,6 +138,7 @@ public interface IApiFacade
     Task<ClassBookingResponseDto?> POSTApiClassesByIdBookingsAsync(string id, CreateClassBookingForUserRequestDto request, CancellationToken cancellationToken = default);
 
     Task<AcademyEventResponseDto?> POSTApiEventsAsync(CreateAcademyEventRequestDto request, CancellationToken cancellationToken = default);
+    Task<AcademyEventResponseDto?> POSTApiEventsInstitutionalBirthdaysGenerateAsync(GenerateBirthdayHighlightEventRequestDto request, CancellationToken cancellationToken = default);
 
     Task<AcademyEventParticipationResponseDto?> POSTApiEventsByIdCheckinAsync(Guid id, EventCheckInRequestDto request, CancellationToken cancellationToken = default);
 

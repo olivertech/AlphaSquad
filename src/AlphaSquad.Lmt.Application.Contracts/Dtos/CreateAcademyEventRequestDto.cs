@@ -5,7 +5,11 @@ public sealed class CreateAcademyEventRequestDto
     public bool? AllowParticipation { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? EndsAt { get; set; }
+    public int? EventType { get; set; }
+    public DateTimeOffset? HighlightEndsAt { get; set; }
+    public DateTimeOffset? HighlightStartsAt { get; set; }
     public bool? IsActive { get; set; }
+    public bool? IsHighlighted { get; set; }
     public bool? IsOutdoorEvent { get; set; }
     public string? Location { get; set; }
     public Guid? MediaId { get; set; }

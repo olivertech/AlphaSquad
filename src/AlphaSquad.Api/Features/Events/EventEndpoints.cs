@@ -103,6 +103,29 @@ public static class EventEndpoints
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapPost("/institutional/birthdays/generate", GenerateBirthdayHighlightAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("GenerateBirthdayHighlightEvent")
+            .WithSummary("Gera um destaque institucional de aniversariantes.")
+            .WithDescription("Cria um item de mural institucional com texto automatico para os aniversariantes do dia ou de uma data informada.")
+            .Produces<AcademyEventResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        group.MapGet("/institutional/birthdays/preview", GetBirthdayHighlightPreviewAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOrTeacher)
+            .WithName("GetBirthdayHighlightPreview")
+            .WithSummary("Mostra a previa de aniversariantes para publicacao institucional.")
+            .WithDescription("Lista os aniversariantes da data informada para ajudar a academia a decidir se deseja publicar o destaque do dia.")
+            .Produces<BirthdayHighlightPreviewResponse>(StatusCodes.Status200OK);
+
+        group.MapPost("/institutional/gamification-winners/generate", GenerateGamificationWinnersHighlightAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+            .WithName("GenerateGamificationWinnersHighlightEvent")
+            .WithSummary("Gera um destaque institucional dos vencedores da gamificacao.")
+            .WithDescription("Cria um item de mural institucional usando o snapshot mensal de vencedores ja fechado no modulo de gamificacao.")
+            .Produces<AcademyEventResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest);
+
         group.MapGet("/{id:guid}/participants", GetParticipantsAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("GetEventParticipants")
@@ -168,16 +191,28 @@ public static class EventEndpoints
                                   FROM academy_events e
                                   WHERE e.tenant_id = @TenantId
                                     AND (@IsActive IS NULL OR e.is_active = @IsActive)
-                                    AND (@OnlyOutdoor IS NULL OR e.is_outdoor_event = @OnlyOutdoor)";
+                                    AND (@OnlyOutdoor IS NULL OR e.is_outdoor_event = @OnlyOutdoor)
+                                    AND (
+                                        @CanManage = true
+                                        OR e.event_type = @StandardEventType
+                                        OR (
+                                            COALESCE(e.highlight_starts_at, e.created_at) <= @Now
+                                            AND (e.highlight_ends_at IS NULL OR e.highlight_ends_at > @Now)
+                                        )
+                                    )";
 
         const string itemsSql = @"SELECT e.id,
                                          e.title,
                                          e.description,
+                                         e.event_type AS EventType,
                                          e.media_id AS MediaId,
                                          m.url AS MediaUrl,
                                          e.location,
                                          e.starts_at AS StartsAt,
                                          e.ends_at AS EndsAt,
+                                         e.is_highlighted AS IsHighlighted,
+                                         e.highlight_starts_at AS HighlightStartsAt,
+                                         e.highlight_ends_at AS HighlightEndsAt,
                                          e.is_outdoor_event AS IsOutdoorEvent,
                                          e.allow_participation AS AllowParticipation,
                                          e.is_active AS IsActive,
@@ -213,7 +248,17 @@ public static class EventEndpoints
                                   WHERE e.tenant_id = @TenantId
                                     AND (@IsActive IS NULL OR e.is_active = @IsActive)
                                     AND (@OnlyOutdoor IS NULL OR e.is_outdoor_event = @OnlyOutdoor)
-                                  ORDER BY COALESCE(e.starts_at, e.created_at) DESC, e.created_at DESC
+                                    AND (
+                                        @CanManage = true
+                                        OR e.event_type = @StandardEventType
+                                        OR (
+                                            COALESCE(e.highlight_starts_at, e.created_at) <= @Now
+                                            AND (e.highlight_ends_at IS NULL OR e.highlight_ends_at > @Now)
+                                        )
+                                    )
+                                  ORDER BY e.is_highlighted DESC,
+                                           COALESCE(e.highlight_starts_at, e.starts_at, e.created_at) DESC,
+                                           e.created_at DESC
                                   LIMIT @Limit OFFSET @Offset";
 
         var parameters = new
@@ -221,6 +266,8 @@ public static class EventEndpoints
             TenantId = tenantId,
             CurrentUserId = currentUserId,
             CanManage = canManageEvents,
+            StandardEventType = AcademyEventType.Standard,
+            Now = DateTime.UtcNow,
             IsActive = effectiveIsActive,
             OnlyOutdoor = onlyOutdoor,
             Limit = pageSize,
@@ -260,11 +307,15 @@ public static class EventEndpoints
         const string sql = @"SELECT e.id,
                                     e.title,
                                     e.description,
+                                    e.event_type AS EventType,
                                     e.media_id AS MediaId,
                                     m.url AS MediaUrl,
                                     e.location,
                                     e.starts_at AS StartsAt,
                                     e.ends_at AS EndsAt,
+                                    e.is_highlighted AS IsHighlighted,
+                                    e.highlight_starts_at AS HighlightStartsAt,
+                                    e.highlight_ends_at AS HighlightEndsAt,
                                     e.is_outdoor_event AS IsOutdoorEvent,
                                     e.allow_participation AS AllowParticipation,
                                     e.is_active AS IsActive,
@@ -276,7 +327,7 @@ public static class EventEndpoints
                                     CASE WHEN current_participation.id IS NULL THEN false ELSE true END AS IsUserParticipating,
                                     e.created_at AS CreatedAt,
                                     e.updated_at AS UpdatedAt,
-                                    COALESCE(e.starts_at, e.created_at) AS FeedOrderAt
+                                    COALESCE(e.highlight_starts_at, e.starts_at, e.created_at) AS FeedOrderAt
                              FROM academy_events e
                              LEFT JOIN tenant_medias m
                                ON m.id = e.media_id
@@ -302,17 +353,28 @@ public static class EventEndpoints
                                AND (@CanManage = true OR e.is_active = true)
                                AND (@OnlyOutdoor IS NULL OR e.is_outdoor_event = @OnlyOutdoor)
                                AND (
-                                   @CursorFeedOrderAt IS NULL
-                                   OR COALESCE(e.starts_at, e.created_at) < @CursorFeedOrderAt
+                                   @CanManage = true
+                                   OR e.event_type = @StandardEventType
                                    OR (
-                                       COALESCE(e.starts_at, e.created_at) = @CursorFeedOrderAt
+                                       COALESCE(e.highlight_starts_at, e.created_at) <= @Now
+                                       AND (e.highlight_ends_at IS NULL OR e.highlight_ends_at > @Now)
+                                   )
+                               )
+                               AND (
+                                   @CursorFeedOrderAt IS NULL
+                                   OR COALESCE(e.highlight_starts_at, e.starts_at, e.created_at) < @CursorFeedOrderAt
+                                   OR (
+                                       COALESCE(e.highlight_starts_at, e.starts_at, e.created_at) = @CursorFeedOrderAt
                                        AND (
                                            e.created_at < @CursorCreatedAt
                                            OR (e.created_at = @CursorCreatedAt AND e.id < @CursorId)
                                        )
                                    )
                                )
-                             ORDER BY COALESCE(e.starts_at, e.created_at) DESC, e.created_at DESC, e.id DESC
+                             ORDER BY e.is_highlighted DESC,
+                                      COALESCE(e.highlight_starts_at, e.starts_at, e.created_at) DESC,
+                                      e.created_at DESC,
+                                      e.id DESC
                              LIMIT @LimitPlusOne";
 
         var rows = (await connection.QueryAsync<AcademyEventFeedRow>(sql, new
@@ -320,6 +382,8 @@ public static class EventEndpoints
             TenantId = tenantId,
             CurrentUserId = currentUserId,
             CanManage = canManageEvents,
+            StandardEventType = AcademyEventType.Standard,
+            Now = DateTime.UtcNow,
             OnlyOutdoor = onlyOutdoor,
             CursorFeedOrderAt = cursorData?.FeedOrderAt,
             CursorCreatedAt = cursorData?.CreatedAt,
@@ -363,11 +427,15 @@ public static class EventEndpoints
         const string sql = @"SELECT e.id,
                                     e.title,
                                     e.description,
+                                    e.event_type AS EventType,
                                     e.media_id AS MediaId,
                                     m.url AS MediaUrl,
                                     e.location,
                                     e.starts_at AS StartsAt,
                                     e.ends_at AS EndsAt,
+                                    e.is_highlighted AS IsHighlighted,
+                                    e.highlight_starts_at AS HighlightStartsAt,
+                                    e.highlight_ends_at AS HighlightEndsAt,
                                     e.is_outdoor_event AS IsOutdoorEvent,
                                     e.allow_participation AS AllowParticipation,
                                     e.is_active AS IsActive,
@@ -402,14 +470,24 @@ public static class EventEndpoints
                              ) current_participation ON true
                              WHERE e.id = @Id
                                AND e.tenant_id = @TenantId
-                               AND (@CanManage = true OR e.is_active = true)";
+                               AND (@CanManage = true OR e.is_active = true)
+                               AND (
+                                   @CanManage = true
+                                   OR e.event_type = @StandardEventType
+                                   OR (
+                                       COALESCE(e.highlight_starts_at, e.created_at) <= @Now
+                                       AND (e.highlight_ends_at IS NULL OR e.highlight_ends_at > @Now)
+                                   )
+                               )";
 
         var item = await connection.QueryFirstOrDefaultAsync<AcademyEventResponse>(sql, new
         {
             Id = id,
             TenantId = tenantId,
             CurrentUserId = currentUserId,
-            CanManage = canManageEvents
+            CanManage = canManageEvents,
+            StandardEventType = AcademyEventType.Standard,
+            Now = DateTime.UtcNow
         });
 
         if (item is null)
@@ -434,11 +512,16 @@ public static class EventEndpoints
         var createdByUserId = GetUserId(context.User);
         var startsAtUtc = NormalizeToUtc(request.StartsAt);
         var endsAtUtc = NormalizeToUtc(request.EndsAt);
+        var highlightStartsAtUtc = NormalizeToUtc(request.HighlightStartsAt);
+        var highlightEndsAtUtc = NormalizeToUtc(request.HighlightEndsAt);
 
         var validationResult = await ValidateRequestAsync(request.Title,
+                                                          request.EventType,
                                                           request.MediaId,
                                                           startsAtUtc,
                                                           endsAtUtc,
+                                                          highlightStartsAtUtc,
+                                                          highlightEndsAtUtc,
                                                           request.IsOutdoorEvent,
                                                           request.AllowParticipation,
                                                           tenantId,
@@ -453,14 +536,20 @@ public static class EventEndpoints
             TenantId = tenantId,
             Title = request.Title.Trim(),
             Description = NormalizeOptional(request.Description),
+            EventType = request.EventType,
             MediaId = request.MediaId,
             Location = NormalizeOptional(request.Location),
             StartsAt = startsAtUtc,
             EndsAt = endsAtUtc,
-            IsOutdoorEvent = request.IsOutdoorEvent,
-            AllowParticipation = request.AllowParticipation,
+            IsHighlighted = request.IsHighlighted || request.EventType != AcademyEventType.Standard,
+            HighlightStartsAt = ResolveHighlightStartsAt(request.EventType, highlightStartsAtUtc),
+            HighlightEndsAt = ResolveHighlightEndsAt(request.EventType, highlightStartsAtUtc, highlightEndsAtUtc),
+            IsOutdoorEvent = request.EventType == AcademyEventType.Standard && request.IsOutdoorEvent,
+            AllowParticipation = request.EventType == AcademyEventType.Standard && request.AllowParticipation,
             IsActive = request.IsActive,
-            CheckInPassword = GenerateCheckInPassword(),
+            CheckInPassword = request.EventType == AcademyEventType.Standard && request.IsOutdoorEvent && request.AllowParticipation
+                ? GenerateCheckInPassword()
+                : string.Empty,
             IsCompleted = false,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow
@@ -491,14 +580,19 @@ public static class EventEndpoints
         var academyEvent = await db.AcademyEvents.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId);
         var startsAtUtc = NormalizeToUtc(request.StartsAt);
         var endsAtUtc = NormalizeToUtc(request.EndsAt);
+        var highlightStartsAtUtc = NormalizeToUtc(request.HighlightStartsAt);
+        var highlightEndsAtUtc = NormalizeToUtc(request.HighlightEndsAt);
 
         if (academyEvent is null)
             return Results.NotFound();
 
         var validationResult = await ValidateRequestAsync(request.Title,
+                                                          request.EventType,
                                                           request.MediaId,
                                                           startsAtUtc,
                                                           endsAtUtc,
+                                                          highlightStartsAtUtc,
+                                                          highlightEndsAtUtc,
                                                           request.IsOutdoorEvent,
                                                           request.AllowParticipation,
                                                           tenantId,
@@ -512,12 +606,19 @@ public static class EventEndpoints
 
         academyEvent.Title = request.Title.Trim();
         academyEvent.Description = NormalizeOptional(request.Description);
+        academyEvent.EventType = request.EventType;
         academyEvent.MediaId = request.MediaId;
         academyEvent.Location = NormalizeOptional(request.Location);
         academyEvent.StartsAt = startsAtUtc;
         academyEvent.EndsAt = endsAtUtc;
-        academyEvent.IsOutdoorEvent = request.IsOutdoorEvent;
-        academyEvent.AllowParticipation = request.AllowParticipation;
+        academyEvent.IsHighlighted = request.IsHighlighted || request.EventType != AcademyEventType.Standard;
+        academyEvent.HighlightStartsAt = ResolveHighlightStartsAt(request.EventType, highlightStartsAtUtc);
+        academyEvent.HighlightEndsAt = ResolveHighlightEndsAt(request.EventType, academyEvent.HighlightStartsAt, highlightEndsAtUtc);
+        academyEvent.IsOutdoorEvent = request.EventType == AcademyEventType.Standard && request.IsOutdoorEvent;
+        academyEvent.AllowParticipation = request.EventType == AcademyEventType.Standard && request.AllowParticipation;
+        academyEvent.CheckInPassword = academyEvent.IsOutdoorEvent && academyEvent.AllowParticipation
+            ? string.IsNullOrWhiteSpace(academyEvent.CheckInPassword) ? GenerateCheckInPassword() : academyEvent.CheckInPassword
+            : string.Empty;
         academyEvent.IsActive = request.IsActive;
         academyEvent.UpdatedAt = DateTime.UtcNow;
 
@@ -766,6 +867,218 @@ public static class EventEndpoints
     }
 
     /// <summary>
+    /// Gera um destaque institucional com os aniversariantes do dia ou da data solicitada.
+    /// Tambem publica uma notificacao geral para o app dos alunos.
+    /// </summary>
+    private static async Task<IResult> GenerateBirthdayHighlightAsync(GenerateBirthdayHighlightEventRequest request,
+                                                                      AppDbContext db,
+                                                                      IFeatureAccessService featureAccessService,
+                                                                      INotificationService notificationService,
+                                                                      HttpContext context,
+                                                                      CancellationToken cancellationToken)
+    {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
+        var tenantId = context.GetTenantId();
+        var createdByUserId = GetUserId(context.User);
+        var referenceDate = (request.ReferenceDate?.Date ?? DateTime.UtcNow.Date);
+        var startsAtUtc = NormalizeToUtc(request.StartsAt);
+        var endsAtUtc = NormalizeToUtc(request.EndsAt);
+        var highlightStartsAtUtc = ResolveHighlightStartsAt(AcademyEventType.BirthdayHighlight, NormalizeToUtc(request.HighlightStartsAt));
+        var highlightEndsAtUtc = ResolveHighlightEndsAt(AcademyEventType.BirthdayHighlight, highlightStartsAtUtc, NormalizeToUtc(request.HighlightEndsAt));
+
+        var validationResult = await ValidateRequestAsync(
+            "Aniversariantes em destaque",
+            AcademyEventType.BirthdayHighlight,
+            request.MediaId,
+            startsAtUtc,
+            endsAtUtc,
+            highlightStartsAtUtc,
+            highlightEndsAtUtc,
+            false,
+            false,
+            tenantId,
+            db);
+
+        if (validationResult is not null)
+            return validationResult;
+
+        var birthdayStudents = await GetBirthdayStudentNamesAsync(db, tenantId, referenceDate, cancellationToken);
+
+        if (birthdayStudents.Count == 0)
+            return Results.BadRequest("No birthdays were found for the selected date.");
+
+        var title = birthdayStudents.Count == 1
+            ? $"Parabens, {birthdayStudents[0]}!"
+            : "Aniversariantes do dia";
+
+        var description = birthdayStudents.Count == 1
+            ? $"Hoje celebramos {birthdayStudents[0]}. A academia deseja um dia incrivel e cheio de energia."
+            : $"Hoje celebramos: {string.Join(", ", birthdayStudents)}. A academia deseja um dia incrivel e cheio de energia para todos.";
+
+        var academyEvent = new AcademyEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Title = title,
+            Description = description,
+            EventType = AcademyEventType.BirthdayHighlight,
+            MediaId = request.MediaId,
+            Location = NormalizeOptional(request.Location),
+            StartsAt = startsAtUtc,
+            EndsAt = endsAtUtc,
+            IsHighlighted = true,
+            HighlightStartsAt = highlightStartsAtUtc,
+            HighlightEndsAt = highlightEndsAtUtc,
+            IsOutdoorEvent = false,
+            AllowParticipation = false,
+            IsActive = request.IsActive,
+            CheckInPassword = string.Empty,
+            IsCompleted = false,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.AcademyEvents.Add(academyEvent);
+        await db.SaveChangesAsync(cancellationToken);
+
+        await PublishInstitutionalNotificationAsync(
+            academyEvent,
+            tenantId,
+            createdByUserId,
+            TenantNotificationType.BirthdayHighlight,
+            notificationService,
+            cancellationToken);
+
+        var response = await BuildResponseAsync(academyEvent.Id, tenantId, createdByUserId, db);
+        return Results.Created($"/api/events/{academyEvent.Id}", response);
+    }
+
+    /// <summary>
+    /// Retorna a previa de aniversariantes do dia para a academia decidir se deseja publicar o destaque.
+    /// </summary>
+    private static async Task<IResult> GetBirthdayHighlightPreviewAsync(AppDbContext db,
+                                                                        IFeatureAccessService featureAccessService,
+                                                                        HttpContext context,
+                                                                        DateTime? referenceDate,
+                                                                        CancellationToken cancellationToken)
+    {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
+        var tenantId = context.GetTenantId();
+        var effectiveDate = (referenceDate?.Date ?? DateTime.UtcNow.Date);
+        var names = await GetBirthdayStudentNamesAsync(db, tenantId, effectiveDate, cancellationToken);
+
+        return Results.Ok(new BirthdayHighlightPreviewResponse(
+            effectiveDate,
+            names.Count,
+            names,
+            names.Count > 0));
+    }
+
+    /// <summary>
+    /// Gera um destaque institucional usando o fechamento mensal dos vencedores da gamificacao.
+    /// Tambem publica uma notificacao geral para o app dos alunos.
+    /// </summary>
+    private static async Task<IResult> GenerateGamificationWinnersHighlightAsync(GenerateGamificationWinnersHighlightEventRequest request,
+                                                                                 AppDbContext db,
+                                                                                 IFeatureAccessService featureAccessService,
+                                                                                 INotificationService notificationService,
+                                                                                 HttpContext context,
+                                                                                 CancellationToken cancellationToken)
+    {
+        var featureResult = await EnsureEventsFeatureEnabledAsync(featureAccessService, context);
+        if (featureResult is not null)
+            return featureResult;
+
+        var tenantId = context.GetTenantId();
+        var createdByUserId = GetUserId(context.User);
+        var now = DateTime.UtcNow;
+        var year = request.Year ?? now.Year;
+        var month = request.Month ?? now.Month;
+        var startsAtUtc = NormalizeToUtc(request.StartsAt);
+        var endsAtUtc = NormalizeToUtc(request.EndsAt);
+        var highlightStartsAtUtc = ResolveHighlightStartsAt(AcademyEventType.GamificationWinnersHighlight, NormalizeToUtc(request.HighlightStartsAt));
+        var highlightEndsAtUtc = ResolveHighlightEndsAt(AcademyEventType.GamificationWinnersHighlight, highlightStartsAtUtc, NormalizeToUtc(request.HighlightEndsAt));
+
+        var validationResult = await ValidateRequestAsync(
+            "Vencedores da gamificacao",
+            AcademyEventType.GamificationWinnersHighlight,
+            request.MediaId,
+            startsAtUtc,
+            endsAtUtc,
+            highlightStartsAtUtc,
+            highlightEndsAtUtc,
+            false,
+            false,
+            tenantId,
+            db);
+
+        if (validationResult is not null)
+            return validationResult;
+
+        var winners = await db.MonthlyStudentRankings
+            .Where(x => x.TenantId == tenantId && x.Year == year && x.Month == month && x.Position <= 3)
+            .OrderBy(x => x.Position)
+            .Select(x => new
+            {
+                x.Position,
+                x.TotalPoints,
+                x.PrizeDescription,
+                UserName = x.User.Name
+            })
+            .ToListAsync(cancellationToken);
+
+        if (winners.Count == 0)
+            return Results.BadRequest("No monthly winners snapshot was found for the selected period.");
+
+        var title = $"Vencedores da gamificacao - {month:00}/{year}";
+        var description = string.Join(" ", winners.Select(x =>
+            $"{x.Position}o lugar: {x.UserName} com {x.TotalPoints:0.##} pontos{(string.IsNullOrWhiteSpace(x.PrizeDescription) ? "." : $" - premio: {x.PrizeDescription}.")}"));
+
+        var academyEvent = new AcademyEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Title = title,
+            Description = description,
+            EventType = AcademyEventType.GamificationWinnersHighlight,
+            MediaId = request.MediaId,
+            Location = NormalizeOptional(request.Location),
+            StartsAt = startsAtUtc,
+            EndsAt = endsAtUtc,
+            IsHighlighted = true,
+            HighlightStartsAt = highlightStartsAtUtc,
+            HighlightEndsAt = highlightEndsAtUtc,
+            IsOutdoorEvent = false,
+            AllowParticipation = false,
+            IsActive = request.IsActive,
+            CheckInPassword = string.Empty,
+            IsCompleted = false,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.AcademyEvents.Add(academyEvent);
+        await db.SaveChangesAsync(cancellationToken);
+
+        await PublishInstitutionalNotificationAsync(
+            academyEvent,
+            tenantId,
+            createdByUserId,
+            TenantNotificationType.GamificationWinnersHighlight,
+            notificationService,
+            cancellationToken);
+
+        var response = await BuildResponseAsync(academyEvent.Id, tenantId, createdByUserId, db);
+        return Results.Created($"/api/events/{academyEvent.Id}", response);
+    }
+
+    /// <summary>
     /// Reaplica a projecao de leitura apos operacoes de escrita.
     /// Isso mantem respostas consistentes entre create, update e consultas.
     /// </summary>
@@ -780,11 +1093,15 @@ public static class EventEndpoints
         const string sql = @"SELECT e.id,
                                     e.title,
                                     e.description,
+                                    e.event_type AS EventType,
                                     e.media_id AS MediaId,
                                     m.url AS MediaUrl,
                                     e.location,
                                     e.starts_at AS StartsAt,
                                     e.ends_at AS EndsAt,
+                                    e.is_highlighted AS IsHighlighted,
+                                    e.highlight_starts_at AS HighlightStartsAt,
+                                    e.highlight_ends_at AS HighlightEndsAt,
                                     e.is_outdoor_event AS IsOutdoorEvent,
                                     e.allow_participation AS AllowParticipation,
                                     e.is_active AS IsActive,
@@ -833,9 +1150,12 @@ public static class EventEndpoints
     /// Valida as principais regras de consistencia do payload de eventos.
     /// </summary>
     private static async Task<IResult?> ValidateRequestAsync(string title,
+                                                             AcademyEventType eventType,
                                                              Guid? mediaId,
                                                              DateTime? startsAt,
                                                              DateTime? endsAt,
+                                                             DateTime? highlightStartsAt,
+                                                             DateTime? highlightEndsAt,
                                                              bool isOutdoorEvent,
                                                              bool allowParticipation,
                                                              Guid tenantId,
@@ -850,8 +1170,14 @@ public static class EventEndpoints
         if (startsAt.HasValue && endsAt.HasValue && endsAt.Value <= startsAt.Value)
             return Results.BadRequest("End date must be greater than start date.");
 
+        if (highlightStartsAt.HasValue && highlightEndsAt.HasValue && highlightEndsAt.Value <= highlightStartsAt.Value)
+            return Results.BadRequest("Highlight end date must be greater than highlight start date.");
+
         if (allowParticipation && !isOutdoorEvent)
             return Results.BadRequest("Only outdoor events can allow participation in this version.");
+
+        if (eventType != AcademyEventType.Standard && (isOutdoorEvent || allowParticipation))
+            return Results.BadRequest("Institutional highlight events cannot allow participation or outdoor check-in.");
 
         if (mediaId.HasValue)
         {
@@ -861,6 +1187,65 @@ public static class EventEndpoints
         }
 
         return null;
+    }
+
+    private static DateTime? ResolveHighlightStartsAt(AcademyEventType eventType, DateTime? highlightStartsAt)
+    {
+        if (eventType == AcademyEventType.Standard)
+            return highlightStartsAt;
+
+        return highlightStartsAt ?? DateTime.UtcNow;
+    }
+
+    private static DateTime? ResolveHighlightEndsAt(AcademyEventType eventType, DateTime? highlightStartsAt, DateTime? highlightEndsAt)
+    {
+        if (eventType == AcademyEventType.Standard)
+            return highlightEndsAt;
+
+        return highlightEndsAt ?? (highlightStartsAt ?? DateTime.UtcNow).AddDays(7);
+    }
+
+    private static Task<List<string>> GetBirthdayStudentNamesAsync(AppDbContext db,
+                                                                   Guid tenantId,
+                                                                   DateTime referenceDate,
+                                                                   CancellationToken cancellationToken)
+    {
+        return db.UserProfiles
+            .Where(x => x.TenantId == tenantId && x.BirthDate.HasValue)
+            .Join(db.Users.Where(x => x.TenantId == tenantId && x.IsActive && x.Role == UserRole.Student),
+                profile => profile.UserId,
+                user => user.Id,
+                (profile, user) => new { user.Name, BirthDate = profile.BirthDate!.Value })
+            .Where(x => x.BirthDate.Month == referenceDate.Month && x.BirthDate.Day == referenceDate.Day)
+            .OrderBy(x => x.Name)
+            .Select(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    private static async Task PublishInstitutionalNotificationAsync(AcademyEvent academyEvent,
+                                                                    Guid tenantId,
+                                                                    Guid createdByUserId,
+                                                                    TenantNotificationType notificationType,
+                                                                    INotificationService notificationService,
+                                                                    CancellationToken cancellationToken)
+    {
+        if (!academyEvent.IsActive)
+            return;
+
+        await notificationService.PublishAsync(new PublishTenantNotificationCommand(
+            tenantId,
+            notificationType,
+            TenantNotificationAudience.StudentsOnly,
+            academyEvent.Title,
+            academyEvent.Description,
+            academyEvent.Description ?? academyEvent.Title,
+            academyEvent.MediaId,
+            true,
+            "academy_event",
+            academyEvent.Id,
+            createdByUserId,
+            academyEvent.HighlightStartsAt ?? academyEvent.CreatedAt,
+            academyEvent.HighlightEndsAt), cancellationToken);
     }
 
     /// <summary>
@@ -949,11 +1334,15 @@ public static class EventEndpoints
             row.Id,
             row.Title,
             row.Description,
+            row.EventType,
             row.MediaId,
             row.MediaUrl,
             row.Location,
             row.StartsAt,
             row.EndsAt,
+            row.IsHighlighted,
+            row.HighlightStartsAt,
+            row.HighlightEndsAt,
             row.IsOutdoorEvent,
             row.AllowParticipation,
             row.IsActive,
@@ -1148,11 +1537,15 @@ public static class EventEndpoints
         Guid Id,
         string Title,
         string? Description,
+        AcademyEventType EventType,
         Guid? MediaId,
         string? MediaUrl,
         string? Location,
         DateTime? StartsAt,
         DateTime? EndsAt,
+        bool IsHighlighted,
+        DateTime? HighlightStartsAt,
+        DateTime? HighlightEndsAt,
         bool IsOutdoorEvent,
         bool AllowParticipation,
         bool IsActive,

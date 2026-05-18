@@ -16,6 +16,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IBCryptPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IFeatureAccessService, FeatureAccessService>();
         services.AddScoped<IGamificationService, GamificationService>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<DatabaseSeeder>();
 
         services.AddSingleton<IObjectStorageService, CloudflareR2StorageService>();

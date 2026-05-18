@@ -189,9 +189,9 @@ Capacidades atuais:
 - eventos outdoor com confirmacao de participacao pelo aluno
 - integracao com gamificacao via `OutdoorEventParticipation`
 - bloqueio do modulo por feature opcional `EVENTS`
-- preparo para destaques internos de aniversariantes e vencedores da gamificacao
+- suporte a destaques internos de aniversariantes e vencedores da gamificacao no backend
 
-Direcoes de produto ja consideradas para a proxima evolucao:
+Direcoes de produto ja consideradas e ja iniciadas no backend:
 
 - eventos internos de mural para destacar aniversariantes do dia ou do periodo
 - eventos internos de mural para divulgar vencedores da gamificacao

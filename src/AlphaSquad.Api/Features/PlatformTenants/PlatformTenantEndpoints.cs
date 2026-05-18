@@ -409,7 +409,7 @@ public static class PlatformTenantEndpoints
                 x.CreatedAt))
             .FirstOrDefaultAsync();
 
-        var features = await db.TenantFeatures
+        var featureRows = await db.TenantFeatures
             .Where(x => x.TenantId == tenantId)
             .Join(db.Features,
                 link => link.FeatureId,
@@ -421,8 +421,11 @@ public static class PlatformTenantEndpoints
                     feature.Description
                 })
             .OrderBy(x => x.Name)
-            .Select(x => new PlatformFeatureCatalogItemResponse(x.Id, x.Name, x.Description))
             .ToListAsync();
+
+        var features = featureRows
+            .Select(x => new PlatformFeatureCatalogItemResponse(x.Id, x.Name, x.Description))
+            .ToList();
 
         return new PlatformTenantDetailsResponse(
             tenant.Id,

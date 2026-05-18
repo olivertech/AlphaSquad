@@ -42,6 +42,8 @@ public class AppDbContext : DbContext
     public DbSet<MonthlyStudentRanking> MonthlyStudentRankings => Set<MonthlyStudentRanking>();
     public DbSet<TenantLegalContent> TenantLegalContents => Set<TenantLegalContent>();
     public DbSet<Configuration> Configurations => Set<Configuration>();
+    public DbSet<TenantNotification> TenantNotifications => Set<TenantNotification>();
+    public DbSet<UserNotificationRead> UserNotificationReads => Set<UserNotificationRead>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -208,6 +210,84 @@ public class AppDbContext : DbContext
             entity.HasOne(x => x.Tenant)
                 .WithMany()
                 .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mapeia a notificacao institucional exibida no app do aluno.
+        // A mesma estrutura sera reaproveitada por eventos, informes, aulas e produtos.
+        modelBuilder.Entity<TenantNotification>(entity =>
+        {
+            entity.ToTable("tenant_notifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Type).HasColumnName("type").HasConversion<int>().IsRequired();
+            entity.Property(x => x.Audience).HasColumnName("audience").HasConversion<int>().IsRequired();
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Summary).HasColumnName("summary").HasMaxLength(300);
+            entity.Property(x => x.Content).HasColumnName("content").IsRequired();
+            entity.Property(x => x.MediaId).HasColumnName("media_id");
+            entity.Property(x => x.IsHighlighted).HasColumnName("is_highlighted");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.RelatedEntityType).HasColumnName("related_entity_type").HasMaxLength(100);
+            entity.Property(x => x.RelatedEntityId).HasColumnName("related_entity_id");
+            entity.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id");
+            entity.Property(x => x.PublishedAt).HasColumnName("published_at");
+            entity.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.MediaId);
+            entity.HasIndex(x => x.CreatedByUserId);
+            entity.HasIndex(x => new { x.TenantId, x.IsActive, x.PublishedAt });
+            entity.HasIndex(x => new { x.TenantId, x.Type, x.Audience, x.PublishedAt });
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Media)
+                .WithMany()
+                .HasForeignKey(x => x.MediaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Mapeia a leitura individual da notificacao por usuario.
+        // Esse registro permite separar pendencias, historico e contagem do sino do app.
+        modelBuilder.Entity<UserNotificationRead>(entity =>
+        {
+            entity.ToTable("user_notification_reads");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.TenantNotificationId).HasColumnName("tenant_notification_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.ReadAt).HasColumnName("read_at");
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.TenantNotificationId);
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.ReadAt });
+            entity.HasIndex(x => new { x.TenantId, x.TenantNotificationId, x.UserId }).IsUnique();
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Notification)
+                .WithMany(x => x.Reads)
+                .HasForeignKey(x => x.TenantNotificationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(x => x.User)
@@ -685,10 +765,14 @@ public class AppDbContext : DbContext
             entity.Property(x => x.TenantId).HasColumnName("tenant_id");
             entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(150).IsRequired();
             entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.EventType).HasColumnName("event_type").HasConversion<int>().IsRequired();
             entity.Property(x => x.MediaId).HasColumnName("media_id");
             entity.Property(x => x.Location).HasColumnName("location").HasMaxLength(150);
             entity.Property(x => x.StartsAt).HasColumnName("starts_at");
             entity.Property(x => x.EndsAt).HasColumnName("ends_at");
+            entity.Property(x => x.IsHighlighted).HasColumnName("is_highlighted");
+            entity.Property(x => x.HighlightStartsAt).HasColumnName("highlight_starts_at");
+            entity.Property(x => x.HighlightEndsAt).HasColumnName("highlight_ends_at");
             entity.Property(x => x.IsOutdoorEvent).HasColumnName("is_outdoor_event");
             entity.Property(x => x.AllowParticipation).HasColumnName("allow_participation");
             entity.Property(x => x.IsActive).HasColumnName("is_active");
@@ -702,6 +786,8 @@ public class AppDbContext : DbContext
             entity.HasIndex(x => x.CreatedByUserId);
             entity.HasIndex(x => new { x.TenantId, x.IsActive, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.IsOutdoorEvent, x.IsActive });
+            entity.HasIndex(x => new { x.TenantId, x.EventType, x.IsActive });
+            entity.HasIndex(x => new { x.TenantId, x.IsHighlighted, x.HighlightStartsAt, x.HighlightEndsAt });
 
             entity.HasOne(x => x.Tenant)
                 .WithMany()

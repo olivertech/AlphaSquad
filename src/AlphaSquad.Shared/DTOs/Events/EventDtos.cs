@@ -6,10 +6,14 @@ namespace AlphaSquad.Shared.DTOs.Events;
 public record CreateAcademyEventRequest(
     string Title,
     string? Description,
+    AcademyEventType EventType,
     Guid? MediaId,
     string? Location,
     DateTime? StartsAt,
     DateTime? EndsAt,
+    bool IsHighlighted,
+    DateTime? HighlightStartsAt,
+    DateTime? HighlightEndsAt,
     bool IsOutdoorEvent,
     bool AllowParticipation,
     bool IsActive
@@ -21,13 +25,56 @@ public record CreateAcademyEventRequest(
 public record UpdateAcademyEventRequest(
     string Title,
     string? Description,
+    AcademyEventType EventType,
     Guid? MediaId,
     string? Location,
     DateTime? StartsAt,
     DateTime? EndsAt,
+    bool IsHighlighted,
+    DateTime? HighlightStartsAt,
+    DateTime? HighlightEndsAt,
     bool IsOutdoorEvent,
     bool AllowParticipation,
     bool IsActive
+);
+
+/// <summary>
+/// Gera um destaque institucional de aniversariantes com texto automatico e janela temporaria de exibicao.
+/// </summary>
+public record GenerateBirthdayHighlightEventRequest(
+    Guid? MediaId,
+    DateTime? ReferenceDate,
+    string? Location,
+    DateTime? StartsAt,
+    DateTime? EndsAt,
+    DateTime? HighlightStartsAt,
+    DateTime? HighlightEndsAt,
+    bool IsActive
+);
+
+/// <summary>
+/// Gera um destaque institucional com os vencedores ja fechados da gamificacao mensal.
+/// </summary>
+public record GenerateGamificationWinnersHighlightEventRequest(
+    Guid? MediaId,
+    int? Year,
+    int? Month,
+    string? Location,
+    DateTime? StartsAt,
+    DateTime? EndsAt,
+    DateTime? HighlightStartsAt,
+    DateTime? HighlightEndsAt,
+    bool IsActive
+);
+
+/// <summary>
+/// Resumo usado no dashboard para que a academia veja os aniversariantes do dia antes de publicar o destaque.
+/// </summary>
+public record BirthdayHighlightPreviewResponse(
+    DateTime ReferenceDate,
+    int BirthdayCount,
+    List<string> StudentNames,
+    bool CanGenerateHighlight
 );
 
 /// <summary>
@@ -56,11 +103,15 @@ public record AcademyEventResponse(
     Guid Id,
     string Title,
     string? Description,
+    AcademyEventType EventType,
     Guid? MediaId,
     string? MediaUrl,
     string? Location,
     DateTime? StartsAt,
     DateTime? EndsAt,
+    bool IsHighlighted,
+    DateTime? HighlightStartsAt,
+    DateTime? HighlightEndsAt,
     bool IsOutdoorEvent,
     bool AllowParticipation,
     bool IsActive,
