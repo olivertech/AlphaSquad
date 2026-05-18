@@ -12,6 +12,14 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
     public partial class CreateUserRequest : IParsable
     #pragma warning restore CS1591
     {
+        /// <summary>The birthDate property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? BirthDate { get; set; }
+#nullable restore
+#else
+        public string BirthDate { get; set; }
+#endif
         /// <summary>The email property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -20,6 +28,10 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
 #else
         public string Email { get; set; }
 #endif
+        /// <summary>The membershipBillingDueDay property</summary>
+        public int? MembershipBillingDueDay { get; set; }
+        /// <summary>The membershipPlanId property</summary>
+        public Guid? MembershipPlanId { get; set; }
         /// <summary>The name property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -35,6 +47,14 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
 #nullable restore
 #else
         public string Password { get; set; }
+#endif
+        /// <summary>The phoneNumber property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? PhoneNumber { get; set; }
+#nullable restore
+#else
+        public string PhoneNumber { get; set; }
 #endif
         /// <summary>The role property</summary>
         public int? Role { get; set; }
@@ -56,9 +76,13 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
+                { "birthDate", n => { BirthDate = n.GetStringValue(); } },
                 { "email", n => { Email = n.GetStringValue(); } },
+                { "membershipBillingDueDay", n => { MembershipBillingDueDay = n.GetIntValue(); } },
+                { "membershipPlanId", n => { MembershipPlanId = n.GetGuidValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
                 { "password", n => { Password = n.GetStringValue(); } },
+                { "phoneNumber", n => { PhoneNumber = n.GetStringValue(); } },
                 { "role", n => { Role = n.GetIntValue(); } },
             };
         }
@@ -69,9 +93,13 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
+            writer.WriteStringValue("birthDate", BirthDate);
             writer.WriteStringValue("email", Email);
+            writer.WriteIntValue("membershipBillingDueDay", MembershipBillingDueDay);
+            writer.WriteGuidValue("membershipPlanId", MembershipPlanId);
             writer.WriteStringValue("name", Name);
             writer.WriteStringValue("password", Password);
+            writer.WriteStringValue("phoneNumber", PhoneNumber);
             writer.WriteIntValue("role", Role);
         }
     }

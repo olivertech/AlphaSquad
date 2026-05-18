@@ -42,6 +42,11 @@ public class UserMembership
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Dia base de vencimento da cobranca recorrente associada ao plano do aluno.
+    /// </summary>
+    public int? BillingDueDay { get; set; }
+
+    /// <summary>
     /// Motivo do status atual do vinculo.
     /// Pode registrar, por exemplo, upgrade, cancelamento, pausa ou campanha comercial.
     /// </summary>

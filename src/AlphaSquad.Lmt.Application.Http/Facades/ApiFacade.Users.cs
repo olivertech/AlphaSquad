@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Kiota.Abstractions;
@@ -34,6 +35,16 @@ public sealed partial class ApiFacade
 
         return GeneratedDtoMapper.Map<UserResponseDto>(result);
 
+    }
+
+    public async Task<UserGamificationHistoryResponseDto?> GETApiUsersByIdGamificationHistoryAsync(Guid id, int? limit = default, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateAuthenticatedClientAsync(cancellationToken).ConfigureAwait(false);
+        var url = limit.HasValue
+            ? $"api/users/{id}/gamification-history?limit={limit.Value}"
+            : $"api/users/{id}/gamification-history";
+
+        return await client.GetFromJsonAsync<UserGamificationHistoryResponseDto>(url, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserResponseDto?> POSTApiUsersAsync(CreateUserRequestDto request, CancellationToken cancellationToken = default)

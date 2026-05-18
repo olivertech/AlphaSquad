@@ -12,6 +12,24 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
     public partial class UserResponse : IParsable
     #pragma warning restore CS1591
     {
+        /// <summary>The activeMembershipPlanId property</summary>
+        public Guid? ActiveMembershipPlanId { get; set; }
+        /// <summary>The activeMembershipPlanName property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? ActiveMembershipPlanName { get; set; }
+#nullable restore
+#else
+        public string ActiveMembershipPlanName { get; set; }
+#endif
+        /// <summary>The birthDate property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? BirthDate { get; set; }
+#nullable restore
+#else
+        public string BirthDate { get; set; }
+#endif
         /// <summary>The createdAt property</summary>
         public DateTimeOffset? CreatedAt { get; set; }
         /// <summary>The email property</summary>
@@ -24,8 +42,14 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
 #endif
         /// <summary>The id property</summary>
         public Guid? Id { get; set; }
+        /// <summary>The isGamificationParticipant property</summary>
+        public bool? IsGamificationParticipant { get; set; }
         /// <summary>The isActive property</summary>
         public bool? IsActive { get; set; }
+        /// <summary>The isMembershipInGoodStanding property</summary>
+        public bool? IsMembershipInGoodStanding { get; set; }
+        /// <summary>The membershipBillingDueDay property</summary>
+        public int? MembershipBillingDueDay { get; set; }
         /// <summary>The name property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -34,10 +58,20 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
 #else
         public string Name { get; set; }
 #endif
+        /// <summary>The phoneNumber property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? PhoneNumber { get; set; }
+#nullable restore
+#else
+        public string PhoneNumber { get; set; }
+#endif
         /// <summary>The role property</summary>
         public int? Role { get; set; }
         /// <summary>The tenantId property</summary>
         public Guid? TenantId { get; set; }
+        /// <summary>The totalAccumulatedPoints property</summary>
+        public double? TotalAccumulatedPoints { get; set; }
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
@@ -56,13 +90,21 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
+                { "activeMembershipPlanId", n => { ActiveMembershipPlanId = n.GetGuidValue(); } },
+                { "activeMembershipPlanName", n => { ActiveMembershipPlanName = n.GetStringValue(); } },
+                { "birthDate", n => { BirthDate = n.GetStringValue(); } },
                 { "createdAt", n => { CreatedAt = n.GetDateTimeOffsetValue(); } },
                 { "email", n => { Email = n.GetStringValue(); } },
                 { "id", n => { Id = n.GetGuidValue(); } },
+                { "isGamificationParticipant", n => { IsGamificationParticipant = n.GetBoolValue(); } },
                 { "isActive", n => { IsActive = n.GetBoolValue(); } },
+                { "isMembershipInGoodStanding", n => { IsMembershipInGoodStanding = n.GetBoolValue(); } },
+                { "membershipBillingDueDay", n => { MembershipBillingDueDay = n.GetIntValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
+                { "phoneNumber", n => { PhoneNumber = n.GetStringValue(); } },
                 { "role", n => { Role = n.GetIntValue(); } },
                 { "tenantId", n => { TenantId = n.GetGuidValue(); } },
+                { "totalAccumulatedPoints", n => { TotalAccumulatedPoints = n.GetDoubleValue(); } },
             };
         }
         /// <summary>
@@ -72,13 +114,21 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
+            writer.WriteGuidValue("activeMembershipPlanId", ActiveMembershipPlanId);
+            writer.WriteStringValue("activeMembershipPlanName", ActiveMembershipPlanName);
+            writer.WriteStringValue("birthDate", BirthDate);
             writer.WriteDateTimeOffsetValue("createdAt", CreatedAt);
             writer.WriteStringValue("email", Email);
             writer.WriteGuidValue("id", Id);
+            writer.WriteBoolValue("isGamificationParticipant", IsGamificationParticipant);
             writer.WriteBoolValue("isActive", IsActive);
+            writer.WriteBoolValue("isMembershipInGoodStanding", IsMembershipInGoodStanding);
+            writer.WriteIntValue("membershipBillingDueDay", MembershipBillingDueDay);
             writer.WriteStringValue("name", Name);
+            writer.WriteStringValue("phoneNumber", PhoneNumber);
             writer.WriteIntValue("role", Role);
             writer.WriteGuidValue("tenantId", TenantId);
+            writer.WriteDoubleValue("totalAccumulatedPoints", TotalAccumulatedPoints);
         }
     }
 }

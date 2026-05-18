@@ -179,6 +179,9 @@ public static class PlanEndpoints
         if (request.EndsAt.HasValue && request.EndsAt.Value <= request.StartsAt)
             return Results.BadRequest("End date must be greater than start date.");
 
+        if (request.BillingDueDay is < 1 or > 31)
+            return Results.BadRequest("Billing due day must be between 1 and 31.");
+
         var normalizedReason = NormalizeOptional(request.StatusReason);
 
         var currentMemberships = await db.UserMemberships
@@ -209,6 +212,7 @@ public static class PlanEndpoints
             StartsAt = request.StartsAt,
             EndsAt = request.EndsAt,
             IsActive = true,
+            BillingDueDay = request.BillingDueDay,
             StatusReason = normalizedReason,
             ChangedByUserId = actorUserId,
             CreatedAt = DateTime.UtcNow

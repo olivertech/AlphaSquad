@@ -12,6 +12,8 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
     public partial class AssignMembershipPlanRequest : IParsable
     #pragma warning restore CS1591
     {
+        /// <summary>The billingDueDay property</summary>
+        public int? BillingDueDay { get; set; }
         /// <summary>The endsAt property</summary>
         public DateTimeOffset? EndsAt { get; set; }
         /// <summary>The startsAt property</summary>
@@ -44,6 +46,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
+                { "billingDueDay", n => { BillingDueDay = n.GetIntValue(); } },
                 { "endsAt", n => { EndsAt = n.GetDateTimeOffsetValue(); } },
                 { "startsAt", n => { StartsAt = n.GetDateTimeOffsetValue(); } },
                 { "statusReason", n => { StatusReason = n.GetStringValue(); } },
@@ -57,6 +60,7 @@ namespace AlphaSquad.Lmt.Application.ApiClient.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
+            writer.WriteIntValue("billingDueDay", BillingDueDay);
             writer.WriteDateTimeOffsetValue("endsAt", EndsAt);
             writer.WriteDateTimeOffsetValue("startsAt", StartsAt);
             writer.WriteStringValue("statusReason", StatusReason);

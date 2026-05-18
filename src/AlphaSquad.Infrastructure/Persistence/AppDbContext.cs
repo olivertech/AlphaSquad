@@ -570,6 +570,7 @@ public class AppDbContext : DbContext
             entity.Property(x => x.StartsAt).HasColumnName("starts_at");
             entity.Property(x => x.EndsAt).HasColumnName("ends_at");
             entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.BillingDueDay).HasColumnName("billing_due_day");
             entity.Property(x => x.StatusReason).HasColumnName("status_reason").HasMaxLength(300);
             entity.Property(x => x.ChangedByUserId).HasColumnName("changed_by_user_id");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");

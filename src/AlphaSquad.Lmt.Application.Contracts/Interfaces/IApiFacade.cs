@@ -117,6 +117,8 @@ public interface IApiFacade
 
     Task<UserResponseDto?> GETApiUsersByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<UserGamificationHistoryResponseDto?> GETApiUsersByIdGamificationHistoryAsync(Guid id, int? limit = default, CancellationToken cancellationToken = default);
+
     Task<List<WorkoutResponseDto>?> GETApiWorkoutsAsync(CancellationToken cancellationToken = default);
 
     Task<WorkoutDetailsResponseDto?> GETApiWorkoutsByIdAsync(Guid id, CancellationToken cancellationToken = default);

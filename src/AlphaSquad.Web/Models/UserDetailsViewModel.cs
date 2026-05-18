@@ -8,10 +8,20 @@ public sealed class UserDetailsViewModel
     public required Guid Id { get; init; }
     public required string Name { get; init; }
     public required string Email { get; init; }
+    public string? PhoneNumber { get; init; }
+    public string? BirthDate { get; init; }
+    public string? ActiveMembershipPlanName { get; init; }
+    public string? MembershipBillingDueDayLabel { get; init; }
+    public string? MembershipFinancialStatusLabel { get; init; }
+    public string? MembershipFinancialStatusDescription { get; init; }
+    public string MembershipFinancialStatusToneClass { get; init; } = "text-slate-700";
     public required string RoleLabel { get; init; }
     public required string RoleDescription { get; init; }
     public required string StatusLabel { get; init; }
+    public required string GamificationStatusText { get; init; }
     public required bool IsActive { get; init; }
+    public required bool IsGamificationParticipant { get; init; }
     public required string Initials { get; init; }
+    public decimal TotalAccumulatedPoints { get; init; }
     public DateTimeOffset? CreatedAt { get; init; }
 }

@@ -12,6 +12,8 @@ public interface IUsersService
 
     Task<UserResponseDto?> GETApiUsersByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<UserGamificationHistoryResponseDto?> GETApiUsersByIdGamificationHistoryAsync(Guid id, int? limit = default, CancellationToken cancellationToken = default);
+
     Task<UserResponseDto?> POSTApiUsersAsync(CreateUserRequestDto request, CancellationToken cancellationToken = default);
 
     Task<UserResponseDto?> PUTApiUsersByIdAsync(Guid id, UpdateUserRequestDto request, CancellationToken cancellationToken = default);

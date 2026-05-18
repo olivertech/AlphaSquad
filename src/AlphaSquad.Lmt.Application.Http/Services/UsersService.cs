@@ -31,6 +31,11 @@ public sealed class UsersService : IUsersService
         return _apiFacade.GETApiUsersByIdAsync(id, cancellationToken);
     }
 
+    public Task<UserGamificationHistoryResponseDto?> GETApiUsersByIdGamificationHistoryAsync(Guid id, int? limit = default, CancellationToken cancellationToken = default)
+    {
+        return _apiFacade.GETApiUsersByIdGamificationHistoryAsync(id, limit, cancellationToken);
+    }
+
     public Task<UserResponseDto?> POSTApiUsersAsync(CreateUserRequestDto request, CancellationToken cancellationToken = default)
     {
         return _apiFacade.POSTApiUsersAsync(request, cancellationToken);

@@ -41,7 +41,8 @@ public record AssignMembershipPlanRequest(
     Guid UserId,
     DateTime StartsAt,
     DateTime? EndsAt,
-    string? StatusReason
+    string? StatusReason,
+    int? BillingDueDay
 );
 
 /// <summary>

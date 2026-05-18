@@ -17,6 +17,18 @@ public sealed class UserFormInputModel
     [Display(Name = "E-mail")]
     public string Email { get; set; } = string.Empty;
 
+    [Display(Name = "Celular com DDD")]
+    public string PhoneNumber { get; set; } = string.Empty;
+
+    [Display(Name = "Data de nascimento")]
+    public string BirthDate { get; set; } = string.Empty;
+
+    [Display(Name = "Plano atual")]
+    public Guid? MembershipPlanId { get; set; }
+
+    [Display(Name = "Dia de vencimento")]
+    public int? MembershipBillingDueDay { get; set; }
+
     [Display(Name = "Senha inicial")]
     public string Password { get; set; } = string.Empty;
 

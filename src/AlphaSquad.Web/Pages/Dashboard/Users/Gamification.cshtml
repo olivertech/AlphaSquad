@@ -1,0 +1,92 @@
+@page "{id:guid}"
+@model AlphaSquad.Web.Pages.Dashboard.Users.GamificationModel
+@{
+    ViewData["Title"] = "Histórico de pontuação";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Dashboard/Index" class="hover:text-slate-700">Dashboard</a></li>
+            <li>Gestão</li>
+            <li><a asp-page="/Dashboard/Users/Index" class="hover:text-slate-700">Usuários</a></li>
+            <li class="font-medium tenant-text">Histórico de pontuação</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight tenant-text">Histórico de pontuação</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Consulte os registros individuais que formam a pontuação total do aluno na gamificação.
+        </p>
+    </div>
+
+    @if (Model.History is not null)
+    {
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold tenant-text">@Model.History.UserName</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">@Model.History.SummaryText</p>
+                    </div>
+                    <div class="rounded-[1.5rem] tenant-soft-bg px-5 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total acumulado</p>
+                        <p class="mt-2 text-2xl font-semibold text-slate-950">@Model.History.TotalAccumulatedPoints.ToString("N2")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50/80 text-left text-slate-500">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">Atividade</th>
+                            <th class="px-6 py-4 font-semibold">Origem</th>
+                            <th class="px-6 py-4 font-semibold">Pontos</th>
+                            <th class="px-6 py-4 font-semibold">Quando aconteceu</th>
+                            <th class="px-6 py-4 font-semibold">Observação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @if (Model.History.Entries.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="px-6 py-10 text-center text-slate-500">
+                                    Nenhum registro individual de pontuação foi encontrado para este usuário.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var entry in Model.History.Entries)
+                            {
+                                <tr class="align-top">
+                                    <td class="px-6 py-4">
+                                        <p class="font-semibold text-slate-950">@entry.EventTypeLabel</p>
+                                        <p class="mt-1 text-slate-500">@entry.RuleName</p>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <p class="font-medium text-slate-700">@entry.SourceLabel</p>
+                                        <p class="mt-1 text-slate-500">@(string.IsNullOrWhiteSpace(entry.SourceTitle) ? "-" : entry.SourceTitle)</p>
+                                    </td>
+                                    <td class="px-6 py-4 font-semibold text-emerald-700">+@entry.PointsApplied.ToString("N2")</td>
+                                    <td class="px-6 py-4 text-slate-600">@entry.OccurredAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="px-6 py-4 text-slate-600">@(string.IsNullOrWhiteSpace(entry.Notes) ? "-" : entry.Notes)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end border-t border-slate-200 px-6 py-5 sm:px-8">
+                <a asp-page="/Dashboard/Users/Details"
+                   asp-route-id="@Model.History.UserId"
+                   class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                    Voltar aos detalhes
+                </a>
+            </div>
+        </section>
+    }
+</section>

@@ -1,4 +1,4 @@
-﻿@page "{id:guid}"
+@page "{id:guid}"
 @model AlphaSquad.Web.Pages.Dashboard.Users.EditModel
 @{
     ViewData["Title"] = "Editar usuário";
@@ -17,7 +17,7 @@
     <div class="space-y-2 px-1">
         <h1 class="text-3xl font-semibold tracking-tight tenant-text">Editar usuário</h1>
         <p class="max-w-3xl text-sm leading-7 text-slate-500">
-            Atualize o nome, o perfil e o status de acesso do usuário de forma simples e segura.
+            Atualize o nome, o perfil, o status e o vínculo do plano do usuário de forma simples e segura.
         </p>
     </div>
 
@@ -44,6 +44,49 @@
                         <input asp-for="Input.Email" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-500" readonly />
                     </label>
                 </div>
+
+                <div class="grid gap-5 lg:grid-cols-2">
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Celular com DDD</span>
+                        <input asp-for="Input.PhoneNumber" inputmode="numeric" maxlength="15" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="(11) 99999-9999" />
+                        <span asp-validation-for="Input.PhoneNumber" class="mt-2 text-sm text-rose-600"></span>
+                    </label>
+
+                    <label class="form-control">
+                        <span class="mb-2 text-sm font-medium text-slate-700">Data de nascimento</span>
+                        <input asp-for="Input.BirthDate" inputmode="numeric" maxlength="10" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="dd/mm/aaaa" />
+                        <span asp-validation-for="Input.BirthDate" class="mt-2 text-sm text-rose-600"></span>
+                    </label>
+                </div>
+
+                <section id="membershipSection" class="space-y-4 rounded-[1.75rem] border border-slate-200 bg-slate-50/70 p-5 hidden">
+                    <div class="space-y-1">
+                        <h3 class="text-base font-semibold tenant-text">Plano do aluno</h3>
+                        <p class="text-sm leading-6 text-slate-500">
+                            Ajuste o plano ativo e o dia base de vencimento quando este cadastro representar um aluno.
+                        </p>
+                    </div>
+
+                    <div class="grid gap-5 lg:grid-cols-[1.4fr_0.6fr]">
+                        <label class="form-control">
+                            <span class="mb-2 text-sm font-medium text-slate-700">Plano contratado</span>
+                            <select asp-for="Input.MembershipPlanId" class="select select-bordered h-12 rounded-2xl border-slate-200 bg-white">
+                                <option value="">Sem plano ativo</option>
+                                @foreach (var plan in Model.MembershipPlanOptions)
+                                {
+                                    <option value="@plan.Id">@plan.Label</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Input.MembershipPlanId" class="mt-2 text-sm text-rose-600"></span>
+                        </label>
+
+                        <label class="form-control">
+                            <span class="mb-2 text-sm font-medium text-slate-700">Dia de vencimento</span>
+                            <input asp-for="Input.MembershipBillingDueDay" type="number" min="1" max="31" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" placeholder="Ex.: 10" />
+                            <span asp-validation-for="Input.MembershipBillingDueDay" class="mt-2 text-sm text-rose-600"></span>
+                        </label>
+                    </div>
+                </section>
 
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
@@ -95,5 +138,95 @@
         }
     </section>
 
-    <partial name="_ValidationScriptsPartial" />
 </section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function formatPhoneNumber(value) {
+            const digits = value.replace(/\D/g, '').slice(0, 11);
+
+            if (digits.length <= 2) {
+                return digits.length ? `(${digits}` : '';
+            }
+
+            if (digits.length <= 6) {
+                return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+            }
+
+            if (digits.length <= 10) {
+                return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+            }
+
+            return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+        }
+
+        function formatBirthDate(value) {
+            const digits = value.replace(/\D/g, '').slice(0, 8);
+
+            if (digits.length <= 2) {
+                return digits;
+            }
+
+            if (digits.length <= 4) {
+                return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+            }
+
+            return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+        }
+
+        function syncMembershipSection() {
+            const roleInput = document.getElementById('Input_Role');
+            const membershipSection = document.getElementById('membershipSection');
+            const dueDayInput = document.getElementById('Input_MembershipBillingDueDay');
+            const planInput = document.getElementById('Input_MembershipPlanId');
+
+            if (!roleInput || !membershipSection) {
+                return;
+            }
+
+            const isStudent = roleInput.value === '3';
+            membershipSection.classList.toggle('hidden', !isStudent);
+
+            if (!isStudent) {
+                if (planInput) {
+                    planInput.value = '';
+                }
+
+                if (dueDayInput) {
+                    dueDayInput.value = '';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const phoneInput = document.getElementById('Input_PhoneNumber');
+            const birthDateInput = document.getElementById('Input_BirthDate');
+            const roleInput = document.getElementById('Input_Role');
+            const roleRadios = document.querySelectorAll('input[name="Input.Role"]');
+
+            if (phoneInput) {
+                phoneInput.value = formatPhoneNumber(phoneInput.value ?? '');
+                phoneInput.addEventListener('input', (event) => {
+                    event.target.value = formatPhoneNumber(event.target.value ?? '');
+                });
+            }
+
+            if (birthDateInput) {
+                birthDateInput.addEventListener('input', (event) => {
+                    event.target.value = formatBirthDate(event.target.value ?? '');
+                });
+            }
+
+            if (roleInput) {
+                roleInput.addEventListener('change', syncMembershipSection);
+            }
+
+            roleRadios.forEach((radio) => {
+                radio.addEventListener('change', syncMembershipSection);
+            });
+
+            syncMembershipSection();
+        });
+    </script>
+}
