@@ -48,6 +48,7 @@ global using AlphaSquad.Api.Features.PlatformAuth;
 global using AlphaSquad.Api.Features.PlatformProfile;
 global using AlphaSquad.Api.Features.PlatformTenants;
 global using AlphaSquad.Api.Features.Notifications;
+global using AlphaSquad.Api.Middleware;
 global using AlphaSquad.Infrastructure.Features;
 global using AlphaSquad.Infrastructure.Gamification;
 global using AlphaSquad.Infrastructure.Notifications;

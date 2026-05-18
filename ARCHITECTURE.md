@@ -214,9 +214,16 @@ Toda feature nova deve aplicar isolamento por tenant em:
 - storage
 - integracoes externas
 
-### Risco arquitetural a observar
+### Resolucao central do tenant
 
-O isolamento hoje depende principalmente da disciplina nos endpoints e queries. Ainda nao existe um middleware central de tenant ou uma camada mais automatica de enforcement.
+O pipeline da API agora resolve o contexto do tenant antes dos endpoints do mundo da academia rodarem.
+
+- `TenantContextMiddleware` valida `tenant_id` e `user_id` das claims
+- confirma se o tenant ainda existe e esta ativo
+- confirma se o usuario ainda pertence ao tenant e esta ativo
+- injeta `TenantRequestContext` no `HttpContext`
+
+As extensoes de `HttpContext` continuam disponiveis, mas agora passam a ler esse contexto resolvido quando ele existir.
 
 ## Contexto master da plataforma
 

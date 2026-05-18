@@ -56,6 +56,7 @@ O produto agora tambem passa a contar com dois frontends web separados e com a b
 ### Modulos em consolidacao
 
 - nenhuma frente estrutural critica pendente para a V1
+- o isolamento multi-tenant agora conta com resolucao central de tenant no pipeline da API
 
 ### Proximas frentes core do produto
 

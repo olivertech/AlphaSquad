@@ -2,6 +2,18 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-18] - Tenant Context Middleware
+
+### Added
+
+- `TenantRequestContext` para representar o contexto multi-tenant validado da requisicao.
+- `TenantContextMiddleware` no pipeline da API para validar tenant e usuario das academias antes dos endpoints.
+
+### Changed
+
+- `GetTenantId()` e `GetTenantSlug()` passam a usar o contexto resolvido quando ele existe no `HttpContext`.
+- O isolamento do tenant deixa de depender apenas de resolucao manual espalhada pelos endpoints.
+
 ## [2026-05-18] - Platform Audit Trail And Tenant Extra Admins
 
 ### Added

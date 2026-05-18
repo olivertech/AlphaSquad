@@ -37,7 +37,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Tratar parse seguro de claims de usuario
 - [x] Adicionar policies e permissoes por role
 - [x] Criar autenticacao master separada para o backoffice da AlphaSquad
-- [ ] Centralizar tenant resolution em middleware
+- [x] Centralizar tenant resolution em middleware
 
 ## Fase 1.1: Platform Backoffice Foundation
 

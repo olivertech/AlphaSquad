@@ -140,6 +140,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseMiddleware<TenantContextMiddleware>();
 app.UseAuthorization();
 
 // Em vez de usar MapControllers, registramos os endpoints de autenticaÃ§Ã£o, tenants e media diretamente,
