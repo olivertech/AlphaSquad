@@ -15,6 +15,19 @@ public record PlatformTenantAdminResponse(
     DateTime CreatedAt
 );
 
+public record PlatformTenantAuditLogResponse(
+    Guid Id,
+    Guid? PlatformUserId,
+    string PlatformUserName,
+    Guid? TenantId,
+    string Action,
+    string EntityType,
+    Guid EntityId,
+    string Summary,
+    string? MetadataJson,
+    DateTime CreatedAt
+);
+
 public record PlatformTenantListItemResponse(
     Guid Id,
     string Name,
@@ -40,7 +53,9 @@ public record PlatformTenantDetailsResponse(
     bool IsActive,
     DateTime CreatedAt,
     PlatformTenantAdminResponse? PrimaryAdmin,
-    List<PlatformFeatureCatalogItemResponse> Features
+    List<PlatformTenantAdminResponse> AdminUsers,
+    List<PlatformFeatureCatalogItemResponse> Features,
+    List<PlatformTenantAuditLogResponse> AuditLogs
 );
 
 public record CreatePlatformTenantRequest(
@@ -77,6 +92,18 @@ public record PlatformTenantAdminPasswordResetResponse(
     Guid TenantId,
     Guid UserId,
     string Email,
+    string TemporaryPassword,
+    bool MustChangePassword
+);
+
+public record CreatePlatformTenantAdminRequest(
+    string Name,
+    string Email
+);
+
+public record PlatformTenantAdminProvisioningResponse(
+    Guid TenantId,
+    PlatformTenantAdminResponse Admin,
     string TemporaryPassword,
     bool MustChangePassword
 );

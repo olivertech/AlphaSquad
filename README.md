@@ -258,6 +258,9 @@ Capacidades iniciais da camada master:
 - atualizacao de academia
 - upload e troca da logo da academia
 - regeneracao de senha provisoria do admin principal
+- criacao de admins adicionais do tenant pelo sponsor
+- regeneracao de senha provisoria de qualquer admin do tenant
+- trilha de auditoria das acoes master sobre cada academia
 
 Comportamento atual da senha provisoria:
 
@@ -566,7 +569,11 @@ Observacao:
 - `POST /api/platform-tenants`
 - `PUT /api/platform-tenants/{id}`
 - `PUT /api/platform-tenants/{id}/logo`
+- `GET /api/platform-tenants/{id}/admins`
+- `POST /api/platform-tenants/{id}/admins`
+- `POST /api/platform-tenants/{tenantId}/admins/{userId}/reset-password`
 - `POST /api/platform-tenants/{id}/reset-admin-password`
+- `GET /api/platform-tenants/{id}/audit`
 
 Proxima etapa prevista da loja:
 

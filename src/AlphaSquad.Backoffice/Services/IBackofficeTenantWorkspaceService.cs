@@ -10,4 +10,8 @@ public interface IBackofficeTenantWorkspaceService
     Task<BackofficeTenantWorkspaceItem?> UpdateAsync(Guid id, BackofficeTenantUpdateCommand command, CancellationToken cancellationToken = default);
     Task<BackofficeTenantWorkspaceItem> UploadLogoAsync(Guid id, IFormFile file, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<BackofficeFeatureOptionViewModel>> GetFeatureCatalogAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BackofficeTenantAdminItem>> GetAdminsAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<BackofficeTenantAdminProvisioningResult> CreateAdminAsync(Guid tenantId, BackofficeTenantAdminCreateCommand command, CancellationToken cancellationToken = default);
+    Task<BackofficeTenantAdminProvisioningResult> ResetAdminPasswordAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BackofficeTenantAuditLogItem>> GetAuditAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }

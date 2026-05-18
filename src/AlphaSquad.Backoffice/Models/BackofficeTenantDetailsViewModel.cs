@@ -1,3 +1,5 @@
+using AlphaSquad.Backoffice.Services;
+
 namespace AlphaSquad.Backoffice.Models;
 
 /// <summary>
@@ -19,4 +21,6 @@ public sealed class BackofficeTenantDetailsViewModel
     public string TemporaryPassword { get; init; } = string.Empty;
     public bool MustChangePassword { get; init; }
     public DateTime CreatedAt { get; init; }
+    public IReadOnlyList<BackofficeTenantAdminItem> AdminUsers { get; init; } = [];
+    public IReadOnlyList<BackofficeTenantAuditLogItem> AuditLogs { get; init; } = [];
 }

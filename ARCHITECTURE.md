@@ -235,6 +235,7 @@ Esse contexto existe para o sponsor operar o negocio AlphaSquad sem se comportar
 
 - `PlatformUser`: usuario global da AlphaSquad
 - `PlatformRefreshToken`: refresh token proprio do backoffice
+- `PlatformAuditLog`: trilha administrativa do sponsor sobre academias e admins
 - `AppUser.MustChangePassword`: suporte a senha provisoria do admin inicial da academia
 
 ## Seguranca e controle de acesso
@@ -300,6 +301,7 @@ Visao resumida do estado atual:
 - `Gamification`: dashboard pessoal para alunos autenticados; regras e fechamento mensal restritos a perfis de gestao
 - `Platform Auth`: autenticacao do sponsor restrita ao contexto master
 - `Platform Tenants`: onboarding e gestao global de academias restritos ao sponsor
+- `Platform Tenants`: suporte a admins adicionais dos tenants e auditoria do sponsor
 
 ### Regra adicional de acesso por plano
 

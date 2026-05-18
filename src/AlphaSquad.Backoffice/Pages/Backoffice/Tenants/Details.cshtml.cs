@@ -42,7 +42,9 @@ public sealed class DetailsModel(IBackofficeTenantWorkspaceService tenantWorkspa
             MustChangePassword = bool.TryParse(TempData["Backoffice.NewTenantMustChangePassword"]?.ToString(), out var mustChangePassword)
                 ? mustChangePassword
                 : tenant.MustChangePassword,
-            CreatedAt = tenant.CreatedAt
+            CreatedAt = tenant.CreatedAt,
+            AdminUsers = tenant.AdminUsers,
+            AuditLogs = tenant.AuditLogs
         };
 
         return Page();

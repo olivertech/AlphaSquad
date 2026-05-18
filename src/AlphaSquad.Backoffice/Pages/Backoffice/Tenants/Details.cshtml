@@ -122,6 +122,46 @@
 
                 <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
                     <div class="border-b border-slate-200 px-6 py-5">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 class="text-xl font-semibold tenant-text">Admins da academia</h2>
+                                <p class="mt-1 text-sm leading-6 text-slate-500">
+                                    Base de administradores que o sponsor pode criar e apoiar quando o tenant precisar.
+                                </p>
+                            </div>
+                            <a asp-page="/Backoffice/Tenants/Admins"
+                               asp-route-id="@Model.Tenant.Id"
+                               class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                                Gerenciar admins
+                            </a>
+                        </div>
+                    </div>
+                    <div class="space-y-3 px-6 py-6">
+                        @foreach (var admin in Model.Tenant.AdminUsers)
+                        {
+                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-base font-semibold text-slate-900">@admin.Name</p>
+                                        <p class="mt-1 text-sm text-slate-500">@admin.Email</p>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="rounded-full px-3 py-1 text-xs font-semibold @(admin.IsActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")">
+                                            @(admin.IsActive ? "Ativo" : "Inativo")
+                                        </span>
+                                        @if (admin.MustChangePassword)
+                                        {
+                                            <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">Troca de senha pendente</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                    <div class="border-b border-slate-200 px-6 py-5">
                         <h2 class="text-xl font-semibold tenant-text">Acoes do sponsor</h2>
                         <p class="mt-1 text-sm leading-6 text-slate-500">
                             Ajustes rapidos para concluir ou revisar o onboarding desta academia.
@@ -134,10 +174,47 @@
                            style="background: var(--tenant-primary);">
                             Editar academia
                         </a>
+                        <a asp-page="/Backoffice/Tenants/Admins"
+                           asp-route-id="@Model.Tenant.Id"
+                           class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                            Gerenciar admins
+                        </a>
                         <a asp-page="/Backoffice/Tenants/Index"
                            class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
                             Voltar para a base
                         </a>
+                    </div>
+                </section>
+
+                <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+                    <div class="border-b border-slate-200 px-6 py-5">
+                        <h2 class="text-xl font-semibold tenant-text">Auditoria do sponsor</h2>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Últimas ações realizadas pelo backoffice nesta academia.
+                        </p>
+                    </div>
+                    <div class="space-y-3 px-6 py-6">
+                        @if (Model.Tenant.AuditLogs.Count == 0)
+                        {
+                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                                Ainda não há registros de auditoria para esta academia.
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var log in Model.Tenant.AuditLogs)
+                            {
+                                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                                    <div class="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-900">@log.Summary</p>
+                                            <p class="mt-1 text-xs uppercase tracking-[0.22em] text-slate-500">@log.PlatformUserName</p>
+                                        </div>
+                                        <p class="text-sm text-slate-500">@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                                    </div>
+                                </div>
+                            }
+                        }
                     </div>
                 </section>
             </section>

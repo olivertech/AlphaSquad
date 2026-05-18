@@ -66,7 +66,9 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Implementar `DELETE /api/platform-profile/me/photo`
 - [x] Permitir upload e troca da logo da academia no contexto master
 - [x] Expor a senha provisoria gerada na criacao da academia
-- [ ] Evoluir a camada master para auditoria operacional mais rica
+- [x] Evoluir a camada master para auditoria operacional mais rica
+- [x] Permitir criacao de admins adicionais do tenant pelo backoffice master
+- [x] Permitir regeneracao de senha provisoria de admins adicionais do tenant
 
 ## Fase 2: Tenant, Media & Feature Access
 

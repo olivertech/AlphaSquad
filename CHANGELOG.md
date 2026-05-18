@@ -2,6 +2,27 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-18] - Platform Audit Trail And Tenant Extra Admins
+
+### Added
+
+- Entidade `PlatformAuditLog` para registrar a trilha administrativa do sponsor no contexto master.
+- Endpoints master para:
+- listar admins da academia
+- criar admin adicional do tenant
+- regenerar senha provisoria de admin especifico
+- listar auditoria da academia
+- Pagina de `Admins` no `AlphaSquad.Backoffice` para suporte operacional do sponsor aos tenants.
+
+### Changed
+
+- `PlatformTenantDetailsResponse` passa a devolver todos os admins da academia e os registros recentes de auditoria.
+- A tela de detalhes da academia no backoffice passa a exibir admins adicionais e historico resumido de acoes do sponsor.
+
+### Noted
+
+- O contexto master agora consegue apoiar a operacao do tenant mesmo quando o admin principal nao consegue criar outros administradores.
+
 ## [2026-05-17] - Documentation Alignment & Current Backend State
 
 ### Changed

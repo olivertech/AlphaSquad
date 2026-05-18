@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<PlatformUser> PlatformUsers => Set<PlatformUser>();
+    public DbSet<PlatformAuditLog> PlatformAuditLogs => Set<PlatformAuditLog>();
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<PlatformRefreshToken> PlatformRefreshTokens => Set<PlatformRefreshToken>();
     public DbSet<TenantMedia> TenantMedias => Set<TenantMedia>();
@@ -84,6 +85,33 @@ public class AppDbContext : DbContext
             entity.Property(x => x.MustChangePassword).HasColumnName("must_change_password");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.HasIndex(x => x.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<PlatformAuditLog>(entity =>
+        {
+            entity.ToTable("platform_audit_logs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.PlatformUserId).HasColumnName("platform_user_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id");
+            entity.Property(x => x.Action).HasColumnName("action").HasMaxLength(120).IsRequired();
+            entity.Property(x => x.EntityType).HasColumnName("entity_type").HasMaxLength(120).IsRequired();
+            entity.Property(x => x.EntityId).HasColumnName("entity_id");
+            entity.Property(x => x.Summary).HasColumnName("summary").HasMaxLength(400).IsRequired();
+            entity.Property(x => x.MetadataJson).HasColumnName("metadata_json");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.HasIndex(x => x.CreatedAt);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+
+            entity.HasOne(x => x.PlatformUser)
+                .WithMany()
+                .HasForeignKey(x => x.PlatformUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<AppUser>(entity =>

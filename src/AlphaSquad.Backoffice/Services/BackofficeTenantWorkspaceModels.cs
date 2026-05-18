@@ -22,6 +22,8 @@ public sealed class BackofficeTenantWorkspaceItem
     public string PrimaryAdminEmail { get; set; } = string.Empty;
     public string TemporaryPassword { get; set; } = string.Empty;
     public bool MustChangePassword { get; set; } = true;
+    public IReadOnlyList<BackofficeTenantAdminItem> AdminUsers { get; set; } = [];
+    public IReadOnlyList<BackofficeTenantAuditLogItem> AuditLogs { get; set; } = [];
 }
 
 public sealed class BackofficeTenantProvisioningResult
@@ -29,6 +31,38 @@ public sealed class BackofficeTenantProvisioningResult
     public BackofficeTenantWorkspaceItem Tenant { get; init; } = new();
     public string TemporaryPassword { get; init; } = string.Empty;
     public bool MustChangePassword { get; init; }
+}
+
+public sealed class BackofficeTenantAdminItem
+{
+    public Guid UserId { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public bool IsActive { get; init; }
+    public bool MustChangePassword { get; init; }
+    public DateTime CreatedAt { get; init; }
+}
+
+public sealed class BackofficeTenantAdminProvisioningResult
+{
+    public Guid TenantId { get; init; }
+    public BackofficeTenantAdminItem Admin { get; init; } = new();
+    public string TemporaryPassword { get; init; } = string.Empty;
+    public bool MustChangePassword { get; init; }
+}
+
+public sealed class BackofficeTenantAuditLogItem
+{
+    public Guid Id { get; init; }
+    public Guid? PlatformUserId { get; init; }
+    public string PlatformUserName { get; init; } = string.Empty;
+    public Guid? TenantId { get; init; }
+    public string Action { get; init; } = string.Empty;
+    public string EntityType { get; init; } = string.Empty;
+    public Guid EntityId { get; init; }
+    public string Summary { get; init; } = string.Empty;
+    public string? MetadataJson { get; init; }
+    public DateTime CreatedAt { get; init; }
 }
 
 public sealed class BackofficeTenantCreateCommand
@@ -55,4 +89,10 @@ public sealed class BackofficeTenantUpdateCommand
     public string AdminName { get; init; } = string.Empty;
     public string AdminEmail { get; init; } = string.Empty;
     public string? LogoUrl { get; init; }
+}
+
+public sealed class BackofficeTenantAdminCreateCommand
+{
+    public string Name { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
 }

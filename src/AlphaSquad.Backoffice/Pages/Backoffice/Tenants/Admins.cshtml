@@ -1,0 +1,132 @@
+@page "{id:guid}"
+@model AlphaSquad.Backoffice.Pages.Backoffice.Tenants.AdminsModel
+@{
+    ViewData["Title"] = "Admins da academia";
+}
+
+<section class="space-y-6">
+    <nav class="breadcrumbs px-1 text-sm text-slate-500">
+        <ul>
+            <li><a asp-page="/Backoffice/Index" class="hover:text-slate-700">Backoffice</a></li>
+            <li><a asp-page="/Backoffice/Tenants/Index" class="hover:text-slate-700">Academias</a></li>
+            <li><a asp-page="/Backoffice/Tenants/Details" asp-route-id="@Model.TenantId" class="hover:text-slate-700">Detalhes</a></li>
+            <li class="font-medium text-slate-900">Admins</li>
+        </ul>
+    </nav>
+
+    <div class="space-y-2 px-1">
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Admins de @Model.TenantName</h1>
+        <p class="max-w-3xl text-sm leading-7 text-slate-500">
+            Crie administradores adicionais e regenere senhas provisórias quando a academia precisar de apoio operacional.
+        </p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.LatestTemporaryPassword))
+    {
+        <section class="overflow-hidden rounded-[2rem] border border-amber-200 bg-amber-50 shadow-sm shadow-amber-100/70">
+            <div class="border-b border-amber-200 px-6 py-5">
+                <h2 class="text-xl font-semibold text-amber-900">Senha provisória gerada</h2>
+                <p class="mt-1 text-sm leading-6 text-amber-800">
+                    Compartilhe esta credencial com @Model.LatestTemporaryPasswordEmail e reforce a troca obrigatória no primeiro acesso.
+                </p>
+            </div>
+            <div class="px-6 py-6">
+                <p class="text-3xl font-semibold tracking-wide text-amber-950">@Model.LatestTemporaryPassword</p>
+            </div>
+        </section>
+    }
+
+    <div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5">
+                <h2 class="text-xl font-semibold tenant-text">Novo administrador</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Use este formulário para provisionar um admin adicional do tenant com senha provisória automática.
+                </p>
+            </div>
+            <form method="post" asp-page-handler="Create" class="space-y-5 px-6 py-6">
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">Nome do administrador</span>
+                    <input asp-for="Input.Name" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <span asp-validation-for="Input.Name" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+
+                <label class="form-control">
+                    <span class="mb-2 text-sm font-medium text-slate-700">E-mail do administrador</span>
+                    <input asp-for="Input.Email" class="input input-bordered h-12 rounded-2xl border-slate-200 bg-white" />
+                    <span asp-validation-for="Input.Email" class="mt-2 block text-sm text-rose-600"></span>
+                </label>
+
+                <div class="flex flex-wrap gap-3">
+                    <button type="submit"
+                            class="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+                            style="background: var(--tenant-primary);">
+                        Criar admin
+                    </button>
+                    <a asp-page="/Backoffice/Tenants/Details"
+                       asp-route-id="@Model.TenantId"
+                       class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                        Voltar aos detalhes
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+            <div class="border-b border-slate-200 px-6 py-5">
+                <h2 class="text-xl font-semibold tenant-text">Admins cadastrados</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Relação atual de administradores desta academia e o status da credencial provisória.
+                </p>
+            </div>
+
+            @if (Model.AdminUsers.Count == 0)
+            {
+                <div class="px-6 py-10">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+                        Nenhum administrador foi encontrado para esta academia.
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-3 px-6 py-6">
+                    @foreach (var admin in Model.AdminUsers)
+                    {
+                        <article class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-5">
+                            <div class="flex flex-wrap items-start justify-between gap-4">
+                                <div>
+                                    <p class="text-base font-semibold text-slate-900">@admin.Name</p>
+                                    <p class="mt-1 text-sm text-slate-500">@admin.Email</p>
+                                    <p class="mt-2 text-xs uppercase tracking-[0.22em] text-slate-400">Criado em @admin.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="rounded-full px-3 py-1 text-xs font-semibold @(admin.IsActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")">
+                                        @(admin.IsActive ? "Ativo" : "Inativo")
+                                    </span>
+                                    @if (admin.MustChangePassword)
+                                    {
+                                        <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">Troca de senha pendente</span>
+                                    }
+
+                                    <form method="post" asp-page-handler="Reset" class="inline-flex">
+                                        <input type="hidden" name="userId" value="@admin.UserId" />
+                                        <button type="submit"
+                                                class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100">
+                                            Regenerar senha
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -197,6 +197,49 @@ public sealed class BackofficePlatformApiClient(HttpClient httpClient, IHttpCont
             .ToList();
     }
 
+    public async Task<IReadOnlyList<BackofficeTenantAdminItem>> GetAdminsAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest(HttpMethod.Get, $"/api/platform-tenants/{tenantId}/admins");
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        var payload = await ReadAsync<List<PlatformTenantAdminResponse>>(response, cancellationToken);
+        return payload.Select(MapAdminItem).ToList();
+    }
+
+    public async Task<BackofficeTenantAdminProvisioningResult> CreateAdminAsync(Guid tenantId, BackofficeTenantAdminCreateCommand command, CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest(HttpMethod.Post, $"/api/platform-tenants/{tenantId}/admins", JsonContent.Create(new CreatePlatformTenantAdminRequest(command.Name, command.Email)));
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        var payload = await ReadAsync<PlatformTenantAdminProvisioningResponse>(response, cancellationToken);
+        return MapAdminProvisioningResult(payload);
+    }
+
+    public async Task<BackofficeTenantAdminProvisioningResult> ResetAdminPasswordAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest(HttpMethod.Post, $"/api/platform-tenants/{tenantId}/admins/{userId}/reset-password");
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        var payload = await ReadAsync<PlatformTenantAdminPasswordResetResponse>(response, cancellationToken);
+        return new BackofficeTenantAdminProvisioningResult
+        {
+            TenantId = payload.TenantId,
+            Admin = new BackofficeTenantAdminItem
+            {
+                UserId = payload.UserId,
+                Email = payload.Email,
+                MustChangePassword = payload.MustChangePassword
+            },
+            TemporaryPassword = payload.TemporaryPassword,
+            MustChangePassword = payload.MustChangePassword
+        };
+    }
+
+    public async Task<IReadOnlyList<BackofficeTenantAuditLogItem>> GetAuditAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest(HttpMethod.Get, $"/api/platform-tenants/{tenantId}/audit");
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        var payload = await ReadAsync<List<PlatformTenantAuditLogResponse>>(response, cancellationToken);
+        return payload.Select(MapAuditItem).ToList();
+    }
+
     private HttpRequestMessage CreateRequest(HttpMethod method, string relativeUrl, HttpContent? content = null)
     {
         var request = new HttpRequestMessage(method, relativeUrl);
@@ -276,7 +319,9 @@ public sealed class BackofficePlatformApiClient(HttpClient httpClient, IHttpCont
             Features = [],
             PrimaryAdminName = item.PrimaryAdminName,
             PrimaryAdminEmail = item.PrimaryAdminEmail,
-            MustChangePassword = item.PrimaryAdminMustChangePassword
+            MustChangePassword = item.PrimaryAdminMustChangePassword,
+            AdminUsers = [],
+            AuditLogs = []
         };
     }
 
@@ -304,7 +349,50 @@ public sealed class BackofficePlatformApiClient(HttpClient httpClient, IHttpCont
             }).ToList(),
             PrimaryAdminName = item.PrimaryAdmin?.Name ?? string.Empty,
             PrimaryAdminEmail = item.PrimaryAdmin?.Email ?? string.Empty,
-            MustChangePassword = item.PrimaryAdmin?.MustChangePassword ?? false
+            MustChangePassword = item.PrimaryAdmin?.MustChangePassword ?? false,
+            AdminUsers = item.AdminUsers.Select(MapAdminItem).ToList(),
+            AuditLogs = item.AuditLogs.Select(MapAuditItem).ToList()
+        };
+    }
+
+    private static BackofficeTenantAdminItem MapAdminItem(PlatformTenantAdminResponse item)
+    {
+        return new BackofficeTenantAdminItem
+        {
+            UserId = item.UserId,
+            Name = item.Name,
+            Email = item.Email,
+            IsActive = item.IsActive,
+            MustChangePassword = item.MustChangePassword,
+            CreatedAt = item.CreatedAt
+        };
+    }
+
+    private static BackofficeTenantAdminProvisioningResult MapAdminProvisioningResult(PlatformTenantAdminProvisioningResponse payload)
+    {
+        return new BackofficeTenantAdminProvisioningResult
+        {
+            TenantId = payload.TenantId,
+            Admin = MapAdminItem(payload.Admin),
+            TemporaryPassword = payload.TemporaryPassword,
+            MustChangePassword = payload.MustChangePassword
+        };
+    }
+
+    private static BackofficeTenantAuditLogItem MapAuditItem(PlatformTenantAuditLogResponse item)
+    {
+        return new BackofficeTenantAuditLogItem
+        {
+            Id = item.Id,
+            PlatformUserId = item.PlatformUserId,
+            PlatformUserName = item.PlatformUserName,
+            TenantId = item.TenantId,
+            Action = item.Action,
+            EntityType = item.EntityType,
+            EntityId = item.EntityId,
+            Summary = item.Summary,
+            MetadataJson = item.MetadataJson,
+            CreatedAt = item.CreatedAt
         };
     }
 }
