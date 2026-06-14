@@ -121,7 +121,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Registrar motivo de status e usuario responsavel pela troca
 - [x] Expor historico de planos por usuario
 - [x] Expor consulta de usuarios sem plano ativo ha X dias
-- [ ] Evoluir planos para cobranca, ciclo financeiro, cancelamento estruturado e historico mais rico
+- [ ] Evoluir planos para cobranca, ciclo financeiro, cancelamento estruturado e historico mais rico em uma V2 de billing dos alunos
 
 ## Fase 5.2: Retention & Reengagement
 
@@ -142,9 +142,26 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Implementar CRUD administrativo de variantes
 - [x] Implementar fluxo de pedido com retirada presencial
 - [x] Implementar status administrativos do pedido para separacao, retirada e pagamento local
-- [ ] Integrar checkout com Stripe em etapa posterior
-- [ ] Implementar webhook de confirmacao de pagamento em etapa posterior
+- [ ] Integrar checkout com Stripe para a loja da academia em etapa posterior
+- [ ] Implementar webhook de confirmacao de pagamento da loja em etapa posterior
 - [x] Registrar status do pedido e auditoria minima
+- [ ] Manter o billing da academia fora do checkout online na V1
+- [ ] Modelar `PaymentTransaction` da academia em etapa futura
+- [ ] Implementar checkout de mensalidade do aluno no app em uma V2
+- [ ] Implementar checkout de mensalidade do aluno no dashboard em uma V2
+- [ ] Implementar cobranca recorrente da academia para seus alunos em uma V2
+
+## Fase 6.1: SaaS Acquisition & Billing
+
+- [ ] Criar landing page publica da AlphaSquad
+- [ ] Definir catalogo de planos SaaS
+- [ ] Criar sessao Stripe Checkout para aquisicao comercial
+- [ ] Implementar webhook comercial dedicado
+- [ ] Modelar lead pago / checkout pago da academia interessada
+- [ ] Modelar `PlatformSubscription` ou `PlatformContract`
+- [ ] Exibir no backoffice novas academias pagas aguardando onboarding
+- [ ] Manter o onboarding da academia como fluxo semiautomatico na V1
+- [ ] Deixar auto-provisionamento total como evolucao futura
 
 ## Fase 7: Events Wall
 
@@ -201,7 +218,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Padronizar contratos `page-based` com `PagedResponse<T>` nos principais endpoints de listagem
 - [x] Criar o projeto `AlphaSquad.Backoffice` separado do dashboard da academia
 - [ ] Padronizar metadados de cards para app mobile
-- [x] Estruturar notificacoes futuras
+- [x] Estruturar notificacoes do app
 - [x] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas
 - [ ] Exibir notificacoes do app em modal rolavel com marcacao automatica como lida
 - [ ] Definir padrao de imagens, thumbnails e tamanhos

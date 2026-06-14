@@ -60,7 +60,8 @@ O produto agora tambem passa a contar com dois frontends web separados e com a b
 
 ### Proximas frentes core do produto
 
-- Loja de produtos personalizados da academia com Stripe
+- Billing SaaS da AlphaSquad com landing page, Stripe e onboarding semiautomatico
+- Loja de produtos personalizados da academia com evolucao comercial futura
 - Gamificacao com pontuacao, ranking mensal e recompensas
 - Rede social interna da academia
 - Multi-idioma com traducao dinamica de conteudo no backend em uma V2
@@ -176,6 +177,17 @@ Capacidades atuais:
 - historico com motivo do status e usuario responsavel pela alteracao
 - consulta de usuarios sem plano ativo ha X dias
 - consulta de usuarios com plano vigente que estao ha X dias sem check-in
+- dia de vencimento por usuario (`BillingDueDay`)
+- registro administrativo/manual de pagamento de mensalidade
+- consulta de situacao financeira do aluno no dashboard
+- historico administrativo de pontuacao e eventos de gamificacao por usuario
+
+Decisao de produto para a V1:
+
+- o aluno nao paga mensalidade pelo app
+- o tenant nao recebe checkout online de mensalidade no dashboard
+- o pagamento real da mensalidade acontece fora do AlphaSquad
+- a academia registra administrativamente o pagamento quando precisar refletir adimplencia, historico e gamificacao
 
 ### 5. Mural de eventos da academia
 
@@ -213,6 +225,25 @@ Regras previstas:
 - uma notificacao aberta deve ser marcada como lida e sair da lista de pendencias
 - as notificacoes descritas nesta fase serao gerais, visiveis para todos os alunos com acesso ao app
 
+## Aquisicao de clientes da AlphaSquad
+
+Na V1, o billing do SaaS da AlphaSquad sera tratado separadamente do billing da academia para seus alunos.
+
+Fluxo comercial decidido para a V1:
+
+- a academia interessada acessa uma landing page publica da AlphaSquad
+- escolhe um plano SaaS da plataforma
+- realiza o pagamento via Stripe Checkout
+- o pagamento confirmado gera um aviso claro ao sponsor/backoffice
+- o onboarding da academia segue semiautomatico, com intervencao humana do dono da AlphaSquad
+
+Decisoes da V1:
+
+- Stripe entra apenas para a venda do SaaS AlphaSquad
+- a criacao/liberacao do tenant nao sera totalmente automatica nesta fase
+- o sponsor continua responsavel por revisar o cliente, confirmar branding e concluir o onboarding
+- o auto-provisionamento total da academia fica como evolucao futura
+
 ## Arquitetura em resumo
 
 - .NET 10
@@ -223,7 +254,7 @@ Regras previstas:
 - PostgreSQL como fonte principal de dados
 - Redis para cache distribuido
 - Cloudflare R2 para storage de arquivos
-- Stripe planejado para pagamentos
+- Stripe planejado para a frente comercial do SaaS e para billing transacional futuro
 
 ## Backoffice master da AlphaSquad
 
@@ -576,12 +607,20 @@ Observacao:
 - `POST /api/platform-tenants/{id}/reset-admin-password`
 - `GET /api/platform-tenants/{id}/audit`
 
-Proxima etapa prevista da loja:
+Proxima etapa prevista da loja e do billing:
 
-- `PaymentTransaction`
-- integracao com Stripe
-- webhook de confirmacao de pagamento
+- `PaymentTransaction` para transacoes da academia com seus alunos
+- checkout online da mensalidade do aluno em uma V2
+- integracao futura de billing recorrente da academia para seus proprios alunos
 - beneficios comerciais conectados a gamificacao
+
+Frente comercial paralela da AlphaSquad:
+
+- landing page publica da plataforma
+- catalogo de planos SaaS
+- Stripe Checkout
+- webhook comercial dedicado
+- lead pago aguardando onboarding no backoffice
 
 ## Banco de dados
 
@@ -626,6 +665,9 @@ Entidades estrategicas previstas para as proximas fases:
 - `Product`
 - `ProductVariant`
 - `PaymentTransaction`
+- `PlatformLead`
+- `PlatformCheckoutSession`
+- `PlatformSubscription`
 - `SocialPost`
 - `PostLike`
 - `PostComment`

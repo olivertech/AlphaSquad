@@ -2,6 +2,24 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-05-19] - V1 Billing Decision And Documentation Alignment
+
+### Changed
+
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para separar formalmente:
+- billing da academia para seus alunos
+- billing SaaS da AlphaSquad para novas academias clientes
+- Registrada a decisao oficial da V1:
+- mensalidade do aluno fica fora do checkout online do app e do dashboard
+- a academia continua registrando pagamento manualmente quando necessario
+- a venda do SaaS AlphaSquad entra com Stripe via landing page
+- o onboarding da academia permanece semiautomatico, com intervencao do sponsor
+
+### Noted
+
+- `MembershipPayment`, `BillingDueDay` e a situacao financeira derivada do aluno passam a ser tratados como parte consolidada da V1 operacional da academia.
+- `PaymentTransaction` fica reservado para uma etapa futura de billing transacional dos alunos.
+
 ## [2026-05-18] - Tenant Context Middleware
 
 ### Added

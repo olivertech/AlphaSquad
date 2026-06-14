@@ -182,7 +182,7 @@ Responsavel por:
 - Redis
 - Cloudflare R2
 - seeding inicial
-- futuras integracoes externas, como Stripe
+- integracoes externas atuais e futuras, como Stripe e webhooks comerciais
 
 ### AlphaSquad.Shared
 
@@ -244,6 +244,25 @@ Esse contexto existe para o sponsor operar o negocio AlphaSquad sem se comportar
 - `PlatformRefreshToken`: refresh token proprio do backoffice
 - `PlatformAuditLog`: trilha administrativa do sponsor sobre academias e admins
 - `AppUser.MustChangePassword`: suporte a senha provisoria do admin inicial da academia
+
+### Billing da plataforma x billing da academia
+
+O produto agora separa formalmente dois dominios financeiros distintos:
+
+- `billing da academia`: relacao da academia com seus alunos
+- `billing da AlphaSquad`: relacao da AlphaSquad com as academias clientes
+
+Estado atual:
+
+- a academia ja controla plano ativo, vencimento, adimplencia e registro manual de pagamento
+- a AlphaSquad ainda nao possui a frente comercial online implementada, mas a V1 foi definida para usar Stripe na landing page
+
+Direcao da V1:
+
+- o aluno nao paga mensalidade pelo app
+- o dashboard do tenant nao processa checkout online de mensalidade
+- o Stripe entra apenas na aquisicao comercial do SaaS AlphaSquad
+- o onboarding da nova academia permanece semiautomatico, com intervencao do sponsor
 
 ## Seguranca e controle de acesso
 
@@ -686,6 +705,10 @@ Capacidades atuais:
 - registro de motivo de status
 - registro do usuario que realizou a troca
 - consultas administrativas de reativacao comercial
+- dia de vencimento (`BillingDueDay`) por usuario
+- registro administrativo/manual de pagamento (`MembershipPayment`)
+- situacao financeira derivada para uso no dashboard
+- reflexo de pagamento em dia na gamificacao
 
 Entidades atuais:
 
@@ -700,6 +723,8 @@ Consideracoes arquiteturais:
 - o historico de planos e preservado em `UserMembership`
 - o acesso ao sistema depende de um plano ativo valido
 - o dominio de planos agora tambem serve a campanhas de retencao e reengajamento
+- o dominio atual nao processa checkout online nem recorrencia automatica na V1
+- o pagamento do aluno e tratado como evento administrativo registrado apos recebimento fora do sistema
 
 Consultas operacionais atuais:
 
@@ -762,6 +787,35 @@ Direcao arquitetural recomendada:
 - separar publicacao institucional do controle de leitura por usuario
 - permitir que aniversariantes e vencedores da gamificacao gerem destaque no mural e notificacoes sem depender de um evento presencial
 - manter a base pronta para segmentacao futura, sem exigir personalizacao por publico neste primeiro recorte
+
+### Billing SaaS da AlphaSquad
+
+O produto passa a considerar uma frente comercial propria para vender o AlphaSquad como SaaS para academias.
+
+Escopo da V1:
+
+- landing page publica da AlphaSquad
+- catalogo de planos SaaS
+- criacao de sessao Stripe Checkout
+- webhook comercial dedicado
+- registro de lead/checkout pago
+- exibicao no backoffice de academias pagas aguardando onboarding
+
+Fluxo da V1:
+
+1. a academia escolhe o plano na landing page
+2. realiza o pagamento no Stripe
+3. o webhook confirma a compra
+4. o sistema registra o lead pago
+5. o sponsor e avisado no backoffice
+6. o sponsor cria/libera tenant e admin inicial manualmente
+
+Fora da V1:
+
+- auto-provisionamento total do tenant
+- renovacao recorrente automatica da assinatura SaaS
+- cancelamento e ciclo financeiro completo da plataforma
+- checkout online de mensalidade dos alunos
 
 ## Multi-idioma em V2
 
@@ -837,11 +891,9 @@ Na inicializacao da aplicacao:
 
 ## Pendencias tecnicas relevantes
 
-- middleware central de tenant
 - cobertura automatizada de testes
-- ciclo financeiro mais rico de planos e cobranca estruturada
-- `PaymentTransaction`, Stripe e webhooks de pagamento
-- notificacoes gerais do app com leitura por usuario
-- eventos internos de mural para aniversariantes e vencedores da gamificacao
+- ciclo financeiro mais rico de planos e cobranca estruturada para os alunos
+- `PaymentTransaction` para transacoes da academia com seus proprios alunos
+- landing page comercial da AlphaSquad com Stripe Checkout e webhook de aquisicao
 - moderacao e governanca futura de social
-- auditoria e observabilidade mais profundas para o contexto master da plataforma
+- cobertura observavel e trilhas analiticas mais profundas do contexto master
