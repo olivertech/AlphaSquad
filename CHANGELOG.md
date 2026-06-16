@@ -2,6 +2,40 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-06-14] - Local Container Stack For Api, Postgres And Redis
+
+### Added
+
+- `src/AlphaSquad.Api/Dockerfile` com build multi-stage para publicar a API em container.
+- `.dockerignore` na raiz para reduzir contexto de build Docker.
+- `.env` local para espelhar os segredos antes mantidos apenas em `user-secrets` no modo container.
+- `.env.example` com placeholders para onboarding de outros ambientes.
+- `docker-compose.yml` oficial na raiz com:
+- `api`
+- `db`
+- `redis`
+- volumes nomeados para Postgres e Redis
+- healthchecks dos servicos de infraestrutura
+
+### Changed
+
+- `AlphaSquad.Api` agora usa a chave `App:EnableHttpsRedirection` para alternar entre:
+- execucao tradicional com HTTPS local
+- execucao containerizada em `http://localhost:8080`
+- `AlphaSquad.Web` e `AlphaSquad.Backoffice` passam a documentar em codigo que a URL versionada default da API continua `https://localhost:7054`.
+- O modo container passa a sobrescrever a `BaseUrl` dos frontends apenas em runtime com `Apis__AlphaSquad__BaseUrl=http://localhost:8080`.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` atualizados para documentar:
+- stack local containerizada
+- regras de `user-secrets` x `.env`
+- exposicao de portas para banco e Redis
+- fluxo de migrations com Postgres em container
+
+### Noted
+
+- `AlphaSquad.Web` e `AlphaSquad.Backoffice` continuam fora do Docker nesta fase.
+- O consumo da API continua passando por `AlphaSquad.Lmt.Application.Http`, `AlphaSquad.Lmt.Application.Contracts` e pelo cliente HTTP do backoffice.
+- O projeto permanece reversivel entre modo tradicional e modo container sem troca estrutural de codigo nos frontends.
+
 ## [2026-05-19] - V1 Billing Decision And Documentation Alignment
 
 ### Changed

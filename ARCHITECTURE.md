@@ -897,3 +897,78 @@ Na inicializacao da aplicacao:
 - landing page comercial da AlphaSquad com Stripe Checkout e webhook de aquisicao
 - moderacao e governanca futura de social
 - cobertura observavel e trilhas analiticas mais profundas do contexto master
+
+## Arquitetura operacional local
+
+O AlphaSquad continua sendo um monolito logico, mas agora passa a aceitar uma infraestrutura local containerizada para demonstracao tecnica e preparo de ambiente.
+
+### Stack local em containers
+
+- `AlphaSquad.Api`
+- PostgreSQL
+- Redis
+
+Portas expostas:
+
+- API: `8080`
+- PostgreSQL: `5432`
+- Redis: `6379`
+
+### Regra de consumo dos frontends
+
+`AlphaSquad.Web` e `AlphaSquad.Backoffice` continuam fora do Docker nesta fase.
+
+Eles tambem preservam:
+
+- a URL versionada default da API em `https://localhost:7054`
+- o consumo via camada `AlphaSquad.Lmt.Application.Http`
+- os contratos em `AlphaSquad.Lmt.Application.Contracts`
+
+Quando a API roda em container, a troca para `http://localhost:8080` acontece apenas por configuracao de runtime:
+
+```text
+Apis__AlphaSquad__BaseUrl=http://localhost:8080
+```
+
+### HTTPS no host x HTTP no container
+
+A API agora usa a chave `App:EnableHttpsRedirection`.
+
+Regras:
+
+- modo tradicional: `true`
+- modo container: `false`
+
+Motivo:
+
+- manter o comportamento HTTPS local tradicional
+- permitir que a API publicada no container responda em `http://localhost:8080`
+- evitar alteracao estrutural de codigo nos frontends ao alternar entre os dois modos
+
+### user-secrets x .env
+
+O projeto agora tem duas fontes oficiais de segredos, dependendo do modo de execucao.
+
+Modo tradicional:
+
+- `user-secrets`
+- variaveis de ambiente
+
+Modo container:
+
+- `.env`
+- variaveis repassadas pelo `docker-compose.yml`
+
+Regra importante:
+
+- o container nao enxerga automaticamente os `user-secrets` do Windows
+
+### Migrations com Postgres em container
+
+Mesmo com o banco em Docker, o fluxo de evolucao do modelo continua centralizado no host.
+
+- gerar migrations com `Add-Migration` ou `dotnet ef migrations add`
+- aplicar com `Update-Database` quando necessario
+- ou deixar a API aplicar automaticamente via `MigrateAsync()` no startup
+
+Como o Postgres fica exposto em `localhost:5432`, o EF Core do host continua administrando o banco normalmente.

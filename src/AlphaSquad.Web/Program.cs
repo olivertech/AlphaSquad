@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// O valor versionado permanece em https://localhost:7054 para o modo tradicional sem Docker.
+// Quando a API estiver em containers, sobrescreva em runtime com:
+// Apis__AlphaSquad__BaseUrl=http://localhost:8080
 var apiBaseUrl = builder.Configuration["Apis:AlphaSquad:BaseUrl"]
                  ?? throw new InvalidOperationException("The API base URL was not configured.");
 

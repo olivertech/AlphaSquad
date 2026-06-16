@@ -124,6 +124,11 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+// O modo tradicional continua servindo a API em HTTPS local, normalmente em https://localhost:7054.
+// Quando a stack sobe via Docker Compose, a API e publicada em http://localhost:8080 e esta redirecao
+// precisa ser desligada por configuracao para manter Web e Backoffice reversiveis entre Docker e host.
+var enableHttpsRedirection = builder.Configuration.GetValue("App:EnableHttpsRedirection", true);
+
 // Ao iniciar a aplicaÃ§Ã£o, executa o seeding do banco de dados para garantir que o tenant demo e o usuÃ¡rio admin existam
 using (var scope = app.Services.CreateScope())
 {
@@ -137,7 +142,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (enableHttpsRedirection)
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseMiddleware<TenantContextMiddleware>();

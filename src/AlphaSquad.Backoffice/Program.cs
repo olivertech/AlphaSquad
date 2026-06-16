@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// O backoffice preserva a URL padrao da API para execucao tradicional fora do Docker.
+// No modo container, a troca para http://localhost:8080 deve acontecer apenas por variavel de ambiente:
+// Apis__AlphaSquad__BaseUrl=http://localhost:8080
 var apiBaseUrl = builder.Configuration["Apis:AlphaSquad:BaseUrl"]
                  ?? throw new InvalidOperationException("The API base URL was not configured.");
 

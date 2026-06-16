@@ -250,3 +250,22 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Preparar configuracao base por ambiente para deploy real
 - [ ] Manter comentarios didaticos nas novas features
 
+## Fase 12: Infraestrutura containerizada local
+
+- [x] Criar `Dockerfile` multi-stage para `AlphaSquad.Api`
+- [x] Consolidar `docker-compose.yml` oficial na raiz com `api`, `db` e `redis`
+- [x] Expor portas locais para debugging e administracao:
+- `8080`
+- `5432`
+- `6379`
+- [x] Criar `.env` para o modo container
+- [x] Criar `.env.example` para onboarding de ambiente
+- [x] Criar `.dockerignore`
+- [x] Preservar a URL versionada default dos frontends em `https://localhost:7054`
+- [x] Permitir troca para `http://localhost:8080` apenas em runtime
+- [x] Documentar `user-secrets` para modo tradicional
+- [x] Documentar `.env` para modo container
+- [x] Documentar o fluxo de migrations com banco em container
+- [ ] Avaliar futura containerizacao opcional de `AlphaSquad.Web`
+- [ ] Avaliar futura containerizacao opcional de `AlphaSquad.Backoffice`
+

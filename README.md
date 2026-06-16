@@ -697,21 +697,57 @@ Ao subir a aplicacao, o projeto aplica migrations e garante a existencia de:
 
 ## Infra local
 
-O repositorio possui `docker-compose.yml` para subir o Redis localmente:
+O repositorio agora possui uma stack oficial de desenvolvimento local em container para:
+
+- `AlphaSquad.Api`
+- PostgreSQL
+- Redis
+
+Portas expostas da stack:
+
+- API: `http://localhost:8080`
+- PostgreSQL: `localhost:5432`
+- Redis: `localhost:6379`
+
+O compose oficial passa a ser o arquivo da raiz:
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
-O PostgreSQL atualmente deve estar disponivel separadamente, conforme a configuracao do ambiente local.
+Observacao:
+
+- o `docker-compose.yml` da raiz passa a ser a referencia oficial da stack local
+- qualquer compose legado dentro de `src/AlphaSquad.Api` deve ser tratado apenas como historico e nao como ponto principal de execucao
 
 ## Configuracao por ambiente
 
-O projeto agora segue esta diretriz:
+O projeto agora segue duas trilhas oficiais de execucao.
+
+### Modo tradicional
 
 - `src/AlphaSquad.Api/appsettings.json` guarda apenas placeholders seguros
 - `src/AlphaSquad.Api/appsettings.Development.json` traz defaults locais de desenvolvimento
-- segredos reais devem ficar em `user-secrets` ou variaveis de ambiente
+- segredos reais podem ficar em `user-secrets` ou variaveis de ambiente
+- a API continua podendo rodar localmente em `https://localhost:7054`
+- `AlphaSquad.Web` e `AlphaSquad.Backoffice` mantem em configuracao versionada a URL `https://localhost:7054`
+
+### Modo container
+
+- o container da API nao le `user-secrets` do Windows
+- os segredos passam a vir de `.env` + variaveis do `docker-compose.yml`
+- a API sobe em `http://localhost:8080`
+- a redirecao HTTPS da API e desligada por `App__EnableHttpsRedirection=false`
+- `AlphaSquad.Web` e `AlphaSquad.Backoffice` continuam com a URL versionada original e so trocam em runtime com:
+
+```text
+Apis__AlphaSquad__BaseUrl=http://localhost:8080
+```
+
+Observacao importante:
+
+- os frontends continuam consumindo a API pela camada `AlphaSquad.Lmt.Application.Http` e pelos contratos de `AlphaSquad.Lmt.Application.Contracts`
+- a troca de URL no modo container nao exige alteracao estrutural do codigo das paginas
 
 Como o projeto possui `UserSecretsId`, voce pode configurar localmente com:
 
@@ -721,42 +757,76 @@ dotnet user-secrets --project src/AlphaSquad.Api set "Storage:AccessKey" "seu-ac
 dotnet user-secrets --project src/AlphaSquad.Api set "Storage:SecretKey" "seu-secret-key"
 ```
 
+No modo container, a referencia equivalente passa a ser o arquivo `.env` da raiz.
+
+Arquivos relevantes:
+
+- `.env`: valores reais locais da stack Docker
+- `.env.example`: placeholders para onboarding de outros ambientes
+
 ## Como rodar
 
-### 1. Subir Redis
+### Opcao 1. Modo tradicional sem Docker
 
-```bash
-docker compose up -d
-```
-
-### 2. Garantir PostgreSQL local
-
-Exemplo atual de configuracao:
-
-```text
-Host=localhost;Port=5432;Database=AlphaSquad;Username=postgres;Password=123
-```
-
-### 3. Gerar migration localmente quando houver mudancas de modelo
-
-Exemplo:
-
-```powershell
-Add-Migration NomeDaMigration -Project AlphaSquad.Infrastructure -StartupProject AlphaSquad.Api
-Update-Database -Project AlphaSquad.Infrastructure -StartupProject AlphaSquad.Api
-```
-
-Observacao:
-As migrations devem ser geradas localmente pelo desenvolvedor responsavel pela rodada atual.
-
-### 4. Executar a API
+1. Garantir PostgreSQL local ou acessivel em `localhost:5432`
+2. Garantir Redis local ou acessivel em `localhost:6379`
+3. Configurar segredos via `user-secrets` ou variaveis de ambiente
+4. Executar:
 
 ```bash
 dotnet run --project src/AlphaSquad.Api
 ```
 
-### 5. Abrir o Swagger
+5. Abrir o Swagger:
 
 ```text
 https://localhost:7054/swagger
 ```
+
+### Opcao 2. Modo container para infraestrutura local
+
+1. Subir a stack:
+
+```bash
+docker compose up --build
+```
+
+2. Acessar:
+
+```text
+http://localhost:8080/swagger
+```
+
+3. Para usar os frontends contra a API containerizada, sobrescrever em runtime:
+
+```text
+Apis__AlphaSquad__BaseUrl=http://localhost:8080
+```
+
+### Migrations com banco em container
+
+Mesmo com Postgres em container, o fluxo de migrations continua sendo feito no host.
+
+Gerar migration:
+
+```powershell
+Add-Migration NomeDaMigration -Project AlphaSquad.Infrastructure -StartupProject AlphaSquad.Api
+```
+
+ou
+
+```bash
+dotnet ef migrations add NomeDaMigration --project src/AlphaSquad.Infrastructure --startup-project src/AlphaSquad.Api
+```
+
+Aplicar migration:
+
+```powershell
+Update-Database -Project AlphaSquad.Infrastructure -StartupProject AlphaSquad.Api
+```
+
+Observacoes:
+
+- como o Postgres do container expõe `localhost:5432`, o EF Core no host continua conseguindo atuar normalmente
+- a API tambem continua aplicando `MigrateAsync()` no startup por meio do `DatabaseSeeder`
+- isso permite administrar o banco em container sem mudar o fluxo de evolucao do modelo de entidades
