@@ -220,7 +220,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Padronizar metadados de cards para app mobile
 - [x] Estruturar notificacoes do app
 - [x] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas
-- [ ] Exibir notificacoes do app em modal rolavel com marcacao automatica como lida
+- [x] Exibir notificacoes do app em modal rolavel com marcacao automatica como lida
 - [x] Definir padrao de imagens, thumbnails e tamanhos
 
 ## Fase 11: Multi-language V2

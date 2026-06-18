@@ -225,6 +225,12 @@ Regras previstas:
 - uma notificacao aberta deve ser marcada como lida e sair da lista de pendencias
 - as notificacoes descritas nesta fase serao gerais, visiveis para todos os alunos com acesso ao app
 
+Contrato backend atual para o app:
+
+- `GET /api/notifications` retorna a lista paginada com status `read/unread`
+- `GET /api/notifications/{id}?markAsRead=true` devolve o detalhe completo para a modal e marca a notificacao como lida no mesmo fluxo
+- `POST /api/notifications/{id}/read` permanece disponivel para clientes que prefiram uma marcacao explicita
+
 ## Aquisicao de clientes da AlphaSquad
 
 Na V1, o billing do SaaS da AlphaSquad sera tratado separadamente do billing da academia para seus alunos.

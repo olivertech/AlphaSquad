@@ -785,6 +785,12 @@ Regras previstas:
 - a leitura deve marcar a notificacao como lida e retirar o item da lista de pendencias
 - na primeira fase, essas notificacoes serao gerais para todos os alunos habilitados no app
 
+Contrato backend consolidado:
+
+- `GET /api/notifications` para listagem paginada
+- `GET /api/notifications/{id}?markAsRead=true` para abrir o detalhe da modal e concluir a leitura no mesmo request
+- `POST /api/notifications/{id}/read` como alternativa explicita para clientes que queiram separar abertura e confirmacao
+
 Direcao arquitetural recomendada:
 
 - separar publicacao institucional do controle de leitura por usuario

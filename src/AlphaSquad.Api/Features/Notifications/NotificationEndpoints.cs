@@ -335,11 +335,23 @@ public static class NotificationEndpoints
             )).ToList()));
     }
 
-    private static async Task<IResult> GetByIdAsync(Guid id, AppDbContext db, HttpContext context)
+    private static async Task<IResult> GetByIdAsync(Guid id,
+                                                    AppDbContext db,
+                                                    HttpContext context,
+                                                    bool markAsRead = true)
     {
         var tenantId = context.GetTenantId();
         var userId = GetUserId(context.User);
         var response = await BuildDetailsResponseAsync(id, tenantId, userId, db);
+        if (response is null)
+            return Results.NotFound();
+
+        if (markAsRead)
+        {
+            await EnsureNotificationMarkedAsReadAsync(id, tenantId, userId, db);
+            response = await BuildDetailsResponseAsync(id, tenantId, userId, db);
+        }
+
         return response is null ? Results.NotFound() : Results.Ok(response);
     }
 
@@ -348,41 +360,15 @@ public static class NotificationEndpoints
         var tenantId = context.GetTenantId();
         var userId = GetUserId(context.User);
 
-        var role = await GetCurrentRoleAsync(db, tenantId, userId);
-        if (role is null)
-            return Results.Unauthorized();
-
-        var now = DateTime.UtcNow;
-        var notificationExists = await ApplyVisibilityFilter(db.TenantNotifications, role.Value)
-            .AnyAsync(x =>
-                x.Id == id &&
-                x.TenantId == tenantId &&
-                x.IsActive &&
-                x.PublishedAt <= now &&
-                (!x.ExpiresAt.HasValue || x.ExpiresAt > now));
-
-        if (!notificationExists)
+        var response = await BuildDetailsResponseAsync(id, tenantId, userId, db);
+        if (response is null)
             return Results.NotFound();
 
-        var existing = await db.UserNotificationReads
-            .FirstOrDefaultAsync(x => x.TenantNotificationId == id && x.TenantId == tenantId && x.UserId == userId);
+        var read = await EnsureNotificationMarkedAsReadAsync(id, tenantId, userId, db);
+        if (read is null)
+            return Results.Unauthorized();
 
-        if (existing is null)
-        {
-            existing = new UserNotificationRead
-            {
-                Id = Guid.NewGuid(),
-                TenantId = tenantId,
-                TenantNotificationId = id,
-                UserId = userId,
-                ReadAt = now
-            };
-
-            db.UserNotificationReads.Add(existing);
-            await db.SaveChangesAsync();
-        }
-
-        return Results.Ok(new NotificationReadResponse(id, true, existing.ReadAt));
+        return Results.Ok(new NotificationReadResponse(id, true, read.ReadAt));
     }
 
     private static async Task<NotificationDetailsResponse?> BuildDetailsResponseAsync(Guid id,
@@ -449,6 +435,39 @@ public static class NotificationEndpoints
             item.ReadAt.HasValue,
             item.ReadAt
         );
+    }
+
+    /// <summary>
+    /// Garante que a leitura fique registrada no primeiro acesso ao detalhe da notificacao.
+    /// O app mobile pode abrir a modal e usar o mesmo payload final sem precisar de uma segunda chamada separada.
+    /// </summary>
+    private static async Task<UserNotificationRead?> EnsureNotificationMarkedAsReadAsync(Guid notificationId,
+                                                                                         Guid tenantId,
+                                                                                         Guid userId,
+                                                                                         AppDbContext db)
+    {
+        var existing = await db.UserNotificationReads
+            .FirstOrDefaultAsync(x =>
+                x.TenantNotificationId == notificationId &&
+                x.TenantId == tenantId &&
+                x.UserId == userId);
+
+        if (existing is not null)
+            return existing;
+
+        existing = new UserNotificationRead
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            TenantNotificationId = notificationId,
+            UserId = userId,
+            ReadAt = DateTime.UtcNow
+        };
+
+        db.UserNotificationReads.Add(existing);
+        await db.SaveChangesAsync();
+
+        return existing;
     }
 
     private static async Task<IResult?> ValidateRequestAsync(Guid tenantId,

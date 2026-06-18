@@ -11,6 +11,15 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 - `PUT /api/tenants/current/logo` passou a exigir que o tenant atual ainda esteja ativo antes de permitir a substituicao da logo.
 - `ROADMAP.md` agora marca como concluida a meta continua de isolamento multi-tenant em todos os modulos existentes da V1.
 
+## [2026-06-18] - Notification Detail Ready For Mobile Modal
+
+### Changed
+
+- `GET /api/notifications/{id}` passa a aceitar o comportamento de leitura automatica via `markAsRead=true`, cobrindo a abertura da modal rolavel do app em uma unica chamada.
+- O detalhe retornado ao app ja volta com `IsRead` e `ReadAt` atualizados depois da abertura, evitando round-trip adicional so para marcar leitura.
+- `POST /api/notifications/{id}/read` continua disponivel para fluxos explicitos de leitura, mas passa a reutilizar a mesma regra central de persistencia.
+- `ROADMAP.md` agora registra como concluido o item de notificacoes do app com marcacao automatica como lida.
+
 ## [2026-06-18] - Mobile Card Contract For Events, Social, Store And Notifications
 
 ### Added
