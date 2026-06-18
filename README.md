@@ -313,6 +313,14 @@ Uso atual:
 - `page-based`: `Store`, `Events`, `Social`, `Classes`, `Checkins` e `Media`
 - `cursor-based`: `Store`, `Events` e `Social`
 
+Para o app mobile, o backend tambem passa a expor um contrato padronizado de apresentacao de midia:
+
+- `MobileCardItemResponse` para cards resumidos
+- `MediaPresentationResponse` para orientar uso visual da imagem
+- `thumbnailUrl` preparado para futura derivacao por CDN
+- codigos de proporcao como `1:1`, `4:5` e `16:9`
+- fallback sem imagem com iniciais e estilo semantico (`avatar`, `banner`, `product`, `logo`)
+
 ## Padrao de feedback visual
 
 No frontend administrativo do AlphaSquad, todo feedback de operacao deve seguir um unico padrao visual.
@@ -458,6 +466,15 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `GET /api/media/{id}`
 - `PUT /api/media/{id}/file`
 - `DELETE /api/media/{id}`
+
+Padrao atual de apresentacao para o app:
+
+- `avatar`: `1:1`
+- `tenant-logo`: `1:1`
+- `store-product`: `1:1`
+- `social-post`: `4:5`
+- `event-cover`: `16:9`
+- `notification-cover`: `16:9`
 
 ### Users
 

@@ -20,6 +20,26 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 - `ROADMAP.md` agora registra a padronizacao de metadados de cards mobile como concluida.
 - As notificacoes seguem oficialmente no modelo paginado (`PagedResponse<T>`) para o app, enquanto `Events`, `Social` e `Store` mantem contratos cursor-based para feeds maiores.
 
+## [2026-06-18] - Media Presentation Contract For Mobile
+
+### Added
+
+- `src/AlphaSquad.Shared/DTOs/Common/MediaPresentationDtos.cs` com o contrato `MediaPresentationResponse`.
+- Presets centralizados de midia para:
+- eventos
+- posts sociais
+- produtos da loja
+- notificacoes
+- avatar de usuario
+- logo do tenant
+- item generico da biblioteca de midias
+
+### Changed
+
+- `MobileCardItemResponse` agora inclui a estrutura `Media` com metadados de uso, proporcao e fallback.
+- DTOs compartilhados de `Auth`, `Profile`, `Tenants`, `Media`, `Events`, `Social`, `Store` e `Notifications` passaram a expor metadados padronizados de apresentacao visual.
+- `ROADMAP.md` agora registra o padrao de imagens, thumbnails e tamanhos como concluido no backend.
+
 ## [2026-06-14] - Local Container Stack For Api, Postgres And Redis
 
 ### Added

@@ -36,12 +36,15 @@ public record NotificationListItemResponse(
         Summary,
         MediaUrl,
         MediaUrl,
+        NotificationMedia,
         IsHighlighted ? "destaque" : AudienceCode,
         StatusCode,
         PublishedAt,
         TargetModule,
         RelatedEntityId ?? Id,
         TargetRouteHint);
+
+    public MediaPresentationResponse NotificationMedia => MediaPresentationFactory.ForNotification(Title, MediaUrl);
 }
 
 public record NotificationDetailsResponse(
@@ -79,12 +82,15 @@ public record NotificationDetailsResponse(
         Summary,
         MediaUrl,
         MediaUrl,
+        NotificationMedia,
         IsHighlighted ? "destaque" : AudienceCode,
         StatusCode,
         PublishedAt,
         TargetModule,
         RelatedEntityId ?? Id,
         TargetRouteHint);
+
+    public MediaPresentationResponse NotificationMedia => MediaPresentationFactory.ForNotification(Title, MediaUrl);
 }
 
 public record AdminNotificationListItemResponse(

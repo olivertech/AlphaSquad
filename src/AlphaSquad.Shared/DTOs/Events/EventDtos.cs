@@ -140,12 +140,15 @@ public record AcademyEventResponse(
         Description,
         MediaUrl,
         MediaUrl,
+        EventMedia,
         BuildBadge(),
         StatusCode,
         HighlightStartsAt ?? StartsAt ?? CreatedAt,
         "events",
         Id,
         MobileContractCodes.BuildRouteHint("events", Id));
+
+    public MediaPresentationResponse EventMedia => MediaPresentationFactory.ForEvent(Title, MediaUrl);
 
     private string? BuildSubtitle()
     {

@@ -47,12 +47,17 @@ public record SocialPostResponse(
         Description,
         MediaUrl,
         MediaUrl,
+        PostMedia,
         BuildBadge(),
         StatusCode,
         CreatedAt,
         "social/posts",
         Id,
         MobileContractCodes.BuildRouteHint("social/posts", Id));
+
+    public MediaPresentationResponse PostMedia => MediaPresentationFactory.ForSocialPost(UserName, MediaUrl);
+
+    public MediaPresentationResponse AuthorAvatar => MediaPresentationFactory.ForAvatar(UserName, ProfilePhotoUrl);
 
     private string? BuildSubtitle()
     {

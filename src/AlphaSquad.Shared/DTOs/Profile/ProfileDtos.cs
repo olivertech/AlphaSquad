@@ -1,5 +1,7 @@
 namespace AlphaSquad.Shared.DTOs.Profile;
 
+using AlphaSquad.Shared.DTOs.Common;
+
 /// <summary>
 /// Representa a resposta principal do modulo de profile.
 /// Consolida dados basicos do usuario com campos de experiencia pessoal no app.
@@ -19,7 +21,10 @@ public record ProfileResponse(
     decimal? ActivePlanPrice,
     int? ActivePlanDurationDays,
     DateTime CreatedAt
-);
+)
+{
+    public MediaPresentationResponse ProfilePhoto => MediaPresentationFactory.ForAvatar(Name, ProfilePhotoUrl);
+}
 
 /// <summary>
 /// Payload para atualizar os dados basicos editaveis pelo proprio usuario.

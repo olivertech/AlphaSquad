@@ -511,6 +511,8 @@ tenants/{tenantSlug}/logos
 - troca de arquivo de midia
 - upload/substituicao de logo do tenant
 - exclusao do binario antigo ao trocar logo
+- exposicao de `MediaPresentationResponse` para o app mobile
+- presets visuais com proporcao e fallback por contexto
 
 ### Uso futuro planejado
 
@@ -743,6 +745,7 @@ Capacidades atuais:
 - feed cursor-based para scroll infinito no app
 - CRUD administrativo restrito a perfis de gestao
 - suporte a imagem via `TenantMedia`
+- `MediaPresentationResponse` com preset `event-cover` (`16:9`)
 - eventos outdoor com participacao do aluno
 - integracao da participacao outdoor com gamificacao
 - senha de check-in por evento

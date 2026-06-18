@@ -14,6 +14,7 @@ public record MobileCardItemResponse(
     string? Summary,
     string? ImageUrl,
     string? ThumbnailUrl,
+    MediaPresentationResponse? Media,
     string? Badge,
     string StatusCode,
     DateTime? ReferenceDate,

@@ -1,5 +1,7 @@
 namespace AlphaSquad.Shared.DTOs.Auth;
 
+using AlphaSquad.Shared.DTOs.Common;
+
 public record LoginRequest(
     string TenantSlug, 
     string Email, 
@@ -30,7 +32,10 @@ public record AuthenticatedUserResponse(
     decimal? ActivePlanPrice,
     int? ActivePlanDurationDays,
     bool MustChangePassword
-);
+)
+{
+    public MediaPresentationResponse ProfilePhoto => MediaPresentationFactory.ForAvatar(Name, ProfilePhotoUrl);
+}
 
 public record AuthenticatedSessionResponse(
     Guid UserId,
@@ -46,7 +51,10 @@ public record AuthenticatedSessionResponse(
     bool MustChangePassword,
     Guid TenantId,
     string TenantSlug
-);
+)
+{
+    public MediaPresentationResponse ProfilePhoto => MediaPresentationFactory.ForAvatar(Name, ProfilePhotoUrl);
+}
 
 public record AuthenticatedTenantResponse(
     Guid Id, 
@@ -55,7 +63,10 @@ public record AuthenticatedTenantResponse(
     string? LogoUrl, 
     string PrimaryColor, 
     string SecondaryColor
-);
+)
+{
+    public MediaPresentationResponse Logo => MediaPresentationFactory.ForLogo(Name, LogoUrl);
+}
 
 public record ChangePasswordRequest(
     string CurrentPassword, 

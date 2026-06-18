@@ -26,12 +26,15 @@ public record ProductListItemResponse(
         Description,
         MainMediaUrl,
         MainMediaUrl,
+        MainMedia,
         BuildBadge(),
         StatusCode,
         CreatedAt,
         "store/products",
         Id,
         MobileContractCodes.BuildRouteHint("store/products", Id));
+
+    public MediaPresentationResponse MainMedia => MediaPresentationFactory.ForStoreProduct(Name, MainMediaUrl);
 
     private string? BuildSubtitle()
     {
@@ -59,7 +62,10 @@ public record ProductDetailResponse(
     int DisplayOrder,
     DateTime CreatedAt,
     List<ProductVariantResponse> Variants
-);
+)
+{
+    public MediaPresentationResponse MainMedia => MediaPresentationFactory.ForStoreProduct(Name, MainMediaUrl);
+}
 
 /// <summary>
 /// Representa uma variante de produto retornada pela API.
