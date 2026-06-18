@@ -2,6 +2,15 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-06-18] - Tenant Isolation Audit For App-Facing Endpoints
+
+### Changed
+
+- Revisada a camada de endpoints voltada ao app e ao dashboard tenant para confirmar filtros explicitos por `tenant_id` nas features operacionais mais sensiveis.
+- `POST /api/auth/change-password` passou a validar tambem o `tenant_id` presente nas claims antes de alterar a senha do usuario autenticado.
+- `PUT /api/tenants/current/logo` passou a exigir que o tenant atual ainda esteja ativo antes de permitir a substituicao da logo.
+- `ROADMAP.md` agora marca como concluida a meta continua de isolamento multi-tenant em todos os modulos existentes da V1.
+
 ## [2026-06-18] - Mobile Card Contract For Events, Social, Store And Notifications
 
 ### Added

@@ -223,8 +223,13 @@ public static class AuthEndpoints
         if (string.IsNullOrEmpty(userIdClaim))
             return Results.Unauthorized();
 
+        var tenantIdClaim = user.FindFirstValue("tenant_id");
+        if (string.IsNullOrEmpty(tenantIdClaim))
+            return Results.Unauthorized();
+
         var userId = Guid.Parse(userIdClaim);
-        var appUser = await db.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        var tenantId = Guid.Parse(tenantIdClaim);
+        var appUser = await db.Users.FirstOrDefaultAsync(x => x.Id == userId && x.TenantId == tenantId);
 
         if (appUser is null)
             return Results.NotFound("User not found.");

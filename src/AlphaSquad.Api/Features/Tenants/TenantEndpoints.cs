@@ -96,7 +96,7 @@ public static class TenantEndpoints
         var tenantId = context.GetTenantId();
         var tenantSlug = context.GetTenantSlug();
 
-        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == tenantId);
+        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == tenantId && x.IsActive);
         if (tenant is null)
             return Results.NotFound();
 

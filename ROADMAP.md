@@ -243,7 +243,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 
 ## Metas continuas
 
-- [ ] Garantir isolamento multi-tenant em todos os modulos
+- [x] Garantir isolamento multi-tenant em todos os modulos
 - [x] Padronizar paginacao nos principais modulos com contratos compartilhados
 - [x] Padronizar feedback visual do dashboard com `toast` em vez de mensagens inline
 - [ ] Aumentar cobertura de testes
