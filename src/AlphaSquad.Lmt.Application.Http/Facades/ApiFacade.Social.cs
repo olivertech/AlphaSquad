@@ -12,9 +12,7 @@ public sealed partial class ApiFacade
 {
     public async Task DELETEApiSocialPostsByIdLikeAsync(string id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
-        await _apiClient.Api.Social.Posts[id].Like.DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        await _apiClient.Api.Social.Posts[ParseRequiredGuid(id, nameof(id))].Like.DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
     }
 
@@ -32,9 +30,7 @@ public sealed partial class ApiFacade
 
     public async Task<SocialPostResponseDto?> GETApiSocialPostsByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Social.Posts[id].GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<SocialPostResponseDto>(result);
 
@@ -42,9 +38,7 @@ public sealed partial class ApiFacade
 
     public async Task<List<SocialCommentResponseDto>?> GETApiSocialPostsByIdCommentsAsync(string id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
-        var result = await _apiClient.Api.Social.Posts[id].Comments.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        var result = await _apiClient.Api.Social.Posts[ParseRequiredGuid(id, nameof(id))].Comments.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.MapList<SocialCommentResponseDto>(result);
 
@@ -66,7 +60,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.CreateSocialPostRequest>(request);
 
-        var result = await _apiClient.Api.Social.Posts.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var result = await _apiClient.Api.Social.Posts.PostAsSocialPostResponseAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.Map<SocialResponseDto>(result);
 
@@ -76,9 +70,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.CreateSocialCommentRequest>(request);
 
-#pragma warning disable CS0618
-        var result = await _apiClient.Api.Social.Posts[id].Comments.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        var result = await _apiClient.Api.Social.Posts[ParseRequiredGuid(id, nameof(id))].Comments.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.Map<SocialCommentResponseDto>(result);
 
@@ -86,9 +78,7 @@ public sealed partial class ApiFacade
 
     public async Task POSTApiSocialPostsByIdLikeAsync(string id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
-        await _apiClient.Api.Social.Posts[id].Like.PostAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        await _apiClient.Api.Social.Posts[ParseRequiredGuid(id, nameof(id))].Like.PostAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
     }
 }

@@ -299,6 +299,8 @@ public static class NotificationEndpoints
                 x.IsHighlighted,
                 x.PublishedAt,
                 x.ExpiresAt,
+                x.RelatedEntityType,
+                x.RelatedEntityId,
                 ReadAt = db.UserNotificationReads
                     .Where(read =>
                         read.TenantNotificationId == x.Id &&
@@ -326,6 +328,8 @@ public static class NotificationEndpoints
                 x.IsHighlighted,
                 x.PublishedAt,
                 x.ExpiresAt,
+                x.RelatedEntityType,
+                x.RelatedEntityId,
                 x.ReadAt.HasValue,
                 x.ReadAt
             )).ToList()));

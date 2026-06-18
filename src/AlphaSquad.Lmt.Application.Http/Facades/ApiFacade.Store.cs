@@ -12,17 +12,13 @@ public sealed partial class ApiFacade
 {
     public async Task DELETEApiStoreProductsByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         await _apiClient.Api.Store.Products[id].DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
     }
 
     public async Task DELETEApiStoreProductsByProductIdVariantsByVariantIdAsync(Guid productId, Guid variantId, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         await _apiClient.Api.Store.Products[productId].Variants[variantId].DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
     }
 
@@ -54,9 +50,7 @@ public sealed partial class ApiFacade
 
     public async Task<List<StoreOrderItemResponseDto>?> GETApiStoreOrdersMeByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Store.Orders.Me[id].GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.MapList<StoreOrderItemResponseDto>(result?.Items);
 
@@ -78,9 +72,7 @@ public sealed partial class ApiFacade
 
     public async Task<ProductDetailResponseDto?> GETApiStoreProductsByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Store.Products[id].GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<ProductDetailResponseDto>(result);
 
@@ -123,9 +115,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.CreateProductVariantRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Store.Products[id].Variants.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<ProductVariantResponseDto>(result);
 
@@ -135,9 +125,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateStoreOrderStatusRequest>(request);
 
-#pragma warning disable CS0618
-        var result = await _apiClient.Api.Store.Orders[id].Status.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        var result = await _apiClient.Api.Store.Orders[ParseRequiredGuid(id, nameof(id))].Status.PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.MapList<StoreOrderItemResponseDto>(result?.Items);
 
@@ -147,9 +135,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateProductRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Store.Products[id].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<ProductDetailResponseDto>(result);
 
@@ -159,9 +145,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateProductVariantRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Store.Products[productId].Variants[variantId].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<ProductVariantResponseDto>(result);
 

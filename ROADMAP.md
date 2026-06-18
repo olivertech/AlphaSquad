@@ -217,7 +217,7 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Padronizar contratos de feed infinito para `Store`, `Events` e `Social`
 - [x] Padronizar contratos `page-based` com `PagedResponse<T>` nos principais endpoints de listagem
 - [x] Criar o projeto `AlphaSquad.Backoffice` separado do dashboard da academia
-- [ ] Padronizar metadados de cards para app mobile
+- [x] Padronizar metadados de cards para app mobile
 - [x] Estruturar notificacoes do app
 - [x] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas
 - [ ] Exibir notificacoes do app em modal rolavel com marcacao automatica como lida

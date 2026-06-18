@@ -12,9 +12,7 @@ public sealed partial class ApiFacade
 {
     public async Task<TenantConfigResponseDto?> GETApiTenantsBySlugBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Tenants.BySlug[slug].GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<TenantConfigResponseDto>(result);
 
@@ -40,9 +38,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateTenantRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Tenants[id].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<TenantConfigResponseDto>(result);
 

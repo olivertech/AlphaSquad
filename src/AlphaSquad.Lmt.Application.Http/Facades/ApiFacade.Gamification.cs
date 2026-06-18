@@ -72,9 +72,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateGamificationEventRuleRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Gamification.Rules[id].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<GamificationEventRuleResponseDto>(result);
 

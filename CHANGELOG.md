@@ -2,6 +2,24 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-06-18] - Mobile Card Contract For Events, Social, Store And Notifications
+
+### Added
+
+- `src/AlphaSquad.Shared/DTOs/Common/MobileContractDtos.cs` com o contrato reutilizavel `MobileCardItemResponse`.
+- Propriedades computadas de contrato mobile em:
+- `AcademyEventResponse`
+- `SocialPostResponse`
+- `ProductListItemResponse`
+- `NotificationListItemResponse`
+- `NotificationDetailsResponse`
+
+### Changed
+
+- `NotificationListItemResponse` passou a carregar tambem o destino relacionado (`RelatedEntityType` e `RelatedEntityId`) para navegacao orientada por payload no app.
+- `ROADMAP.md` agora registra a padronizacao de metadados de cards mobile como concluida.
+- As notificacoes seguem oficialmente no modelo paginado (`PagedResponse<T>`) para o app, enquanto `Events`, `Social` e `Store` mantem contratos cursor-based para feeds maiores.
+
 ## [2026-06-14] - Local Container Stack For Api, Postgres And Redis
 
 ### Added

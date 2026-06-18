@@ -1,5 +1,8 @@
 namespace AlphaSquad.Shared.DTOs.Store;
 
+using System.Globalization;
+using AlphaSquad.Shared.DTOs.Common;
+
 /// <summary>
 /// Resposta resumida usada nas listagens do catalogo da loja.
 /// </summary>
@@ -12,7 +15,36 @@ public record ProductListItemResponse(
     bool IsActive,
     int DisplayOrder,
     DateTime CreatedAt
-);
+)
+{
+    public string StatusCode => MobileContractCodes.FromBoolean(IsActive, "active", "inactive");
+
+    public MobileCardItemResponse MobileCard => new(
+        "store-product",
+        Name,
+        BuildSubtitle(),
+        Description,
+        MainMediaUrl,
+        MainMediaUrl,
+        BuildBadge(),
+        StatusCode,
+        CreatedAt,
+        "store/products",
+        Id,
+        MobileContractCodes.BuildRouteHint("store/products", Id));
+
+    private string? BuildSubtitle()
+    {
+        return StartingPrice.HasValue
+            ? $"a partir de R$ {StartingPrice.Value.ToString("0.00", CultureInfo.InvariantCulture)}"
+            : null;
+    }
+
+    private string? BuildBadge()
+    {
+        return IsActive ? "pedido presencial" : "indisponivel";
+    }
+}
 
 /// <summary>
 /// Resposta detalhada do produto, incluindo suas variantes vendaveis.

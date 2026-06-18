@@ -1,5 +1,7 @@
 namespace AlphaSquad.Shared.DTOs.Social;
 
+using AlphaSquad.Shared.DTOs.Common;
+
 /// <summary>
 /// Payload para criacao de uma nova publicacao social.
 /// O post pode ter descricao, midia, ou ambos.
@@ -34,7 +36,42 @@ public record SocialPostResponse(
     bool IsLikedByCurrentUser,
     DateTime CreatedAt,
     DateTime? UpdatedAt
-);
+)
+{
+    public string StatusCode => "active";
+
+    public MobileCardItemResponse MobileCard => new(
+        "social-post",
+        UserName,
+        BuildSubtitle(),
+        Description,
+        MediaUrl,
+        MediaUrl,
+        BuildBadge(),
+        StatusCode,
+        CreatedAt,
+        "social/posts",
+        Id,
+        MobileContractCodes.BuildRouteHint("social/posts", Id));
+
+    private string? BuildSubtitle()
+    {
+        return !string.IsNullOrWhiteSpace(Username)
+            ? $"@{Username}"
+            : null;
+    }
+
+    private string? BuildBadge()
+    {
+        if (CommentsCount > 0)
+            return $"{CommentsCount} comentarios";
+
+        if (LikesCount > 0)
+            return $"{LikesCount} curtidas";
+
+        return null;
+    }
+}
 
 /// <summary>
 /// DTO de resposta para comentarios simples da rede social.

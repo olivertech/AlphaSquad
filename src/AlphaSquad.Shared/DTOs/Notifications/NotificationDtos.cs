@@ -1,5 +1,7 @@
 namespace AlphaSquad.Shared.DTOs.Notifications;
 
+using AlphaSquad.Shared.DTOs.Common;
+
 public record NotificationListItemResponse(
     Guid Id,
     TenantNotificationType Type,
@@ -11,9 +13,36 @@ public record NotificationListItemResponse(
     bool IsHighlighted,
     DateTime PublishedAt,
     DateTime? ExpiresAt,
+    string? RelatedEntityType,
+    Guid? RelatedEntityId,
     bool IsRead,
     DateTime? ReadAt
-);
+)
+{
+    public string TypeCode => MobileContractCodes.ToCode(Type);
+
+    public string AudienceCode => MobileContractCodes.ToCode(Audience);
+
+    public string StatusCode => IsRead ? "read" : "unread";
+
+    public string TargetModule => MobileContractCodes.ResolveTargetModule(RelatedEntityType, "notifications");
+
+    public string TargetRouteHint => MobileContractCodes.BuildRouteHint(TargetModule, RelatedEntityId ?? Id);
+
+    public MobileCardItemResponse MobileCard => new(
+        "notification",
+        Title,
+        TypeCode,
+        Summary,
+        MediaUrl,
+        MediaUrl,
+        IsHighlighted ? "destaque" : AudienceCode,
+        StatusCode,
+        PublishedAt,
+        TargetModule,
+        RelatedEntityId ?? Id,
+        TargetRouteHint);
+}
 
 public record NotificationDetailsResponse(
     Guid Id,
@@ -31,7 +60,32 @@ public record NotificationDetailsResponse(
     DateTime? ExpiresAt,
     bool IsRead,
     DateTime? ReadAt
-);
+)
+{
+    public string TypeCode => MobileContractCodes.ToCode(Type);
+
+    public string AudienceCode => MobileContractCodes.ToCode(Audience);
+
+    public string StatusCode => IsRead ? "read" : "unread";
+
+    public string TargetModule => MobileContractCodes.ResolveTargetModule(RelatedEntityType, "notifications");
+
+    public string TargetRouteHint => MobileContractCodes.BuildRouteHint(TargetModule, RelatedEntityId ?? Id);
+
+    public MobileCardItemResponse MobileCard => new(
+        "notification",
+        Title,
+        TypeCode,
+        Summary,
+        MediaUrl,
+        MediaUrl,
+        IsHighlighted ? "destaque" : AudienceCode,
+        StatusCode,
+        PublishedAt,
+        TargetModule,
+        RelatedEntityId ?? Id,
+        TargetRouteHint);
+}
 
 public record AdminNotificationListItemResponse(
     Guid Id,

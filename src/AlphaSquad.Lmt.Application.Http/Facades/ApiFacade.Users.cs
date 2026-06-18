@@ -13,9 +13,7 @@ public sealed partial class ApiFacade
 {
     public async Task DELETEApiUsersByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         await _apiClient.Api.Users[id].DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
     }
 
@@ -29,9 +27,7 @@ public sealed partial class ApiFacade
 
     public async Task<UserResponseDto?> GETApiUsersByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Users[id].GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<UserResponseDto>(result);
 
@@ -61,9 +57,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateUserRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Users[id].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<UserResponseDto>(result);
 

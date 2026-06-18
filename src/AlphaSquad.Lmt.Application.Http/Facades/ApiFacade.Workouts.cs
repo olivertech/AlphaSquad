@@ -12,9 +12,7 @@ public sealed partial class ApiFacade
 {
     public async Task DELETEApiWorkoutsByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         await _apiClient.Api.Workouts[id].DeleteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
     }
 
@@ -28,9 +26,7 @@ public sealed partial class ApiFacade
 
     public async Task<WorkoutDetailsResponseDto?> GETApiWorkoutsByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Workouts[id].GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<WorkoutDetailsResponseDto>(result);
 
@@ -50,9 +46,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<List<AlphaSquad.Lmt.Application.ApiClient.Models.ExerciseAssignmentRequest>>(request);
 
-#pragma warning disable CS0618
-        var result = await _apiClient.Api.Workouts[id].Exercises.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        var result = await _apiClient.Api.Workouts[ParseRequiredGuid(id, nameof(id))].Exercises.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.Map<WorkoutDetailsResponseDto>(result);
 
@@ -62,9 +56,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.WorkoutUpdateRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Workouts[id].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<WorkoutResponseDto>(result);
 

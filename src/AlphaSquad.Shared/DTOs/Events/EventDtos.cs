@@ -1,5 +1,7 @@
 namespace AlphaSquad.Shared.DTOs.Events;
 
+using AlphaSquad.Shared.DTOs.Common;
+
 /// <summary>
 /// DTO usado pela gestao para criar um novo evento no mural da academia.
 /// </summary>
@@ -123,7 +125,53 @@ public record AcademyEventResponse(
     bool IsUserParticipating,
     DateTime CreatedAt,
     DateTime? UpdatedAt
-);
+)
+{
+    public string EventTypeCode => MobileContractCodes.ToCode(EventType);
+
+    public string StatusCode => IsCompleted
+        ? "completed"
+        : MobileContractCodes.FromBoolean(IsActive, "active", "inactive");
+
+    public MobileCardItemResponse MobileCard => new(
+        "event",
+        Title,
+        BuildSubtitle(),
+        Description,
+        MediaUrl,
+        MediaUrl,
+        BuildBadge(),
+        StatusCode,
+        HighlightStartsAt ?? StartsAt ?? CreatedAt,
+        "events",
+        Id,
+        MobileContractCodes.BuildRouteHint("events", Id));
+
+    private string? BuildSubtitle()
+    {
+        if (!string.IsNullOrWhiteSpace(Location))
+            return Location;
+
+        if (IsOutdoorEvent)
+            return "evento presencial";
+
+        return EventTypeCode;
+    }
+
+    private string? BuildBadge()
+    {
+        if (IsCompleted)
+            return "concluido";
+
+        if (IsHighlighted)
+            return "destaque";
+
+        if (AllowParticipation)
+            return "participacao";
+
+        return IsOutdoorEvent ? "presencial" : null;
+    }
+}
 
 /// <summary>
 /// DTO de resposta para confirmar participacao de um aluno em evento outdoor.

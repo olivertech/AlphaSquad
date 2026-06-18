@@ -31,9 +31,7 @@ public sealed partial class ApiFacade
 
     public async Task<List<UserMembershipHistoryResponseDto>?> GETApiPlansUsersByUserIdHistoryAsync(string userId, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CS0618
-        var result = await _apiClient.Api.Plans.Users[userId].History.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        var result = await _apiClient.Api.Plans.Users[ParseRequiredGuid(userId, nameof(userId))].History.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return GeneratedDtoMapper.MapList<UserMembershipHistoryResponseDto>(result);
 
@@ -53,9 +51,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.AssignMembershipPlanRequest>(request);
 
-#pragma warning disable CS0618
-        await _apiClient.Api.Plans[id].Assign.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
+        await _apiClient.Api.Plans[ParseRequiredGuid(id, nameof(id))].Assign.PostAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
 
     }
 
@@ -73,9 +69,7 @@ public sealed partial class ApiFacade
     {
         var kiotaRequest = GeneratedDtoMapper.MapRequired<AlphaSquad.Lmt.Application.ApiClient.Models.UpdateMembershipPlanRequest>(request);
 
-#pragma warning disable CS0618
         var result = await _apiClient.Api.Plans[id].PutAsync(kiotaRequest, cancellationToken: cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618
 
         return GeneratedDtoMapper.Map<MembershipPlanResponseDto>(result);
 
