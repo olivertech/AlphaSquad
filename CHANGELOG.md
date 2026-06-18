@@ -2,6 +2,14 @@
 
 Todas as mudancas relevantes do projeto sao registradas aqui.
 
+## [2026-06-18] - Documentation Aligned To MAUI Readiness
+
+### Changed
+
+- `README.md` passa a registrar explicitamente que o backend da V1 ja esta pronto para iniciar o app Android em MAUI.
+- `ARCHITECTURE.md` passa a diferenciar o que ja e base consolidada para o app e o que segue como evolucao futura.
+- `ROADMAP.md` agora deixa claro, logo no topo, que os itens ainda abertos nao bloqueiam o inicio do mobile e pertencem a trilhas futuras ou melhorias tecnicas.
+
 ## [2026-06-18] - Tenant Isolation Audit For App-Facing Endpoints
 
 ### Changed
@@ -19,6 +27,40 @@ Todas as mudancas relevantes do projeto sao registradas aqui.
 - O detalhe retornado ao app ja volta com `IsRead` e `ReadAt` atualizados depois da abertura, evitando round-trip adicional so para marcar leitura.
 - `POST /api/notifications/{id}/read` continua disponivel para fluxos explicitos de leitura, mas passa a reutilizar a mesma regra central de persistencia.
 - `ROADMAP.md` agora registra como concluido o item de notificacoes do app com marcacao automatica como lida.
+
+## [2026-06-18] - App Bootstrap Endpoint For MAUI Shell
+
+### Added
+
+- `GET /api/app/bootstrap` para concentrar o payload inicial do app autenticado.
+- Novo contrato `AppBootstrapResponse` com:
+- sessao autenticada
+- tenant atual
+- features habilitadas
+- contador de notificacoes nao lidas
+- resumo leve de gamificacao para alunos
+
+### Changed
+
+- `AuthEndpoints.BuildAuthenticatedUserResponseAsync` passou a ser reutilizavel dentro da API para evitar duplicacao do contrato de sessao no bootstrap mobile.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` agora documentam o bootstrap autenticado do app como parte da prontidao do backend para o MAUI.
+
+## [2026-06-18] - Aggregated App Home Endpoint
+
+### Added
+
+- `GET /api/app/home` para entregar a primeira dobra do app em uma unica chamada autenticada.
+- Novo contrato `AppHomeResponse` com:
+- aulas proximas
+- secao de eventos em destaque
+- secao de comunidade
+- secao resumida da loja
+
+### Changed
+
+- As seções de `Events`, `Social` e `Store` reaproveitam `MobileCardItemResponse`, mantendo consistencia com os contratos mobile já padronizados.
+- A home do app passa a respeitar as features opcionais do tenant no próprio payload agregado, evitando lógica extra no cliente.
+- `README.md`, `ARCHITECTURE.md` e `ROADMAP.md` agora registram a home agregada como parte da prontidão do backend para o MAUI.
 
 ## [2026-06-18] - Mobile Card Contract For Events, Social, Store And Notifications
 

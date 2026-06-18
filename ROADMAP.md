@@ -2,6 +2,12 @@
 
 Este roadmap foi alinhado com o estado atual do codigo e com a visao estrategica definida em 2026-05-08.
 
+## Status atual
+
+- o backend da V1 ja esta pronto para iniciar o app Android em MAUI
+- nao existe mais, neste momento, nenhuma pendencia estrutural obrigatoria para comecar o mobile
+- os itens ainda abertos abaixo devem ser lidos como evolucoes futuras, V2, ampliacoes comerciais ou melhorias tecnicas
+
 ## Principios de priorizacao
 
 - entregar primeiro o que gera valor direto para a experiencia do aluno
@@ -217,6 +223,8 @@ Essa ordem foi escolhida para reduzir retrabalho:
 - [x] Padronizar contratos de feed infinito para `Store`, `Events` e `Social`
 - [x] Padronizar contratos `page-based` com `PagedResponse<T>` nos principais endpoints de listagem
 - [x] Criar o projeto `AlphaSquad.Backoffice` separado do dashboard da academia
+- [x] Criar endpoint de bootstrap autenticado para a shell inicial do app
+- [x] Criar endpoint agregado da home do app com seções prontas
 - [x] Padronizar metadados de cards para app mobile
 - [x] Estruturar notificacoes do app
 - [x] Definir leitura de notificacoes por usuario com filtros de lidas, nao lidas e todas

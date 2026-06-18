@@ -277,7 +277,7 @@ public static class AuthEndpoints
     /// <summary>
     /// Reconstroi a visao autenticada do usuario unindo dados centrais e dados de profile.
     /// </summary>
-    private static async Task<AuthenticatedUserResponse?> BuildAuthenticatedUserResponseAsync(Guid userId, Guid tenantId, AppDbContext db)
+    internal static async Task<AuthenticatedUserResponse?> BuildAuthenticatedUserResponseAsync(Guid userId, Guid tenantId, AppDbContext db)
     {
         var connection = db.Database.GetDbConnection();
 

@@ -170,6 +170,8 @@ app.MapGamificationEndpoints();
 app.MapLegalEndpoints();
 app.MapConfigurationEndpoints();
 app.MapNotificationEndpoints();
+app.MapAppBootstrapEndpoints();
+app.MapAppHomeEndpoints();
 app.MapPlatformAuthEndpoints();
 app.MapPlatformProfileEndpoints();
 app.MapPlatformTenantEndpoints();

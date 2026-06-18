@@ -2,6 +2,11 @@
 
 Este documento descreve a arquitetura tecnica atual do AlphaSquad com base no codigo existente no workspace e no direcionamento de produto definido para as proximas fases.
 
+Estado atual relevante:
+
+- a arquitetura backend da V1 ja esta suficientemente consolidada para iniciar o app Android em MAUI
+- as pendencias restantes deixam de ser estruturais para o app e passam a ser melhorias, V2 ou extensoes de produto
+
 ## Objetivo arquitetural
 
 O sistema foi desenhado para sustentar um SaaS white-label para academias com:
@@ -141,6 +146,15 @@ Responsavel por:
 - composicao dos modulos
 - endpoints do contexto tenant
 - endpoints do contexto master da plataforma
+
+No fluxo mobile, o bootstrap autenticado do app agora fica concentrado em `GET /api/app/bootstrap`, reduzindo o custo de hidratacao inicial da shell cliente.
+O mesmo contexto agora oferece `GET /api/app/home` para entregar a primeira dobra do app com seções agregadas e prontas para renderização.
+
+Leitura arquitetural atual:
+
+- `GET /api/app/bootstrap` resolve sessao, branding, features e sinais iniciais da home
+- `GET /api/app/home` resolve a primeira dobra do app com aulas, eventos, comunidade e loja
+- os demais modulos continuam acessiveis por endpoints proprios, sem depender de composicoes novas no curto prazo
 
 ### AlphaSquad.Backoffice
 

@@ -9,7 +9,7 @@ A proposta do produto e permitir que cada academia tenha seu proprio aplicativo 
 - White-label para academias
 - Multi-tenant desde o backend
 - Foco em retencao, frequencia e experiencia do aluno
-- Base preparada para app mobile no futuro
+- Backend pronto para iniciar o app mobile Android em MAUI
 - Comunidade digital interna entre alunos, professores e gestao
 - Gamificacao como diferencial central do ecossistema
 
@@ -21,6 +21,11 @@ O produto agora tambem passa a contar com dois frontends web separados e com a b
 
 - operacao da academia (`tenant`)
 - operacao global da plataforma (`backoffice`)
+
+Status objetivo neste momento:
+
+- o backend da V1 ja oferece a base necessaria para iniciar o app MAUI Android sem novas frentes estruturais obrigatorias
+- os proximos desenvolvimentos de backend deixam de ser bloqueadores e passam a ser evolucoes pontuais, V2 ou melhorias tecnicas
 
 ### Modulos consolidados
 
@@ -57,6 +62,31 @@ O produto agora tambem passa a contar com dois frontends web separados e com a b
 
 - nenhuma frente estrutural critica pendente para a V1
 - o isolamento multi-tenant agora conta com resolucao central de tenant no pipeline da API
+
+### Backend pronto para o MAUI
+
+O backend ja entrega os contratos e agregacoes centrais para comecar o app Android:
+
+- autenticacao com `login`, `refresh`, `logout` e `change-password`
+- sessao atual com `/api/auth/me`
+- bootstrap autenticado com `/api/app/bootstrap`
+- home agregada com `/api/app/home`
+- notificacoes paginadas com detalhe pronto para modal e marcacao automatica de leitura
+- contratos mobile padronizados para `Events`, `Social`, `Store` e `Notifications`
+- metadados consistentes de midia e fallback visual
+- tenant atual, branding e features habilitadas
+- dashboard pessoal de gamificacao do aluno
+
+Com isso, o app pode iniciar pelas seguintes frentes sem depender de novas mudancas estruturais no backend:
+
+- shell autenticada
+- home inicial
+- mural de eventos
+- rede social
+- loja
+- notificacoes
+- profile
+- gamificacao
 
 ### Proximas frentes core do produto
 
@@ -319,6 +349,22 @@ Uso atual:
 - `page-based`: `Store`, `Events`, `Social`, `Classes`, `Checkins` e `Media`
 - `cursor-based`: `Store`, `Events` e `Social`
 
+Bootstrap atual do app:
+
+- `GET /api/app/bootstrap`
+- consolida sessao autenticada, tenant atual, features habilitadas, contador de notificacoes nao lidas e resumo leve de gamificacao para alunos
+- reduz round-trips no primeiro carregamento da shell do app MAUI
+
+Home atual do app:
+
+- `GET /api/app/home`
+- entrega seções prontas da primeira dobra com:
+- aulas proximas
+- eventos em destaque
+- posts recentes da comunidade
+- vitrine resumida da loja
+- as secoes opcionais respeitam as features contratadas do tenant
+
 Para o app mobile, o backend tambem passa a expor um contrato padronizado de apresentacao de midia:
 
 - `MobileCardItemResponse` para cards resumidos
@@ -451,6 +497,11 @@ Esse conjunto de camadas reforca que o AlphaSquad nao depende de um unico ponto 
 - `POST /api/auth/refresh`
 - `POST /api/auth/change-password`
 - `POST /api/auth/logout`
+
+### App
+
+- `GET /api/app/bootstrap`
+- `GET /api/app/home`
 
 ### Tenants
 
