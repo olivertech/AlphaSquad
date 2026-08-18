@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AlphaSquad System Architecture",
+    "subtitle": "Multi-tenant fitness SaaS with tenant dashboard, sponsor backoffice, mobile-ready API contracts, and shared infrastructure",
+    "output": "docs/diagrams/archify/alphasquad-system.architecture.html"
+  },
+  "components": [
+    { "id": "owner", "type": "external", "label": "Sponsor", "sublabel": "AlphaSquad owner", "pos": [40, 120], "size": [140, 64] },
+    { "id": "ops", "type": "external", "label": "Academia", "sublabel": "admin / teacher", "pos": [40, 340], "size": [140, 64] },
+    { "id": "student", "type": "external", "label": "Aluno App", "sublabel": "mobile-ready client", "pos": [40, 560], "size": [140, 64], "tag": "next phase" },
+
+    { "id": "backoffice", "type": "frontend", "label": "Backoffice", "sublabel": "Razor Pages", "pos": [290, 120], "size": [150, 64] },
+    { "id": "web", "type": "frontend", "label": "Tenant Web", "sublabel": "Razor Pages", "pos": [290, 340], "size": [150, 64] },
+    { "id": "platformclient", "type": "backend", "label": "Platform Client", "sublabel": "backoffice API client", "pos": [540, 120], "size": [170, 64] },
+    { "id": "lmt", "type": "backend", "label": "LMT HTTP", "sublabel": "Kiota + services", "pos": [540, 340], "size": [170, 64], "tag": "Application.Http" },
+
+    { "id": "guard", "type": "security", "label": "Auth + Guard", "sublabel": "JWT + tenant context", "pos": [840, 120], "size": [170, 64], "tag": "policies" },
+    { "id": "api", "type": "backend", "label": "AlphaSquad.Api", "sublabel": "Minimal APIs", "pos": [840, 340], "size": [170, 64], "tag": ".NET 10" },
+
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "cache :6379", "pos": [1120, 120], "size": [150, 64] },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "source of truth", "pos": [1120, 340], "size": [150, 64], "tag": ":5432" },
+    { "id": "r2", "type": "cloud", "label": "Cloudflare R2", "sublabel": "logos, media, photos", "pos": [1120, 560], "size": [170, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "AlphaSquad frontends and client layers", "wraps": ["backoffice", "web", "platformclient", "lmt"] },
+    { "kind": "security-group", "label": "Protected API core", "wraps": ["guard", "api", "redis", "db"] },
+    { "kind": "region", "label": "Managed object storage", "wraps": ["r2"] }
+  ],
+  "connections": [
+    { "from": "owner", "to": "backoffice", "label": "cookie session", "variant": "emphasis", "labelDy": -26 },
+    { "from": "backoffice", "to": "platformclient", "label": "Backoffice client", "labelDy": -26 },
+    { "from": "platformclient", "to": "api", "label": "/api/platform-auth/* + /api/platform-tenants/*", "variant": "emphasis" },
+
+    { "from": "ops", "to": "web", "label": "cookie session", "variant": "emphasis", "labelDy": -26 },
+    { "from": "web", "to": "lmt", "label": "Razor -> LMT", "labelDy": -26 },
+    { "from": "lmt", "to": "api", "label": "/api/auth/* + tenant modules + /api/app/*", "variant": "emphasis", "labelDy": -26 },
+
+    { "from": "student", "to": "api", "label": "mobile-ready contracts: app, events, social, store, notifications", "variant": "dashed" },
+
+    { "from": "api", "to": "guard", "label": "UseAuthentication + TenantContextMiddleware", "variant": "security", "fromSide": "top", "toSide": "bottom", "labelDy": -60 },
+    { "from": "guard", "to": "db", "label": "resolve active tenant + user", "variant": "security", "fromSide": "right", "toSide": "top" },
+    { "from": "api", "to": "redis", "label": "tenant config + features cache", "fromSide": "top", "toSide": "bottom", "labelDy": -60 },
+    { "from": "api", "to": "db", "label": "EF Core + Dapper", "labelDy": -26 },
+    { "from": "api", "to": "r2", "label": "upload and present media", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 64 }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Consumer Surfaces",
+      "items": [
+        "AlphaSquad.Web atende a operação da academia com cookies e sessão local",
+        "AlphaSquad.Backoffice atende o sponsor e consome endpoints master separados",
+        "A API já expõe contratos prontos para o futuro app Android"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Application Layers",
+      "items": [
+        "O dashboard tenant passa pela camada AlphaSquad.Lmt.Application.Http",
+        "Kiota, DTOs e facades padronizam o consumo do backend",
+        "O backoffice usa um client dedicado para os fluxos platform"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Runtime Core",
+      "items": [
+        "AlphaSquad.Api concentra Minimal APIs, políticas, seed e módulos do produto",
+        "Redis acelera branding, features e leitura contextual do tenant",
+        "PostgreSQL é a fonte principal para domínio, auditoria e histórico"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Security and Media",
+      "items": [
+        "JWT, roles e TenantContextMiddleware blindam o isolamento multi-tenant",
+        "PlatformOwnerOnly protege o backoffice sem reaproveitar claims do tenant",
+        "Cloudflare R2 centraliza logos, fotos de perfil e ativos de mídia"
+      ]
+    }
+  ]
+}

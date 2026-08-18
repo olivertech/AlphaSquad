@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "AlphaSquad Tenant Access Lifecycle",
+    "subtitle": "Provisioning, first access, password rotation, tenant activation, and guarded daily operation",
+    "output": "docs/diagrams/archify/alphasquad-tenant.lifecycle.html",
+    "viewBox": [1100, 700]
+  },
+  "lanes": [
+    { "id": "main", "label": "Fases principais" },
+    { "id": "waiting", "label": "Dependências humanas" },
+    { "id": "exceptions", "label": "Recuperação" },
+    { "id": "terminal", "label": "Saídas finais" }
+  ],
+  "states": [
+    { "id": "provisioned", "type": "start", "label": "Provisioned", "sublabel": "tenant + admin seeded", "lane": "main", "col": 0, "step": "01", "tag": "owner" },
+    { "id": "first_access", "type": "active", "label": "First access", "sublabel": "temporary password", "lane": "main", "col": 1, "step": "02", "tag": "login" },
+    { "id": "change_password", "type": "decision", "label": "Change password", "sublabel": "mustChangePassword", "lane": "main", "col": 2, "step": "03", "tag": "security" },
+    { "id": "enabled", "type": "active", "label": "Tenant enabled", "sublabel": "branding + features", "lane": "main", "col": 3, "step": "04", "tag": "ready" },
+    { "id": "operating", "type": "success", "label": "Daily operation", "sublabel": "dashboard + app APIs", "lane": "main", "col": 4, "step": "05", "tag": "live" },
+
+    { "id": "awaiting_login", "type": "waiting", "label": "Awaiting login", "sublabel": "credential handoff", "lane": "waiting", "col": 0, "tag": "pause" },
+    { "id": "awaiting_support", "type": "waiting", "label": "Needs support", "sublabel": "owner or admin action", "lane": "waiting", "col": 1, "tag": "assist" },
+
+    { "id": "blocked", "type": "failure", "label": "Access blocked", "sublabel": "inactive user or tenant", "lane": "exceptions", "col": 0, "yOffset": 78, "tag": "guard" },
+    { "id": "reset_issued", "type": "waiting", "label": "Reset issued", "sublabel": "new provisional password", "lane": "exceptions", "col": 2, "yOffset": 78, "tag": "reset" },
+
+    { "id": "suspended", "type": "failure", "label": "Suspended", "sublabel": "tenant disabled", "lane": "terminal", "col": 0, "tag": "terminal" },
+    { "id": "logged_out", "type": "failure", "label": "Logged out", "sublabel": "session revoked", "lane": "terminal", "col": 1, "tag": "exit" }
+  ],
+  "transitions": [
+    { "from": "provisioned", "to": "awaiting_login", "variant": "default", "route": "drop" },
+    { "from": "change_password", "to": "awaiting_support", "variant": "default", "route": "drop" },
+    { "from": "awaiting_support", "to": "change_password", "variant": "default", "route": "top-channel" },
+    { "from": "first_access", "to": "blocked", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "straight" },
+    { "from": "operating", "to": "blocked", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "straight" },
+    { "from": "blocked", "to": "reset_issued", "variant": "default", "route": "right-channel" },
+    { "from": "reset_issued", "to": "first_access", "variant": "default", "route": "top-channel" },
+    { "from": "operating", "to": "suspended", "variant": "security", "route": "bottom-channel" },
+    { "from": "operating", "to": "logged_out", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "straight" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Provisioning Model",
+      "items": [
+        "O sponsor cria a academia e o admin inicial pelo backoffice",
+        "A senha provisória nasce no backend e força troca no primeiro acesso",
+        "Branding e features contratadas são carregados antes da operação diária"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Human Gates",
+      "items": [
+        "A entrega da credencial ainda depende do sponsor na V1",
+        "Problemas de primeiro acesso podem voltar para suporte operacional",
+        "Reset de senha provisória recoloca o fluxo no mesmo ponto de entrada"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Guards and Exits",
+      "items": [
+        "TenantContextMiddleware e status do usuário podem bloquear o acesso",
+        "Suspensão do tenant encerra a operação sem apagar o histórico",
+        "Logout e revogação de sessão são saídas finais do ciclo autenticado"
+      ]
+    }
+  ]
+}

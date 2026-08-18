@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "AlphaSquad Dashboard Request Sequence",
+    "subtitle": "Tenant admin login followed by the first authenticated bootstrap and dashboard render",
+    "output": "docs/diagrams/archify/alphasquad-dashboard.sequence.html",
+    "viewBox": [1180, 1280]
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "Admin", "sublabel": "academia" },
+    { "id": "web", "type": "frontend", "label": "Tenant Web", "sublabel": "Razor Pages" },
+    { "id": "lmt", "type": "backend", "label": "LMT HTTP", "sublabel": "generated services" },
+    { "id": "api", "type": "backend", "label": "API", "sublabel": "AlphaSquad.Api" },
+    { "id": "auth", "type": "security", "label": "Auth", "sublabel": "JWT + refresh" },
+    { "id": "tenant", "type": "security", "label": "Tenant Guard", "sublabel": "middleware" },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "cache" },
+    { "id": "db", "type": "database", "label": "Postgres", "sublabel": "domain data" }
+  ],
+  "segments": [
+    { "from": 165, "to": 500, "label": "Login" },
+    { "from": 520, "to": 1065, "label": "Bootstrap" },
+    { "from": 1085, "to": 1165, "label": "Render" }
+  ],
+  "messages": [
+    { "from": "user", "to": "web", "y": 190, "label": "fill login form", "variant": "default" },
+    { "from": "web", "to": "lmt", "y": 232, "label": "submit credentials", "variant": "default" },
+    { "from": "lmt", "to": "api", "y": 276, "label": "POST /api/auth/login", "variant": "emphasis" },
+    { "from": "api", "to": "db", "y": 322, "label": "validate user + tenant", "variant": "emphasis" },
+    { "from": "db", "to": "api", "y": 366, "label": "user, tenant, profile", "variant": "return" },
+    { "from": "api", "to": "auth", "y": 410, "label": "sign JWT + refresh", "variant": "security" },
+    { "from": "auth", "to": "api", "y": 452, "label": "tokens ready", "variant": "return" },
+    { "from": "api", "to": "lmt", "y": 494, "label": "200 LoginResponse", "variant": "return" },
+    { "from": "lmt", "to": "web", "y": 536, "label": "set cookie + session", "variant": "return" },
+    { "from": "web", "to": "lmt", "y": 582, "label": "request bootstrap", "variant": "default" },
+    { "from": "lmt", "to": "api", "y": 626, "label": "GET /api/app/bootstrap", "variant": "emphasis" },
+    { "from": "api", "to": "auth", "y": 670, "label": "verify JWT", "variant": "security" },
+    { "from": "auth", "to": "api", "y": 712, "label": "claims ok", "variant": "return" },
+    { "from": "api", "to": "tenant", "y": 756, "label": "TenantContextMiddleware", "variant": "security" },
+    { "from": "tenant", "to": "db", "y": 800, "label": "resolve active tenant + user", "variant": "security" },
+    { "from": "db", "to": "tenant", "y": 844, "label": "tenant context", "variant": "return" },
+    { "from": "tenant", "to": "api", "y": 886, "label": "context attached", "variant": "return" },
+    { "from": "api", "to": "redis", "y": 930, "label": "features + branding cache", "variant": "default" },
+    { "from": "redis", "to": "api", "y": 972, "label": "cache hit or fallback", "variant": "return" },
+    { "from": "api", "to": "db", "y": 1016, "label": "home, notifications, gamification", "variant": "emphasis" },
+    { "from": "db", "to": "api", "y": 1058, "label": "aggregated rows", "variant": "return" },
+    { "from": "api", "to": "lmt", "y": 1102, "label": "200 BootstrapResponse", "variant": "return" },
+    { "from": "lmt", "to": "web", "y": 1140, "label": "map view models", "variant": "return" },
+    { "from": "web", "to": "user", "y": 1172, "label": "render dashboard", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "web", "from": 224, "to": 1178, "type": "frontend" },
+    { "participant": "lmt", "from": 268, "to": 1148, "type": "backend" },
+    { "participant": "api", "from": 276, "to": 1108, "type": "backend" },
+    { "participant": "auth", "from": 404, "to": 458, "type": "security" },
+    { "participant": "auth", "from": 664, "to": 718, "type": "security" },
+    { "participant": "tenant", "from": 748, "to": 892, "type": "security" },
+    { "participant": "redis", "from": 924, "to": 978, "type": "database" },
+    { "participant": "db", "from": 316, "to": 372, "type": "database" },
+    { "participant": "db", "from": 794, "to": 850, "type": "database" },
+    { "participant": "db", "from": 1010, "to": 1064, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Tenant Web Path",
+      "items": [
+        "O dashboard tenant nunca fala direto com HttpClient solto",
+        "O login e o bootstrap passam pela camada LMT HTTP",
+        "A sessão local do Razor Pages é alimentada a partir das respostas da API"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Security Path",
+      "items": [
+        "O login gera JWT e refresh token antes do primeiro carregamento autenticado",
+        "Cada chamada autenticada volta a validar claims e o contexto do tenant",
+        "TenantContextMiddleware bloqueia usuário ou academia inativos"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Read Model Path",
+      "items": [
+        "Redis ajuda no branding e nas features contratadas",
+        "Postgres segue como fonte principal do bootstrap agregado",
+        "O retorno final já traz dados prontos para header, notificações e gamificação"
+      ]
+    }
+  ]
+}
