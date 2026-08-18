@@ -4,6 +4,8 @@ on:
     push:
         branches:
             - main
+            - master
+    workflow_dispatch:
 
 jobs:
     hello-world-job:
@@ -14,4 +16,4 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Run a one-line script
-              run: echo Hello, world!
+              run: echo "Hello, world!"
